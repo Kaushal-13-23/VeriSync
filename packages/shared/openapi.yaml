@@ -1,0 +1,238 @@
+openapi: 3.0.3
+info:
+  title: VeriSync Placement Assessment Platform API
+  version: 1.1.0
+  description: >
+    Official OpenAPI contract for VeriSync secure placement-assessment platform.
+    Source of truth: docs/SRS/VeriSync_SRS_v1_1.pdf.
+    Changes must be proposed via Developer A (Kaushal Kumar Singh) in packages/shared/openapi.yaml.
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development environment
+
+paths:
+  /health:
+    get:
+      summary: System Health Check
+      description: Returns server operational status and authoritative UTC timestamp.
+      operationId: getHealthStatus
+      responses:
+        '200':
+          description: Server is healthy and operational.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+
+  /auth/login:
+    post:
+      summary: Candidate & Administrator Authentication
+      description: >
+        Authenticates credentials against Argon2id hashed passwords.
+        Candidates may authenticate using either Candidate ID or Username (FR-CAN-007).
+        Admins require MFA in production (FR-AUTH-008).
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful; returns access token and refresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Missing or invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '429':
+          description: Rate limited due to repeated failed attempts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /assessments/active/submit-answer:
+    post:
+      summary: Submit Question Answer
+      description: >
+        Submits candidate answer for the currently active question.
+        Requires an Idempotency-Key header (FR-ANS-009). Late submissions return 409 QUESTION_EXPIRED.
+      operationId: submitAnswer
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique client-generated UUID for deduplication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerPayload'
+      responses:
+        '200':
+          description: Submission accepted or original outcome returned for duplicate key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitAnswerResponse'
+        '401':
+          description: Unauthenticated session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '409':
+          description: Question timed out or invalid session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+components:
+  schemas:
+    HealthStatusResponse:
+      type: object
+      required:
+        - status
+        - serverTime
+        - version
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        serverTime:
+          type: string
+          format: date-time
+          example: '2026-10-25T14:30:00Z'
+        version:
+          type: string
+          example: '1.1.0'
+
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          description: Candidate ID, username, or admin email address.
+          example: 'CAN-2026-001'
+        password:
+          type: string
+          format: password
+          example: 'Secret123!'
+        mfaCode:
+          type: string
+          description: 6-digit TOTP code for MFA-enabled accounts.
+          example: '123456'
+
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - user
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            role:
+              type: string
+              enum: [SUPER_ADMIN, CANDIDATE, TECHNICAL_EVALUATOR]
+
+    SubmitAnswerPayload:
+      type: object
+      required:
+        - questionAttemptId
+        - response
+      properties:
+        questionAttemptId:
+          type: string
+          example: 'qa_0142'
+        response:
+          description: Selected option ID(s), text answer, or code.
+
+    SubmitAnswerResponse:
+      type: object
+      required:
+        - status
+        - questionAttemptId
+        - submittedAt
+        - serverTime
+      properties:
+        status:
+          type: string
+          enum: [accepted]
+        questionAttemptId:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+        next:
+          type: object
+          properties:
+            questionAttemptId:
+              type: string
+            deadlineAt:
+              type: string
+              format: date-time
+        serverTime:
+          type: string
+          format: date-time
+
+    ApiErrorCode:
+      type: string
+      description: Standard API Error Codes per SRS Section 8.3.3.
+      enum:
+        - UNAUTHENTICATED
+        - FORBIDDEN
+        - NOT_ELIGIBLE
+        - INVALID_STATE
+        - QUESTION_EXPIRED
+        - DUPLICATE_REQUEST
+        - UNSUPPORTED_CLIENT
+        - RATE_LIMITED
+        - VALIDATION_FAILED
+        - INTERNAL_ERROR
+
+    ApiErrorResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+        - correlationId
+      properties:
+        status:
+          type: string
+          enum: [rejected, error]
+        code:
+          $ref: '#/components/schemas/ApiErrorCode'
+        message:
+          type: string
+          example: 'This question has timed out.'
+        correlationId:
+          type: string
+          example: 'c-7d21f8'
+        details:
+          type: object

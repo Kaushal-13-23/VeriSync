@@ -1,0 +1,26 @@
+{
+  "name": "verisync-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VeriSync: Secure Placement Assessment Platform Monorepo",
+  "scripts": {
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "build": "pnpm -r run build",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
+    "dev:api": "pnpm --filter @verisync/api dev",
+    "dev:admin": "pnpm --filter @verisync/admin-web dev",
+    "dev:candidate": "pnpm --filter @verisync/candidate-desktop dev"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
+  }
+}

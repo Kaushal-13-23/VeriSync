@@ -1,0 +1,14 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'services/*'
+
+allowBuilds:
+  '@nestjs/core': true
+  electron: true
+  esbuild: true
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - 'electron'
+  - 'esbuild'

@@ -1,0 +1,117 @@
+// VeriSync Database Schema
+// Source of truth: docs/SRS/VeriSync_SRS_v1_1.pdf (Section 9: Database Requirements and Logical Data Model)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Phase 1 Schema Baseline (Tables defined in SRS Section 9.1)
+// Full relations, foreign keys, unique constraints, and enums will be implemented
+// in Phase 1 by Dev A per FR-AUTH, FR-AUD, and database specification.
+// -----------------------------------------------------------------------------
+
+enum UserRole {
+  SUPER_ADMIN
+  CANDIDATE
+  TECHNICAL_EVALUATOR
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MCQ_SINGLE
+  MCQ_MULTIPLE
+  TRUE_FALSE
+  SHORT_ANSWER
+  DESCRIPTIVE
+  SCENARIO
+  CODING
+  SQL
+}
+
+enum SessionState {
+  NOT_STARTED
+  READY
+  ACTIVE
+  INTERRUPTED
+  SUBMITTED
+  EXPIRED
+  CANCELLED
+}
+
+enum AttemptState {
+  PENDING
+  ACTIVE
+  SUBMITTED
+  TIMED_OUT
+  SKIPPED
+  EVALUATION_PENDING
+  EVALUATED
+}
+
+enum CodingStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  COMPILATION_ERROR
+  RUNTIME_ERROR
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  INTERNAL_EVALUATION_ERROR
+}
+
+enum DeviceStatus {
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+model User {
+  id            String        @id @default(uuid()) @map("user_id")
+  username      String        @unique
+  passwordHash  String        @map("password_hash")
+  role          UserRole      @default(CANDIDATE)
+  accountStatus AccountStatus @default(ACTIVE) @map("account_status")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  candidateProfile CandidateProfile?
+
+  @@map("users")
+}
+
+model CandidateProfile {
+  id                   String   @id @default(uuid()) @map("candidate_id")
+  userId               String   @unique @map("user_id")
+  fullName             String   @map("full_name")
+  email                String   @unique
+  phone                String?
+  institution          String
+  qualification        String
+  graduationYear       Int      @map("graduation_year")
+  recruitmentReference String   @map("recruitment_reference")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_profiles")
+}

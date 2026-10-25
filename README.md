@@ -6,7 +6,7 @@ VeriSync is an enterprise-grade, secure placement-assessment platform designed f
 
 Sources of truth:
 
-- **Requirements**: `docs/SRS/VeriSync_SRS_v1_1.pdf` (and `docs/SRS/srs.md`)
+- **Requirements**: `docs/SRS/srs.md`
 - **UI Design Reference**: `docs/design/UI_Sample.jpeg`
 - **Architectural Decisions**: `docs/DECISIONS.md`
 - **Team Ownership Matrix**: `docs/OWNERSHIP.md`
@@ -45,7 +45,7 @@ verisync/
 ├── deploy/
 │   └── kiosk/                # Windows Assigned Access & kiosk scripts (Dev C)
 └── docs/
-    ├── SRS/                  # VeriSync_SRS_v1_1.pdf and srs.md
+    ├── SRS/                  # srs.md and INDEX.md
     ├── design/               # UI_Sample.jpeg
     ├── phases/               # Phase completion reports
     ├── DECISIONS.md          # Recorded architectural decisions & reconciliations

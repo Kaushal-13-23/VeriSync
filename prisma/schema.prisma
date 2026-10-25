@@ -1,5 +1,5 @@
 // VeriSync Database Schema
-// Source of truth: docs/SRS/VeriSync_SRS_v1_1.pdf (Section 9: Database Requirements and Logical Data Model)
+// Source of truth: docs/SRS/srs.md (Section 9: Database Requirements and Logical Data Model)
 
 generator client {
   provider = "prisma-client-js"

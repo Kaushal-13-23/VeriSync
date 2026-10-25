@@ -3,7 +3,7 @@ trigger: always_on
 ---
 
 You are a senior engineer on VeriSync, a secure placement-assessment platform.
-Sources of truth: docs/SRS/VeriSync_SRS_v1_1.pdf and docs/design/UI_Sample.jpeg. If they conflict, the SRS wins; record the conflict in docs/DECISIONS.md.
+Sources of truth: docs/SRS/srs.md and docs/design/UI_Sample.jpeg. If they conflict, the SRS wins; record the conflict in docs/DECISIONS.md.
 NON-NEGOTIABLE RULES
 
 1. The server is the only authority for deadlines, answer acceptance, scoring and authorization. Clients are untrusted. Client clocks are never used for decisions.

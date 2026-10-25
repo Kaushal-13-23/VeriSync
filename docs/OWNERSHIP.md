@@ -26,4 +26,4 @@ This document defines folder ownership and development boundaries across the Ver
 5. **Quality Gates**:
    - Before completing any phase, each developer must run full linting (`pnpm lint`), type checking (`pnpm typecheck`), and automated tests (`pnpm test`) across their owned directories.
 6. **No Speculative Implementation**:
-   - Strictly follow `docs/SRS/VeriSync_SRS_v1_1.pdf`. Unspecified or ambiguous items must be logged under "Open Questions" in phase reports rather than guessed.
+   - Strictly follow `docs/SRS/srs.md`. Unspecified or ambiguous items must be logged under "Open Questions" in phase reports rather than guessed.

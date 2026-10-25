@@ -3,7 +3,7 @@
 **Developer**: Developer A (Kaushal Kumar Singh)  
 **Role**: Backend & Data Lead  
 **Branch**: `main` / `phase-0/dev-a-scaffold`  
-**Date**: 2026-10-25  
+**Date**: 2026-10-25
 
 ---
 
@@ -41,7 +41,7 @@ Established the foundation for the VeriSync platform using a high-performance **
      - Windows Assigned Access and AppLocker OS kiosk configuration guide and folder structure.
 
 - **Documentation & Sources of Truth**:
-  - `docs/SRS/VeriSync_SRS_v1_1.pdf` & `docs/SRS/srs.md`: Primary specifications.
+  - `docs/SRS/srs.md`: Primary specifications.
   - `docs/design/UI_Sample.jpeg`: UI layout reference.
   - `docs/OWNERSHIP.md`: Boundary matrix for Developer A, B, and C.
   - `docs/DECISIONS.md`: Recorded 5 UI-vs-SRS conflict reconciliations.
@@ -52,14 +52,14 @@ Established the foundation for the VeriSync platform using a high-performance **
 
 ## 2. Endpoints, Screens & Modules Added
 
-| Area | Component / File | Purpose |
-| :--- | :--- | :--- |
-| **Backend API** | `GET /api/v1/health` | Authoritative health check & UTC ISO-8601 clock sync (`FR-TIME-001`, `Rule 9`) |
-| **Backend API** | `GET /api/v1/` | Base API hello-world probe |
-| **Admin Web** | `apps/admin-web/src/App.tsx` | Dashboard landing screen with shield branding & token system |
-| **Candidate Client** | `apps/candidate-desktop/src/App.tsx` | Secure candidate login shell with kiosk status indicators |
-| **Shared Package** | `packages/shared/src/errors.ts` | Complete SRS 8.3.3 enum implementation & HTTP status code map |
-| **Shared Package** | `packages/shared/openapi.yaml` | OpenAPI contract baseline |
+| Area                 | Component / File                     | Purpose                                                                        |
+| :------------------- | :----------------------------------- | :----------------------------------------------------------------------------- |
+| **Backend API**      | `GET /api/v1/health`                 | Authoritative health check & UTC ISO-8601 clock sync (`FR-TIME-001`, `Rule 9`) |
+| **Backend API**      | `GET /api/v1/`                       | Base API hello-world probe                                                     |
+| **Admin Web**        | `apps/admin-web/src/App.tsx`         | Dashboard landing screen with shield branding & token system                   |
+| **Candidate Client** | `apps/candidate-desktop/src/App.tsx` | Secure candidate login shell with kiosk status indicators                      |
+| **Shared Package**   | `packages/shared/src/errors.ts`      | Complete SRS 8.3.3 enum implementation & HTTP status code map                  |
+| **Shared Package**   | `packages/shared/openapi.yaml`       | OpenAPI contract baseline                                                      |
 
 ---
 
@@ -86,6 +86,7 @@ Established the foundation for the VeriSync platform using a high-performance **
    - `apps/candidate-desktop/src/App.test.tsx`: Validates candidate desktop client mounting and kiosk status indicators.
 
 **Test Summary**:
+
 ```
 - packages/shared: 2 passed
 - apps/api: 2 passed

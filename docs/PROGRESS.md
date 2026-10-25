@@ -1,6 +1,6 @@
 # VeriSync Implementation Progress Checklist
 
-This document tracks implementation status across all functional and non-functional requirements defined in `docs/SRS/VeriSync_SRS_v1_1.pdf`.
+This document tracks implementation status across all functional and non-functional requirements defined in `docs/SRS/srs.md`.
 
 Status Legend:
 

@@ -1,6 +1,6 @@
 /**
  * VeriSync Shared Domain Types & Enums
- * Source: docs/SRS/VeriSync_SRS_v1_1.pdf (Sections 3.3, 3.4, 9.1)
+ * Source: docs/SRS/srs.md (Sections 3.3, 3.4, 9.1)
  */
 
 export enum UserRole {

@@ -4,7 +4,7 @@ info:
   version: 1.1.0
   description: >
     Official OpenAPI contract for VeriSync secure placement-assessment platform.
-    Source of truth: docs/SRS/VeriSync_SRS_v1_1.pdf.
+    Source of truth: docs/SRS/srs.md.
     Changes must be proposed via Developer A (Kaushal Kumar Singh) in packages/shared/openapi.yaml.
 servers:
   - url: http://localhost:4000/api/v1

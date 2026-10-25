@@ -1,6 +1,6 @@
 /**
  * VeriSync Standard API Error Codes
- * Source: docs/SRS/VeriSync_SRS_v1_1.pdf (Section 8.3.3 Standard Error Codes)
+ * Source: docs/SRS/srs.md (Section 8.3.3 Standard Error Codes)
  */
 export enum ApiErrorCode {
   UNAUTHENTICATED = 'UNAUTHENTICATED',

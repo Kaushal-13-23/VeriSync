@@ -1,8 +1,8 @@
 # VeriSync Architectural & Design Decisions
 
-This document records architectural, functional, and design decisions, specifically resolving any discrepancies between the primary source of truth (`docs/SRS/VeriSync_SRS_v1_1.pdf`) and the interface reference (`docs/design/UI_Sample.jpeg`).
+This document records architectural, functional, and design decisions, specifically resolving any discrepancies between the primary source of truth (`docs/SRS/srs.md`) and the interface reference (`docs/design/UI_Sample.jpeg`).
 
-> **Rule of Precedence**: If a conflict arises between `docs/design/UI_Sample.jpeg` and `docs/SRS/VeriSync_SRS_v1_1.pdf`, the **SRS always wins**. All reconciliations are documented below.
+> **Rule of Precedence**: If a conflict arises between `docs/design/UI_Sample.jpeg` and `docs/SRS/srs.md`, the **SRS always wins**. All reconciliations are documented below.
 
 ---
 

@@ -16,7 +16,10 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@verisync/shared": ["../../packages/shared/src"]
+    }
   },
   "include": ["src/**/*", "test/**/*"]
 }

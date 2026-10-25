@@ -13,7 +13,7 @@ Established the foundation for the VeriSync platform using a high-performance **
 
 - **Root Tooling & Quality Gates**:
   - `pnpm-workspace.yaml`: Configured workspace routing (`apps/*`, `packages/*`, `services/*`) with `onlyBuiltDependencies` permissions for `@nestjs/core`, `electron`, and `esbuild`.
-  - Quality scripts: `lint`, `typecheck`, `test`, `build`, `format`, `format:check`.
+  - Quality scripts: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format`, `pnpm format:check`.
   - Linting & Formatting: Root ESLint (`.eslintrc.cjs`), Prettier (`.prettierrc`, `.prettierignore`), and EditorConfig (`.editorconfig`).
   - Commit Linting: `@commitlint/cli` and `@commitlint/config-conventional` enforcing conventional commit semantics.
   - Environment Templates: Root `.env.example` and sub-project `.env.example` files.
@@ -22,11 +22,11 @@ Established the foundation for the VeriSync platform using a high-performance **
 - **Workspace Packages & Applications**:
   1. [`packages/shared`](file:///d:/Veri_Sync/VeriSync/packages/shared):
      - OpenAPI 3.0.3 contract skeleton in [`openapi.yaml`](file:///d:/Veri_Sync/VeriSync/packages/shared/openapi.yaml).
-     - Standard error code enum [`ApiErrorCode`](file:///d:/Veri_Sync/VeriSync/packages/shared/src/errors.ts) and status mapping per SRS Section 8.3.3.
+     - Standard error code enum [`ApiErrorCode`](file:///d:/Veri_Sync/VeriSync/packages/shared/src/errors.ts) and HTTP status code mapping per SRS Section 8.3.3.
      - Domain state machine types for assessment sessions, question attempts, and user roles per SRS Sections 3.3 and 3.4.
   2. [`apps/api`](file:///d:/Veri_Sync/VeriSync/apps/api):
      - NestJS backend application with global prefix `api/v1` and CORS configuration.
-     - Root hello-world endpoint (`GET /api/v1/`) and health check (`GET /api/v1/health`) returning server status with UTC ISO-8601 timestamps (Rule 9).
+     - Root hello-world endpoint (`GET /api/v1/`) and health check (`GET /api/v1/health`) returning server status with UTC ISO-8601 timestamps (`Rule 9`, `FR-TIME-001`).
   3. [`apps/admin-web`](file:///d:/Veri_Sync/VeriSync/apps/admin-web):
      - React 18 + Vite + TypeScript + TailwindCSS administrative dashboard matching tokens from `docs/design/UI_Sample.jpeg`.
   4. [`apps/candidate-desktop`](file:///d:/Veri_Sync/VeriSync/apps/candidate-desktop):
@@ -41,7 +41,8 @@ Established the foundation for the VeriSync platform using a high-performance **
      - Windows Assigned Access and AppLocker OS kiosk configuration guide and folder structure.
 
 - **Documentation & Sources of Truth**:
-  - `docs/SRS/srs.md`: Primary specifications.
+  - `docs/SRS/srs.md`: Primary baseline specification.
+  - `docs/SRS/INDEX.md`: Master line-range lookup index for all 20 SRS sections.
   - `docs/design/UI_Sample.jpeg`: UI layout reference.
   - `docs/OWNERSHIP.md`: Boundary matrix for Developer A, B, and C.
   - `docs/DECISIONS.md`: Recorded 5 UI-vs-SRS conflict reconciliations.
@@ -59,6 +60,7 @@ Established the foundation for the VeriSync platform using a high-performance **
 | **Admin Web**        | `apps/admin-web/src/App.tsx`         | Dashboard landing screen with shield branding & token system                   |
 | **Candidate Client** | `apps/candidate-desktop/src/App.tsx` | Secure candidate login shell with kiosk status indicators                      |
 | **Shared Package**   | `packages/shared/src/errors.ts`      | Complete SRS 8.3.3 enum implementation & HTTP status code map                  |
+| **Shared Package**   | `packages/shared/src/types.ts`       | Shared domain and state machine enums (SRS 3.3, 3.4)                           |
 | **Shared Package**   | `packages/shared/openapi.yaml`       | OpenAPI contract baseline                                                      |
 
 ---
@@ -74,7 +76,7 @@ Established the foundation for the VeriSync platform using a high-performance **
 
 ---
 
-## 4. Tests Added & Verification
+## 4. Tests Added & Verification Evidence
 
 1. **Shared Package Test Suite**:
    - `packages/shared/tests/errors.spec.ts`: Validates that all 10 error codes from SRS 8.3.3 are present and correctly mapped to their authoritative HTTP status codes.
@@ -85,23 +87,23 @@ Established the foundation for the VeriSync platform using a high-performance **
 4. **Candidate Desktop Test Suite**:
    - `apps/candidate-desktop/src/App.test.tsx`: Validates candidate desktop client mounting and kiosk status indicators.
 
-**Test Summary**:
+**Test Execution Results**:
 
-```
-- packages/shared: 2 passed
-- apps/api: 2 passed
-- apps/admin-web: 1 passed
-- apps/candidate-desktop: 1 passed
-Total: 6 tests passing across all workspaces.
+```text
+✓ packages/shared: 2 tests passed (4ms)
+✓ apps/api: 2 tests passed (3.11s)
+✓ apps/admin-web: 1 test passed (2.86s)
+✓ apps/candidate-desktop: 1 test passed (2.93s)
+Total: 6 passing tests across 4 workspaces. 0 failures.
 ```
 
 ---
 
 ## 5. What is Still Mocked / Stubbed
 
-- Authentication flows, JWT signing, and Argon2id hashing will be implemented in Phase 1 (`FR-AUTH`).
-- Database tables exist as Prisma schema models and will be migrated and seeded with SuperAdmin in Phase 1.
-- Candidate desktop currently runs in scaffold mode; preload bridge hooks to IPC will be wired in Phase 1.
+- Authentication flows, JWT token signing, and Argon2id password hashing are scaffolded for Phase 1 (`FR-AUTH`).
+- Database tables exist as Prisma schema definitions and will be migrated and seeded with SuperAdmin in Phase 1 (`FR-AUTH`, `FR-AUD`).
+- Candidate desktop runs in scaffold mode; IPC preload bridge hooks will be wired to actual API clients in Phase 1.
 
 ---
 

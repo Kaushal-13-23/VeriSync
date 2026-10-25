@@ -233,10 +233,10 @@ Status Legend:
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
 
-- [ ] `NFR-MNT-001`: Modular monorepo architecture with clean separation of concerns (Must)
-- [ ] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
-- [ ] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
-- [ ] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
+- [x] `NFR-MNT-001`: Modular monorepo architecture with clean separation of concerns (Must)
+- [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
+- [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
+- [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
 - [ ] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)

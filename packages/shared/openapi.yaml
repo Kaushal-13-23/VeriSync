@@ -14,7 +14,7 @@ paths:
   /health:
     get:
       summary: System Health Check
-      description: Returns server operational status and authoritative UTC timestamp.
+      description: Returns server operational status and authoritative UTC timestamp (Rule 9, FR-TIME-001).
       operationId: getHealthStatus
       responses:
         '200':
@@ -29,8 +29,8 @@ paths:
       summary: Candidate & Administrator Authentication
       description: >
         Authenticates credentials against Argon2id hashed passwords.
-        Candidates may authenticate using either Candidate ID or Username (FR-CAN-007).
-        Admins require MFA in production (FR-AUTH-008).
+        Candidates may authenticate using either Candidate ID (e.g. CAN-2026-081) or Username (Decision 3, FR-AUTH-002).
+        Admins with MFA enabled receive an MFA challenge token (FR-AUTH-008).
       operationId: login
       requestBody:
         required: true
@@ -40,7 +40,7 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Authentication successful; returns access token and refresh token.
+          description: Authentication successful (returns JWT tokens or MFA challenge).
           content:
             application/json:
               schema:
@@ -52,54 +52,170 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
         '429':
-          description: Rate limited due to repeated failed attempts.
+          description: Rate limited due to repeated failed attempts (TC17).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
 
-  /assessments/active/submit-answer:
+  /auth/mfa/verify:
     post:
-      summary: Submit Question Answer
-      description: >
-        Submits candidate answer for the currently active question.
-        Requires an Idempotency-Key header (FR-ANS-009). Late submissions return 409 QUESTION_EXPIRED.
-      operationId: submitAnswer
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: Unique client-generated UUID for deduplication.
+      summary: Verify Administrator MFA Code
+      description: Verifies 6-digit RFC 6238 TOTP code using MFA challenge token (FR-AUTH-008).
+      operationId: verifyMfa
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubmitAnswerPayload'
+              $ref: '#/components/schemas/VerifyMfaRequest'
       responses:
         '200':
-          description: Submission accepted or original outcome returned for duplicate key.
+          description: MFA verification successful; returns access and refresh tokens.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubmitAnswerResponse'
+                $ref: '#/components/schemas/TokenPairResponse'
         '401':
-          description: Unauthenticated session.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '409':
-          description: Question timed out or invalid session state.
+          description: Invalid or expired MFA verification code.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
 
+  /auth/refresh:
+    post:
+      summary: Refresh Access Token
+      description: Rotates refresh token and issues a new access token pair (FR-AUTH-007).
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token rotated and new access token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPairResponse'
+        '401':
+          description: Refresh token invalid or revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: End User Session
+      description: Revokes user refresh token and terminates session server-side (FR-AUTH-006, FR-AUTH-007).
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session revoked successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /admin/candidates/{id}/password-reset:
+    post:
+      summary: Admin Candidate Password Reset
+      description: SuperAdmin initiated password reset without exposing old password (FR-AUTH-005, Rule 7).
+      operationId: adminResetPassword
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Candidate ID or User ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminPasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset successfully and active sessions revoked.
+        '403':
+          description: Insufficient privileges (Requires SuperAdmin).
+
+  /admin/candidates/{id}/deactivate:
+    patch:
+      summary: Deactivate Candidate Account
+      description: SuperAdmin initiated deactivation; revokes all candidate sessions immediately (FR-AUTH-006, Rule 7).
+      operationId: deactivateAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeactivateAccountRequest'
+      responses:
+        '200':
+          description: Account deactivated and sessions terminated.
+        '403':
+          description: Insufficient privileges.
+
+  /admin/audit-logs:
+    get:
+      summary: Search Audit Logs
+      description: Authoritative audit trail inspection for SuperAdmin and Technical Evaluator (FR-AUD-001, FR-ADMIN-001).
+      operationId: getAuditLogs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: actorUserId
+          in: query
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          schema:
+            type: string
+        - name: correlationId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of matching audit log entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatusResponse:
       type: object
@@ -127,24 +243,22 @@ components:
       properties:
         identifier:
           type: string
-          description: Candidate ID, username, or admin email address.
+          description: Candidate ID (e.g. CAN-2026-001) or Username (Decision 3).
           example: 'CAN-2026-001'
         password:
           type: string
           format: password
           example: 'Secret123!'
-        mfaCode:
-          type: string
-          description: 6-digit TOTP code for MFA-enabled accounts.
-          example: '123456'
 
     LoginResponse:
       type: object
       required:
-        - accessToken
-        - refreshToken
-        - user
+        - mfaRequired
       properties:
+        mfaRequired:
+          type: boolean
+        mfaToken:
+          type: string
         accessToken:
           type: string
         refreshToken:
@@ -159,46 +273,88 @@ components:
             role:
               type: string
               enum: [SUPER_ADMIN, CANDIDATE, TECHNICAL_EVALUATOR]
+            candidateProfile:
+              type: object
 
-    SubmitAnswerPayload:
+    VerifyMfaRequest:
       type: object
       required:
-        - questionAttemptId
-        - response
+        - mfaToken
+        - code
       properties:
-        questionAttemptId:
+        mfaToken:
           type: string
-          example: 'qa_0142'
-        response:
-          description: Selected option ID(s), text answer, or code.
+        code:
+          type: string
+          example: '123456'
 
-    SubmitAnswerResponse:
+    RefreshTokenRequest:
       type: object
       required:
-        - status
-        - questionAttemptId
-        - submittedAt
-        - serverTime
+        - refreshToken
       properties:
-        status:
+        refreshToken:
           type: string
-          enum: [accepted]
-        questionAttemptId:
+
+    TokenPairResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
           type: string
-        submittedAt:
+        refreshToken:
+          type: string
+
+    AdminPasswordResetRequest:
+      type: object
+      required:
+        - newPassword
+      properties:
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+
+    DeactivateAccountRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          example: 'Suspicious exam behavior / violation of policy'
+
+    AuditLogEntry:
+      type: object
+      required:
+        - id
+        - eventType
+        - affectedEntity
+        - eventTimestamp
+        - outcome
+        - correlationId
+      properties:
+        id:
+          type: string
+        actorUserId:
+          type: string
+          nullable: true
+        eventType:
+          type: string
+        affectedEntity:
+          type: string
+        eventTimestamp:
           type: string
           format: date-time
-        next:
+        outcome:
+          type: string
+          enum: [SUCCESS, DENIED, FAILURE]
+        correlationId:
+          type: string
+        metadata:
           type: object
-          properties:
-            questionAttemptId:
-              type: string
-            deadlineAt:
-              type: string
-              format: date-time
-        serverTime:
-          type: string
-          format: date-time
 
     ApiErrorCode:
       type: string
@@ -230,7 +386,7 @@ components:
           $ref: '#/components/schemas/ApiErrorCode'
         message:
           type: string
-          example: 'This question has timed out.'
+          example: 'Invalid username/candidate ID or password'
         correlationId:
           type: string
           example: 'c-7d21f8'

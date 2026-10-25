@@ -59,8 +59,8 @@ verisync/
 
 ### Prerequisites
 
-- **Node.js**: >= 20.x
-- **pnpm**: >= 9.x / 11.x
+- **Node.js**: >= 22.13.x
+- **pnpm**: >= 11.x
 - **Docker & Docker Compose** (for local PostgreSQL and code sandbox)
 
 ### 1. Installation

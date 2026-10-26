@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import type { VeriSyncBridge } from '../../electron/preload';
 
 declare global {

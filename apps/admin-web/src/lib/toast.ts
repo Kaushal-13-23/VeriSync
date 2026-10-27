@@ -104,7 +104,8 @@ export const SRS_ERROR_MESSAGES: Record<ApiErrorCode, { title: string; defaultMe
   },
   [ApiErrorCode.INTERNAL_ERROR]: {
     title: 'System Error',
-    defaultMessage: 'An internal server error occurred. Please quote the correlation ID to support.',
+    defaultMessage:
+      'An internal server error occurred. Please quote the correlation ID to support.',
   },
 };
 

@@ -31,9 +31,13 @@ export const StatCard: React.FC<StatCardProps> = ({
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-          <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{formattedValue}</h3>
+          <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            {formattedValue}
+          </h3>
         </div>
-        <div className={`w-12 h-12 rounded-2xl ${iconBgColor} ${iconColor} flex items-center justify-center shrink-0`}>
+        <div
+          className={`w-12 h-12 rounded-2xl ${iconBgColor} ${iconColor} flex items-center justify-center shrink-0`}
+        >
           <Icon className="w-6 h-6" />
         </div>
       </div>

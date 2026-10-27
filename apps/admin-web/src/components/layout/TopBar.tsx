@@ -91,7 +91,9 @@ export const TopBar: React.FC<TopBarProps> = ({ title, subtitle = 'Welcome back,
             >
               <div className="px-4 py-2.5 border-b border-slate-100">
                 <p className="text-xs font-semibold text-slate-800">{displayName}</p>
-                <p className="text-[11px] text-slate-500 truncate">{user?.email || 'admin@verisync.com'}</p>
+                <p className="text-[11px] text-slate-500 truncate">
+                  {user?.email || 'admin@verisync.com'}
+                </p>
                 <div className="mt-1.5 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">
                   <ShieldCheck className="w-3 h-3 text-blue-600" />
                   <span>{roleName}</span>

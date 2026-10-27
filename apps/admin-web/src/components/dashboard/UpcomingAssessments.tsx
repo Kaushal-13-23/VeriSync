@@ -21,7 +21,9 @@ export const UpcomingAssessments: React.FC<UpcomingAssessmentsProps> = ({
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-base font-bold text-slate-900 tracking-tight">Upcoming Assessments</h4>
+          <h4 className="text-base font-bold text-slate-900 tracking-tight">
+            Upcoming Assessments
+          </h4>
           <p className="text-xs text-slate-500 mt-0.5">Scheduled test sessions (FR-ASMT-006)</p>
         </div>
         <button

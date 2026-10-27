@@ -47,16 +47,23 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ items }) => {
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
       <div>
         <h4 className="text-base font-bold text-slate-900 tracking-tight">Recent Activity</h4>
-        <p className="text-xs text-slate-500 mt-0.5">Live platform operations feed (FR-ADMIN-001)</p>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Live platform operations feed (FR-ADMIN-001)
+        </p>
       </div>
 
       <div className="mt-6 divide-y divide-slate-100">
         {items.map((item) => {
           const { icon: Icon, bg, color } = getIcon(item.type);
           return (
-            <div key={item.id} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between">
+            <div
+              key={item.id}
+              className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between"
+            >
               <div className="flex items-center space-x-3.5">
-                <div className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0`}>
+                <div
+                  className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0`}
+                >
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>

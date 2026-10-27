@@ -48,7 +48,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen
 
           <div className="mt-5 space-y-3 text-sm text-slate-600 leading-relaxed">
             <p>
-              To maintain strict platform integrity, administrator passwords cannot be reset via unverified self-service email links.
+              To maintain strict platform integrity, administrator passwords cannot be reset via
+              unverified self-service email links.
             </p>
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs space-y-2">
               <div className="font-semibold text-slate-800 flex items-center space-x-2">
@@ -57,7 +58,9 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen
               </div>
               <ul className="list-disc pl-5 space-y-1 text-slate-600">
                 <li>Contact the system Super Administrator or your security operations officer.</li>
-                <li>An authorized reset workflow will issue a one-time temporary credential securely.</li>
+                <li>
+                  An authorized reset workflow will issue a one-time temporary credential securely.
+                </li>
                 <li>Existing sessions are immediately revoked upon reset initiation.</li>
               </ul>
             </div>

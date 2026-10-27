@@ -3,14 +3,25 @@
  * Traceability: FR-AUTH-001, FR-AUTH-007, FR-AUTH-008, FR-ADMIN-001, SRS 8.3.3, Rule 1, Rule 9
  */
 
-import { ApiErrorCode, ApiErrorResponse, LoginApiResponse, TokenPairResponse, DashboardStats, HealthStatusResponse } from '../types/api';
+import {
+  ApiErrorCode,
+  ApiErrorResponse,
+  LoginApiResponse,
+  TokenPairResponse,
+  DashboardStats,
+  HealthStatusResponse,
+} from '../types/api';
 import { showApiErrorToast } from '../lib/toast';
 
 export function getBaseUrl(): string {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  if (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.includes('null')) {
+  if (
+    typeof window !== 'undefined' &&
+    window.location?.origin &&
+    !window.location.origin.includes('null')
+  ) {
     return `${window.location.origin}/api/v1`;
   }
   return 'http://localhost:4000/api/v1';
@@ -73,7 +84,7 @@ function onRefreshed(token: string | null) {
  */
 export async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit & { skipAuth?: boolean; silentError?: boolean } = {}
+  options: RequestInit & { skipAuth?: boolean; silentError?: boolean } = {},
 ): Promise<T> {
   const baseUrl = getBaseUrl();
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -104,7 +115,12 @@ export async function apiFetch<T>(
   }
 
   // Handle 401 Unauthorized with automatic token refresh (FR-AUTH-007)
-  if (response.status === 401 && !options.skipAuth && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
+  if (
+    response.status === 401 &&
+    !options.skipAuth &&
+    !endpoint.includes('/auth/login') &&
+    !endpoint.includes('/auth/refresh')
+  ) {
     const refreshToken = getRefreshTokenFn();
     if (!refreshToken) {
       onAuthFailedFn();
@@ -165,7 +181,7 @@ export async function apiFetch<T>(
               code: ApiErrorCode.UNAUTHENTICATED,
               message: 'Session refresh failed.',
               correlationId: `ref-${Date.now().toString(36)}`,
-            })
+            }),
           );
           return;
         }
@@ -208,7 +224,9 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
   }
 
   const correlationId =
-    json.correlationId || response.headers.get('x-correlation-id') || `cid-${Date.now().toString(36)}`;
+    json.correlationId ||
+    response.headers.get('x-correlation-id') ||
+    `cid-${Date.now().toString(36)}`;
 
   return new ApiError({
     httpStatus: response.status,

@@ -61,9 +61,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ activeTab, onSelectTab, ch
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <TopBar title={currentTabInfo.title} subtitle={currentTabInfo.subtitle} />
 
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {children}
-        </main>
+        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">{children}</main>
       </div>
     </div>
   );

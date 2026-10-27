@@ -65,7 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const saveAuthToStorage = (tokenPair: TokenPairResponse, userData: AuthUser, remember: boolean) => {
+  const saveAuthToStorage = (
+    tokenPair: TokenPairResponse,
+    userData: AuthUser,
+    remember: boolean,
+  ) => {
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokenPair.accessToken);
     storage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenPair.refreshToken);
@@ -131,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       saveAuthToStorage(
         { accessToken: res.accessToken, refreshToken: res.refreshToken },
         res.user,
-        remember
+        remember,
       );
       toastManager.show({
         type: 'success',
@@ -211,7 +215,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       cancelMfa,
       logout,
     }),
-    [user, accessToken, refreshToken, mfaRequired, mfaToken, pendingIdentifier, rememberMe, isLoading]
+    [
+      user,
+      accessToken,
+      refreshToken,
+      mfaRequired,
+      mfaToken,
+      pendingIdentifier,
+      rememberMe,
+      isLoading,
+    ],
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

@@ -3,7 +3,7 @@
 **Developer**: Developer B (Ashlin Siddharth)  
 **Role**: Frontend & Execution Lead  
 **Branch**: `phase-1/ashlin-admin-shell`  
-**Date**: 2026-10-27  
+**Date**: 2026-10-27
 
 ---
 
@@ -15,7 +15,7 @@ Implemented the complete **Administrator Web Dashboard Shell** in `apps/admin-we
   - Implemented deep navy primary sidebar (`#0F172A` / `bg-slate-900`), crisp white card surfaces with subtle borders (`border-slate-200`), royal blue accents (`bg-blue-600`), and curated status badges (emerald, amber, rose, slate).
   - Modern typography and clean layout spacing with Lucide icons matching the UI sample reference.
 - **Enterprise Authentication & MFA TOTP Flow**:
-  - Split branding login screen with dark navy tagline showcase (*"Trusted Assessments for a Brighter Tomorrow"*) alongside credentials entry (`FR-AUTH-001`, `NFR-USE-001`).
+  - Split branding login screen with dark navy tagline showcase (_"Trusted Assessments for a Brighter Tomorrow"_) alongside credentials entry (`FR-AUTH-001`, `NFR-USE-001`).
   - Seamless two-step authentication: transitions dynamically from username/password to a 6-digit TOTP verification screen upon receiving `mfaRequired: true` (`FR-AUTH-008`).
   - Remember Me toggle, password visibility toggle, and admin credential recovery modal documenting recovery policy per `FR-AUTH-005`.
   - Global `AuthContext` managing authentication state, session tokens, user roles, and sign-out session revocation (`FR-AUTH-006`, `FR-AUTH-007`).
@@ -24,7 +24,7 @@ Implemented the complete **Administrator Web Dashboard Shell** in `apps/admin-we
   - Automatic token refresh interceptor on HTTP 401 using stored refresh tokens (`POST /auth/refresh`).
   - Non-intrusive floating toast notifications for standard error codes (`UNAUTHENTICATED`, `FORBIDDEN`, `RATE_LIMITED`, `INTERNAL_ERROR`) with one-click `correlationId` clipboard copying (`NFR-USE-003`).
 - **Application Shell & Role-Based Navigation**:
-  - Fixed deep navy left sidebar with 8 navigation items: *Dashboard*, *Candidates*, *Question Bank*, *Assessments*, *Results*, *Reports*, *Audit Logs*, *Settings*.
+  - Fixed deep navy left sidebar with 8 navigation items: _Dashboard_, _Candidates_, _Question Bank_, _Assessments_, _Results_, _Reports_, _Audit Logs_, _Settings_.
   - Role-aware menu filtering enforcing access boundaries (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) per `FR-ADMIN-009`.
   - Top navigation bar featuring notification bell with unread indicator badge and administrator profile dropdown with logout action.
 - **Dashboard Overview Screen**:
@@ -39,47 +39,47 @@ Implemented the complete **Administrator Web Dashboard Shell** in `apps/admin-we
 
 ## 2. Endpoints, Screens & Modules Added
 
-| Module / Component | File Path | SRS Traceability | Purpose |
-| :--- | :--- | :--- | :--- |
-| **API Client** | `src/api/client.ts` | `SRS 8.3.3`, `Rule 9`, `FR-AUTH-007` | Authoritative fetch wrapper, 401 refresh, and error serialization |
-| **Auth Store** | `src/store/authContext.tsx` | `FR-AUTH-001`, `FR-AUTH-006`, `FR-AUTH-008` | React Context for session state, MFA tokens, and role persistence |
-| **Toast System** | `src/lib/toast.ts`, `src/components/ui/ToastContainer.tsx` | `SRS 8.3.3`, `Rule 9`, `NFR-USE-003` | Correlation ID toast notifications for API error events |
-| **MSW Mocks** | `src/mocks/handlers.ts`, `server.ts`, `browser.ts` | `packages/shared/openapi.yaml` | MSW v3 mock service worker for isolated development and testing |
-| **Login Screen** | `src/components/login/AdminLogin.tsx` | `FR-AUTH-001`, `FR-AUTH-008`, `NFR-USE-001` | Split branding login page with 6-digit TOTP MFA verification step |
-| **Password Modal** | `src/components/login/ForgotPasswordModal.tsx` | `FR-AUTH-005` | Administrator credential recovery policy modal |
-| **Sidebar** | `src/components/layout/Sidebar.tsx` | `FR-ADMIN-001`, `FR-ADMIN-009` | Deep navy sidebar with active tab highlighting and RBAC filtering |
-| **Top Bar** | `src/components/layout/TopBar.tsx` | `FR-AUTH-006`, `NFR-USE-001` | Header bar with notifications badge and user profile menu |
-| **App Layout** | `src/components/layout/AppLayout.tsx` | `NFR-USE-001` | Master scaffold integrating Sidebar, TopBar, and view switcher |
-| **Stat Cards** | `src/components/dashboard/StatCard.tsx` | `FR-ADMIN-001` | 4 metric overview cards matching UI sample |
-| **Recent Activity** | `src/components/dashboard/RecentActivity.tsx` | `FR-ADMIN-001`, `FR-AUD-002` | Live audit activity event feed |
-| **Completion Donut**| `src/components/dashboard/CompletionDonut.tsx` | `FR-ADMIN-003` | SVG test completion donut chart and metric breakdown |
-| **Upcoming Tests** | `src/components/dashboard/UpcomingAssessments.tsx` | `FR-ASMT-006` | Scheduled assessment sessions with calendar badges |
-| **Dashboard View** | `src/components/dashboard/DashboardOverview.tsx` | `FR-ADMIN-001`, `FR-ADMIN-002` | TanStack Query integrated dashboard screen |
-| **Smoke Spec** | `e2e/smoke.spec.ts`, `playwright.config.ts` | `NFR-MNT-004` | Playwright E2E smoke test for complete auth & navigation |
+| Module / Component   | File Path                                                  | SRS Traceability                            | Purpose                                                           |
+| :------------------- | :--------------------------------------------------------- | :------------------------------------------ | :---------------------------------------------------------------- |
+| **API Client**       | `src/api/client.ts`                                        | `SRS 8.3.3`, `Rule 9`, `FR-AUTH-007`        | Authoritative fetch wrapper, 401 refresh, and error serialization |
+| **Auth Store**       | `src/store/authContext.tsx`                                | `FR-AUTH-001`, `FR-AUTH-006`, `FR-AUTH-008` | React Context for session state, MFA tokens, and role persistence |
+| **Toast System**     | `src/lib/toast.ts`, `src/components/ui/ToastContainer.tsx` | `SRS 8.3.3`, `Rule 9`, `NFR-USE-003`        | Correlation ID toast notifications for API error events           |
+| **MSW Mocks**        | `src/mocks/handlers.ts`, `server.ts`, `browser.ts`         | `packages/shared/openapi.yaml`              | MSW v3 mock service worker for isolated development and testing   |
+| **Login Screen**     | `src/components/login/AdminLogin.tsx`                      | `FR-AUTH-001`, `FR-AUTH-008`, `NFR-USE-001` | Split branding login page with 6-digit TOTP MFA verification step |
+| **Password Modal**   | `src/components/login/ForgotPasswordModal.tsx`             | `FR-AUTH-005`                               | Administrator credential recovery policy modal                    |
+| **Sidebar**          | `src/components/layout/Sidebar.tsx`                        | `FR-ADMIN-001`, `FR-ADMIN-009`              | Deep navy sidebar with active tab highlighting and RBAC filtering |
+| **Top Bar**          | `src/components/layout/TopBar.tsx`                         | `FR-AUTH-006`, `NFR-USE-001`                | Header bar with notifications badge and user profile menu         |
+| **App Layout**       | `src/components/layout/AppLayout.tsx`                      | `NFR-USE-001`                               | Master scaffold integrating Sidebar, TopBar, and view switcher    |
+| **Stat Cards**       | `src/components/dashboard/StatCard.tsx`                    | `FR-ADMIN-001`                              | 4 metric overview cards matching UI sample                        |
+| **Recent Activity**  | `src/components/dashboard/RecentActivity.tsx`              | `FR-ADMIN-001`, `FR-AUD-002`                | Live audit activity event feed                                    |
+| **Completion Donut** | `src/components/dashboard/CompletionDonut.tsx`             | `FR-ADMIN-003`                              | SVG test completion donut chart and metric breakdown              |
+| **Upcoming Tests**   | `src/components/dashboard/UpcomingAssessments.tsx`         | `FR-ASMT-006`                               | Scheduled assessment sessions with calendar badges                |
+| **Dashboard View**   | `src/components/dashboard/DashboardOverview.tsx`           | `FR-ADMIN-001`, `FR-ADMIN-002`              | TanStack Query integrated dashboard screen                        |
+| **Smoke Spec**       | `e2e/smoke.spec.ts`, `playwright.config.ts`                | `NFR-MNT-004`                               | Playwright E2E smoke test for complete auth & navigation          |
 
 ---
 
 ## 3. SRS Requirements Covered
 
-| SRS ID | Requirement Title | Implementation Details |
-| :--- | :--- | :--- |
-| `FR-AUTH-001` | Super Admin Login | Email/Password login form with server-side validation against `POST /auth/login` |
-| `FR-AUTH-004` | Rate-Limiting Feedback | Client handling and toast error rendering for `RATE_LIMITED` responses |
-| `FR-AUTH-005` | Password Recovery Policy | SuperAdmin credential recovery workflow modal and policy notice |
-| `FR-AUTH-006` | Session Revocation | Explicit sign-out calling `POST /auth/logout` and clearing local tokens |
-| `FR-AUTH-007` | Session Token Rotation | Automatic token refresh on 401 via `POST /auth/refresh` |
-| `FR-AUTH-008` | Multi-Factor Authentication | 6-digit TOTP verification step verifying against `POST /auth/mfa/verify` |
-| `FR-ADMIN-001` | Administrative Dashboard | 4 stat cards, recent operations feed, completion donut, and upcoming tests |
-| `FR-ADMIN-002` | Active Assessment Monitoring | Active candidates counter (`356`) and live test session monitoring |
-| `FR-ADMIN-003` | Candidate Progress View | Test completion rate breakdown (72% completed, in-progress, not started) |
-| `FR-ADMIN-009` | RBAC Navigation | Role-based tab filtering (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) |
-| `FR-ASMT-006` | Assessment Scheduling | Upcoming assessments list with start/end availability windows |
-| `NFR-USE-001` | Usability & Layout | Responsive desktop layout matching `UI_Sample.jpeg` with navy sidebar |
-| `NFR-USE-003` | Error Messaging | Toast alerts with error codes and copyable UTC correlation IDs |
-| `NFR-COMP-002`| Evergreen Browser Support | Modern standards-compliant React 18, Vite, and TailwindCSS |
-| `NFR-MNT-002`| TypeScript & Linting | Strict TypeScript checks (`tsc --noEmit`) and ESLint with 0 warnings |
-| `NFR-MNT-004`| Automated Testing | Vitest unit/integration suite + Playwright E2E smoke test |
-| `Non-Negotiable Rule 9` | Error Correlation IDs | Every API error extracts and exposes `correlationId` |
+| SRS ID                  | Requirement Title            | Implementation Details                                                           |
+| :---------------------- | :--------------------------- | :------------------------------------------------------------------------------- |
+| `FR-AUTH-001`           | Super Admin Login            | Email/Password login form with server-side validation against `POST /auth/login` |
+| `FR-AUTH-004`           | Rate-Limiting Feedback       | Client handling and toast error rendering for `RATE_LIMITED` responses           |
+| `FR-AUTH-005`           | Password Recovery Policy     | SuperAdmin credential recovery workflow modal and policy notice                  |
+| `FR-AUTH-006`           | Session Revocation           | Explicit sign-out calling `POST /auth/logout` and clearing local tokens          |
+| `FR-AUTH-007`           | Session Token Rotation       | Automatic token refresh on 401 via `POST /auth/refresh`                          |
+| `FR-AUTH-008`           | Multi-Factor Authentication  | 6-digit TOTP verification step verifying against `POST /auth/mfa/verify`         |
+| `FR-ADMIN-001`          | Administrative Dashboard     | 4 stat cards, recent operations feed, completion donut, and upcoming tests       |
+| `FR-ADMIN-002`          | Active Assessment Monitoring | Active candidates counter (`356`) and live test session monitoring               |
+| `FR-ADMIN-003`          | Candidate Progress View      | Test completion rate breakdown (72% completed, in-progress, not started)         |
+| `FR-ADMIN-009`          | RBAC Navigation              | Role-based tab filtering (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`)                |
+| `FR-ASMT-006`           | Assessment Scheduling        | Upcoming assessments list with start/end availability windows                    |
+| `NFR-USE-001`           | Usability & Layout           | Responsive desktop layout matching `UI_Sample.jpeg` with navy sidebar            |
+| `NFR-USE-003`           | Error Messaging              | Toast alerts with error codes and copyable UTC correlation IDs                   |
+| `NFR-COMP-002`          | Evergreen Browser Support    | Modern standards-compliant React 18, Vite, and TailwindCSS                       |
+| `NFR-MNT-002`           | TypeScript & Linting         | Strict TypeScript checks (`tsc --noEmit`) and ESLint with 0 warnings             |
+| `NFR-MNT-004`           | Automated Testing            | Vitest unit/integration suite + Playwright E2E smoke test                        |
+| `Non-Negotiable Rule 9` | Error Correlation IDs        | Every API error extracts and exposes `correlationId`                             |
 
 ---
 

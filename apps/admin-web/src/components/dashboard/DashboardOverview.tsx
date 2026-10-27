@@ -6,7 +6,14 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, ClipboardList, CheckCircle2, UserCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import {
+  Users,
+  ClipboardList,
+  CheckCircle2,
+  UserCheck,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import { dashboardApi } from '../../api/client';
 import { StatCard } from './StatCard';
 import { RecentActivity } from './RecentActivity';
@@ -29,7 +36,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
         {/* Stat cards skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-white rounded-2xl border border-slate-200 p-6 space-y-3">
+            <div
+              key={i}
+              className="h-32 bg-white rounded-2xl border border-slate-200 p-6 space-y-3"
+            >
               <div className="h-4 bg-slate-200 rounded w-1/2" />
               <div className="h-8 bg-slate-200 rounded w-1/3" />
             </div>
@@ -56,7 +66,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ onNavigate
         </div>
         <h3 className="text-lg font-bold text-slate-900">Failed to load dashboard metrics</h3>
         <p className="text-xs text-slate-500 max-w-md mx-auto">
-          {(error as Error)?.message || 'An error occurred while fetching authoritative platform status.'}
+          {(error as Error)?.message ||
+            'An error occurred while fetching authoritative platform status.'}
         </p>
         <button
           type="button"

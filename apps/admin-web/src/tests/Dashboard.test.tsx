@@ -20,7 +20,7 @@ const renderDashboard = () => {
   return render(
     <QueryClientProvider client={queryClient}>
       <DashboardOverview />
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 };
 

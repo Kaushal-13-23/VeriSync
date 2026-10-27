@@ -32,37 +32,43 @@ const TAB_DETAILS: Record<
     title: 'Question Bank Management',
     phase: 'Phase 3 (Content & Assessments)',
     srsIds: 'FR-QB-001 through FR-QB-010',
-    description: 'Question authoring (MCQ, Short Answer, Coding, SQL) and versioned snapshot immutability.',
+    description:
+      'Question authoring (MCQ, Short Answer, Coding, SQL) and versioned snapshot immutability.',
   },
   assessments: {
     title: 'Assessment Configuration',
     phase: 'Phase 3 (Content & Assessments)',
     srsIds: 'FR-ASMT-001 through FR-ASMT-008, Decision 5',
-    description: '4-step assessment creation wizard with per-question deadlines and navigation modes.',
+    description:
+      '4-step assessment creation wizard with per-question deadlines and navigation modes.',
   },
   results: {
     title: 'Assessment Results & Rankings',
     phase: 'Phase 5 (Results & Evaluation)',
     srsIds: 'FR-SCORE-001 through FR-SCORE-010, FR-ADMIN-005',
-    description: 'Candidate score aggregation, rubric-based evaluation queue, and audited score corrections.',
+    description:
+      'Candidate score aggregation, rubric-based evaluation queue, and audited score corrections.',
   },
   reports: {
     title: 'Platform Analytics & Reports',
     phase: 'Phase 5 (Reporting & Analytics)',
     srsIds: 'FR-ADMIN-005, FR-ADMIN-006, FR-ADMIN-007',
-    description: 'Question discrimination indices, completion times, and authorized CSV/Excel export.',
+    description:
+      'Question discrimination indices, completion times, and authorized CSV/Excel export.',
   },
   'audit-logs': {
     title: 'Immutable Audit Trail',
     phase: 'Phase 1 Backend / Phase 2 Web UI',
     srsIds: 'FR-AUD-001 through FR-AUD-007, Rule 7',
-    description: 'Cryptographically ordered audit event search and inspection without secret disclosure.',
+    description:
+      'Cryptographically ordered audit event search and inspection without secret disclosure.',
   },
   settings: {
     title: 'Platform Security Settings',
     phase: 'Phase 6 (Hardening & Lockdown)',
     srsIds: 'FR-CONF-001, FR-CONF-002, FR-LAB-003',
-    description: 'Approved client version thresholds, lockdown policies, and global system configuration.',
+    description:
+      'Approved client version thresholds, lockdown policies, and global system configuration.',
   },
 };
 
@@ -81,9 +87,7 @@ export const TabPlaceholder: React.FC<TabPlaceholderProps> = ({ tab, onReturnToD
         </div>
       </div>
 
-      <p className="text-sm text-slate-600 max-w-xl leading-relaxed">
-        {details.description}
-      </p>
+      <p className="text-sm text-slate-600 max-w-xl leading-relaxed">{details.description}</p>
 
       <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 space-y-1">
         <span className="font-semibold text-slate-700">Authoritative SRS Traceability:</span>

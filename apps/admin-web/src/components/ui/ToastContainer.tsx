@@ -55,7 +55,9 @@ export const ToastContainer: React.FC = () => {
             {icon}
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold tracking-tight leading-5">{toast.title}</h4>
-              <p className="text-xs text-slate-600 mt-0.5 leading-relaxed break-words">{toast.message}</p>
+              <p className="text-xs text-slate-600 mt-0.5 leading-relaxed break-words">
+                {toast.message}
+              </p>
               {toast.correlationId && (
                 <div className="mt-2 flex items-center space-x-1.5 text-[11px] font-mono text-slate-500 bg-white/80 px-2 py-0.5 rounded border border-slate-200 w-fit">
                   <span>cid: {toast.correlationId}</span>

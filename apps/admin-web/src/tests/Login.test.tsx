@@ -12,7 +12,7 @@ const renderLogin = () => {
   return render(
     <AuthProvider>
       <AdminLogin />
-    </AuthProvider>
+    </AuthProvider>,
   );
 };
 
@@ -34,7 +34,7 @@ describe('AdminLogin Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Login$/i }));
 
     expect(
-      await screen.findByText('Please enter your administrator email address or username.')
+      await screen.findByText('Please enter your administrator email address or username.'),
     ).toBeInTheDocument();
   });
 

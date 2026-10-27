@@ -6,7 +6,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin Web Portal Smoke Test', () => {
-  test('[FR-AUTH-001, FR-AUTH-008, FR-ADMIN-001] complete login with TOTP MFA and explore dashboard overview', async ({ page }) => {
+  test('[FR-AUTH-001, FR-AUTH-008, FR-ADMIN-001] complete login with TOTP MFA and explore dashboard overview', async ({
+    page,
+  }) => {
     // 1. Visit root page
     await page.goto('/');
 

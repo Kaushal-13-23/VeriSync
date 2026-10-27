@@ -33,7 +33,7 @@ export const handlers = [
           message: 'Both username/email and password are required.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
 
@@ -45,7 +45,7 @@ export const handlers = [
           message: 'Too many failed login attempts. Account temporarily locked for 15 minutes.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -57,7 +57,7 @@ export const handlers = [
           message: 'Invalid username/candidate ID or password.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -99,7 +99,7 @@ export const handlers = [
           message: 'MFA challenge session expired or invalid.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -111,7 +111,7 @@ export const handlers = [
           message: 'Invalid or expired 6-digit MFA verification code.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -142,7 +142,7 @@ export const handlers = [
           message: 'Refresh token invalid or expired.',
           correlationId: `cid-${Date.now().toString(36)}`,
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 

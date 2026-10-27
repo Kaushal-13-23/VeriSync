@@ -5,7 +5,18 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldCheck, Mail, Lock, KeyRound, ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2, Shield } from 'lucide-react';
+import {
+  ShieldCheck,
+  Mail,
+  Lock,
+  KeyRound,
+  ArrowLeft,
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  Shield,
+} from 'lucide-react';
 import { useAuth } from '../../store/authContext';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 
@@ -115,7 +126,8 @@ export const AdminLogin: React.FC = () => {
           </h2>
 
           <p className="text-sm md:text-base text-slate-300 leading-relaxed">
-            Centralized administration hub providing tamper-evident assessment monitoring, synchronized timing enforcement, and cryptographically verified candidate evaluations.
+            Centralized administration hub providing tamper-evident assessment monitoring,
+            synchronized timing enforcement, and cryptographically verified candidate evaluations.
           </p>
 
           <div className="pt-4 grid grid-cols-2 gap-3 text-xs text-slate-300">
@@ -289,8 +301,8 @@ export const AdminLogin: React.FC = () => {
                   Two-Factor Authentication
                 </h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Enter the 6-digit TOTP verification code from your authenticator device for account{' '}
-                  <span className="font-semibold text-slate-700">{pendingIdentifier}</span>.
+                  Enter the 6-digit TOTP verification code from your authenticator device for
+                  account <span className="font-semibold text-slate-700">{pendingIdentifier}</span>.
                 </p>
               </div>
 

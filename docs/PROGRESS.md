@@ -269,4 +269,3 @@ Status Legend:
   - [/] `FR-ADMIN-002`: Active candidate counter and monitoring overview (Partial - client complete)
   - [/] `FR-ADMIN-003`: Completion donut chart breakdown (Partial - client complete)
   - [/] `FR-ASMT-006`: Scheduled assessments calendar display (Partial - client complete)
-

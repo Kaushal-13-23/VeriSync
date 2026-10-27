@@ -47,7 +47,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
           </div>
           <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Your role (<span className="font-semibold text-slate-800">{user.role}</span>) does not have permission to view this section (SRS Section 8.3.3: FORBIDDEN).
+            Your role (<span className="font-semibold text-slate-800">{user.role}</span>) does not
+            have permission to view this section (SRS Section 8.3.3: FORBIDDEN).
           </p>
           <div className="pt-2">
             <button

@@ -8,11 +8,9 @@ import { http, HttpResponse } from 'msw';
 import { ApiErrorCode } from '@verisync/shared';
 import { DashboardStats } from '../types/api';
 
-const API_PREFIX = '*/api/v1';
-
 export const handlers = [
   // GET /api/v1/health (Rule 9, FR-TIME-001)
-  http.get(`${API_PREFIX}/health`, () => {
+  http.get(/\/api\/v1\/health$/, () => {
     return HttpResponse.json({
       status: 'ok',
       serverTime: new Date().toISOString(),
@@ -21,7 +19,7 @@ export const handlers = [
   }),
 
   // POST /api/v1/auth/login (FR-AUTH-001, FR-AUTH-008)
-  http.post(`${API_PREFIX}/auth/login`, async ({ request }) => {
+  http.post(/\/api\/v1\/auth\/login$/, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as {
       identifier?: string;
       password?: string;
@@ -87,7 +85,7 @@ export const handlers = [
   }),
 
   // POST /api/v1/auth/mfa/verify (FR-AUTH-008)
-  http.post(`${API_PREFIX}/auth/mfa/verify`, async ({ request }) => {
+  http.post(/\/api\/v1\/auth\/mfa\/verify$/, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as {
       mfaToken?: string;
       code?: string;
@@ -131,7 +129,7 @@ export const handlers = [
   }),
 
   // POST /api/v1/auth/refresh (FR-AUTH-007)
-  http.post(`${API_PREFIX}/auth/refresh`, async ({ request }) => {
+  http.post(/\/api\/v1\/auth\/refresh$/, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as {
       refreshToken?: string;
     };
@@ -155,7 +153,7 @@ export const handlers = [
   }),
 
   // POST /api/v1/auth/logout (FR-AUTH-006, FR-AUTH-007)
-  http.post(`${API_PREFIX}/auth/logout`, () => {
+  http.post(/\/api\/v1\/auth\/logout$/, () => {
     return HttpResponse.json({
       success: true,
       message: 'Session revoked successfully.',
@@ -163,7 +161,7 @@ export const handlers = [
   }),
 
   // GET /api/v1/admin/dashboard-stats (FR-ADMIN-001, FR-ADMIN-002, UI_Sample.jpeg)
-  http.get(`${API_PREFIX}/admin/dashboard-stats`, () => {
+  http.get(/\/api\/v1\/admin\/dashboard-stats$/, () => {
     const stats: DashboardStats = {
       totalCandidates: { value: 1248, trend: '+ 12%' },
       totalAssessments: { value: 24, trend: '+ 3' },

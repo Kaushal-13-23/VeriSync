@@ -6,7 +6,15 @@
 import { ApiErrorCode, ApiErrorResponse, LoginApiResponse, TokenPairResponse, DashboardStats, HealthStatusResponse } from '../types/api';
 import { showApiErrorToast } from '../lib/toast';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+export function getBaseUrl(): string {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.includes('null')) {
+    return `${window.location.origin}/api/v1`;
+  }
+  return 'http://localhost:4000/api/v1';
+}
 
 export class ApiError extends Error {
   public code: ApiErrorCode;
@@ -67,7 +75,9 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit & { skipAuth?: boolean; silentError?: boolean } = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const baseUrl = getBaseUrl();
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${normalizedEndpoint}`;
   const headers = new Headers(options.headers || {});
 
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
@@ -82,7 +92,7 @@ export async function apiFetch<T>(
   let response: Response;
   try {
     response = await fetch(url, { ...options, headers });
-  } catch (netErr) {
+  } catch (_netErr) {
     const error = new ApiError({
       httpStatus: 0,
       code: ApiErrorCode.INTERNAL_ERROR,
@@ -106,7 +116,7 @@ export async function apiFetch<T>(
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refreshToken }),

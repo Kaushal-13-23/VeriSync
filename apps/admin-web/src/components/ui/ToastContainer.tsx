@@ -32,18 +32,17 @@ export const ToastContainer: React.FC = () => {
       aria-live="polite"
     >
       {toasts.map((toast) => {
-        let borderClass = 'border-slate-200';
-        let bgClass = 'bg-white';
+        let colorClass = 'border-slate-200 bg-white text-slate-900';
         let icon = <Info className="w-5 h-5 text-blue-500 shrink-0" />;
 
         if (toast.type === 'error') {
-          borderClass = 'border-rose-200 bg-rose-50/90 text-rose-950';
+          colorClass = 'border-rose-200 bg-rose-50/90 text-rose-950';
           icon = <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />;
         } else if (toast.type === 'success') {
-          borderClass = 'border-emerald-200 bg-emerald-50/90 text-emerald-950';
+          colorClass = 'border-emerald-200 bg-emerald-50/90 text-emerald-950';
           icon = <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />;
         } else if (toast.type === 'warning') {
-          borderClass = 'border-amber-200 bg-amber-50/90 text-amber-950';
+          colorClass = 'border-amber-200 bg-amber-50/90 text-amber-950';
           icon = <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />;
         }
 
@@ -51,7 +50,7 @@ export const ToastContainer: React.FC = () => {
           <div
             key={toast.id}
             role="alert"
-            className={`pointer-events-auto rounded-xl border p-4 shadow-lg transition-all duration-200 flex items-start space-x-3 backdrop-blur-sm ${borderClass} ${bgClass}`}
+            className={`pointer-events-auto rounded-xl border p-4 shadow-lg transition-all duration-200 flex items-start space-x-3 backdrop-blur-sm ${colorClass}`}
           >
             {icon}
             <div className="flex-1 min-w-0">

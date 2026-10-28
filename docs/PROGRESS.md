@@ -14,14 +14,14 @@ Status Legend:
 
 ### 5.1 Authentication and Account Management (FR-AUTH)
 
-- [ ] `FR-AUTH-001`: Secure Super Admin login with server-side credential validation (Must)
+- [/] `FR-AUTH-001`: Secure Super Admin login with server-side credential validation (Must)
 - [ ] `FR-AUTH-002`: Candidate login requiring administrator-issued credentials; no self-registration (Must)
 - [ ] `FR-AUTH-003`: Passwords stored using Argon2id; no plaintext passwords in DB or logs (Must)
-- [ ] `FR-AUTH-004`: Rate-limiting on login endpoints with temporary lockout on repeated failures (Must)
-- [ ] `FR-AUTH-005`: Super Admin initiated candidate password reset workflow without exposing old password (Must)
-- [ ] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Must)
-- [ ] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
-- [ ] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
+- [/] `FR-AUTH-004`: Rate-limiting on login endpoints with temporary lockout on repeated failures (Must)
+- [/] `FR-AUTH-005`: Super Admin initiated candidate password reset workflow without exposing old password (Must)
+- [/] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Must)
+- [/] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
+- [/] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
 - [ ] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Must)
 - [ ] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
 
@@ -55,7 +55,7 @@ Status Legend:
 - [ ] `FR-ASMT-003`: Assessment editing before candidate commencement with versioned snapshot on publish (Must)
 - [ ] `FR-ASMT-004`: Validation ensuring sum of question limits or individual limits do not exceed overall duration (Must)
 - [ ] `FR-ASMT-005`: Assessment status state machine: Draft, Scheduled, Active, Completed, Suspended, Archived (Must)
-- [ ] `FR-ASMT-006`: Assessment scheduling with enforced start/end availability windows (Must)
+- [/] `FR-ASMT-006`: Assessment scheduling with enforced start/end availability windows (Must)
 - [ ] `FR-ASMT-007`: Assessment attempt limit enforcement per candidate (default: 1) (Must)
 - [ ] `FR-ASMT-008`: Result visibility policy configuration (immediate, scheduled, or administrator release) (Must)
 
@@ -146,15 +146,15 @@ Status Legend:
 
 ### 5.12 Administration and Monitoring (FR-ADMIN)
 
-- [ ] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must)
-- [ ] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
-- [ ] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
+- [x] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must)
+- [/] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
+- [/] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
 - [ ] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must)
 - [ ] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
 - [ ] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
 - [ ] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
 - [ ] `FR-ADMIN-008`: Assessment configuration cloning and templating (Should)
-- [ ] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
+- [x] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
 
 ### 5.13 Candidate User Interface (FR-UI)
 
@@ -219,16 +219,16 @@ Status Legend:
 
 ### 6.5 Usability Requirements (NFR-USE)
 
-- [ ] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
+- [x] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
 - [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
-- [ ] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
+- [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
 - [ ] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
 - [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
 - [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
-- [ ] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
+- [x] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
 - [ ] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
@@ -245,3 +245,27 @@ Status Legend:
 - [ ] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
 - [ ] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
 - [ ] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
+
+---
+
+## 7. Developer Implementation Status
+
+### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
+
+- **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3).
+- **Branch**: `phase-1/ashlin-admin-shell`
+- **Phase 1 Completion Status**:
+  - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
+  - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)
+  - [x] `NFR-USE-001`: Navy sidebar and responsive layout matching `UI_Sample.jpeg` (Done)
+  - [x] `NFR-USE-003`: Transparent toast error messaging with correlation IDs (Done)
+  - [x] `NFR-COMP-002`: Evergreen browser compatibility (Chrome, Edge, Firefox) (Done)
+  - [/] `FR-AUTH-001`: Super Admin login screen and client validation (Partial - client complete, awaiting Dev A API merge)
+  - [/] `FR-AUTH-004`: Rate-limiting error toast handling (Partial - client complete)
+  - [/] `FR-AUTH-005`: Password recovery policy modal (Partial - client complete)
+  - [/] `FR-AUTH-006`: Session sign-out and client revocation (Partial - client complete)
+  - [/] `FR-AUTH-007`: Token refresh interceptor and session store (Partial - client complete)
+  - [/] `FR-AUTH-008`: 6-digit TOTP MFA verification screen (Partial - client complete)
+  - [/] `FR-ADMIN-002`: Active candidate counter and monitoring overview (Partial - client complete)
+  - [/] `FR-ADMIN-003`: Completion donut chart breakdown (Partial - client complete)
+  - [/] `FR-ASMT-006`: Scheduled assessments calendar display (Partial - client complete)

@@ -182,3 +182,4 @@ pnpm --filter @verisync/candidate-desktop build
 # 4. Launch Candidate Desktop Client (Electron Development Mode)
 pnpm dev:candidate
 ```
+

@@ -275,3 +275,137 @@ export interface SubmitAnswerResponse {
   };
   serverTime: string; // UTC ISO-8601
 }
+
+/**
+ * Exam Runtime & Session Types (SRS 3.2, 3.3, 3.4, FR-TIME-001..011, FR-ANS-001..009)
+ */
+
+export interface CandidateQuestionOptionDto {
+  id: string;
+  optionText: string;
+  displayOrder: number;
+  // Strict non-negotiable rule 2 & TC-09: zero isCorrect or answer key exposure
+}
+
+export interface CandidateSampleTestCaseDto {
+  id: string;
+  inputData: string;
+  expectedOutput: string;
+  // Hidden test cases are strictly excluded (FR-CODE-004, TC-10)
+}
+
+export interface CandidateQuestionDto {
+  questionAttemptId: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  maximumMarks: number;
+  timeLimitSeconds?: number | null;
+  startedAt?: string | null;
+  deadlineAt: string; // UTC ISO-8601
+  remainingSeconds: number;
+  options?: CandidateQuestionOptionDto[];
+  sampleTestCases?: CandidateSampleTestCaseDto[];
+  draftPayload?: unknown | null;
+}
+
+export type PaletteItemStatus = 'ANSWERED' | 'CURRENT' | 'NOT_ANSWERED';
+
+export interface PaletteItemDto {
+  sequenceNumber: number;
+  questionAttemptId: string;
+  status: PaletteItemStatus;
+}
+
+export interface StartSessionDto {
+  clientVersion: string;
+  deviceId?: string;
+  acknowledgedInstructions: boolean;
+}
+
+export interface StartSessionResponseDto {
+  sessionId: string;
+  assignmentId: string;
+  attemptNumber: number;
+  startedAt: string;
+  overallDeadline: string;
+  overallRemainingSeconds: number;
+  currentQuestion: CandidateQuestionDto;
+  palette: PaletteItemDto[];
+  serverTime: string;
+}
+
+export interface SessionStatusDto {
+  sessionId: string;
+  sessionStatus: SessionState;
+  startedAt: string;
+  overallDeadline: string;
+  overallRemainingSeconds: number;
+  currentQuestion?: CandidateQuestionDto | null;
+  palette: PaletteItemDto[];
+  serverTime: string;
+}
+
+export interface SubmitAnswerDto {
+  questionAttemptId: string;
+  answer: unknown;
+}
+
+export interface SubmitAnswerAckDto {
+  status: 'accepted';
+  questionAttemptId: string;
+  submittedAt: string;
+  next?: {
+    questionAttemptId: string;
+    sequenceNumber: number;
+    deadlineAt: string;
+  } | null;
+  serverTime: string;
+}
+
+export interface SaveDraftDto {
+  questionAttemptId: string;
+  draftPayload: unknown;
+}
+
+export interface FinalSubmitResponseDto {
+  status: 'submitted';
+  sessionId: string;
+  candidateIdentifier: string;
+  assessmentTitle: string;
+  totalQuestions: number;
+  answeredCount: number;
+  submittedAt: string;
+  serverTime: string;
+}
+
+export type AdminSessionOverrideAction = 'EXTEND' | 'REOPEN' | 'PAUSE' | 'RESUME' | 'CANCEL';
+
+export interface AdminSessionOverrideDto {
+  action: AdminSessionOverrideAction;
+  reason: string;
+  extensionMinutes?: number;
+}
+
+export interface AdminSessionOverrideResponseDto {
+  sessionId: string;
+  previousStatus: SessionState;
+  newStatus: SessionState;
+  overallDeadline: string;
+  overrideReason: string;
+  performedBy: string;
+  serverTime: string;
+}
+
+export interface SessionHeartbeatDto {
+  deviceId?: string;
+  clientVersion?: string;
+}
+
+export interface SessionHeartbeatResponseDto {
+  status: 'ok';
+  sessionStatus: SessionState;
+  serverTime: string;
+}

@@ -303,6 +303,7 @@ model AssessmentSession {
   overallDeadline DateTime?         @map("overall_deadline")
   sessionStatus   SessionState      @default(NOT_STARTED) @map("session_status")
   submittedAt     DateTime?         @map("submitted_at")
+  lastHeartbeatAt DateTime?         @map("last_heartbeat_at")
   clientVersion   String?           @map("client_version")
   deviceId        String?           @map("device_id")
   createdAt       DateTime          @default(now()) @map("created_at")
@@ -330,6 +331,7 @@ model QuestionAttempt {
   submittedAt          DateTime?          @map("submitted_at")
   attemptStatus        AttemptState       @default(PENDING) @map("attempt_status")
   awardedMarks         Decimal?           @map("awarded_marks") @db.Decimal(5, 2)
+  draftPayload         Json?              @map("draft_payload")
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
 

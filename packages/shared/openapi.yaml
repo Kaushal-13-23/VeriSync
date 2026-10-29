@@ -578,6 +578,237 @@ paths:
                 items:
                   $ref: '#/components/schemas/CandidateAssignedAssessment'
 
+  /candidate/assessments/{id}/start:
+    post:
+      summary: Start Assessment Session
+      description: Candidate starts assigned assessment after reading and acknowledging instructions (UC-08, FR-UI-002, BR-007, TC-15, TC-16). Validates eligibility, attempt count, approved client version, and device registration.
+      operationId: startAssessmentSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientVersion
+                - acknowledgedInstructions
+              properties:
+                clientVersion:
+                  type: string
+                  example: '1.0.0'
+                deviceId:
+                  type: string
+                  example: 'DEV-LAB-01'
+                acknowledgedInstructions:
+                  type: boolean
+                  example: true
+      responses:
+        '201':
+          description: Session started; first question attempt activated with authoritative deadline.
+        '403':
+          description: Not eligible (outside window, attempts used, or assignment revoked).
+        '409':
+          description: An active session already exists for this assignment (BR-007, TC-15).
+        '426':
+          description: Unsupported client version (FR-LAB-003, TC-16).
+
+  /candidate/sessions/{id}/current-question:
+    get:
+      summary: Get Active Question & Deadline
+      description: Returns candidate's currently active question in sequential mode with server-authoritative deadline. Zero answer keys or hidden test cases returned (FR-UI-003, TC-09).
+      operationId: getCurrentQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active question details and authoritative deadline.
+        '403':
+          description: Access denied to other candidate's session (TC-08).
+        '409':
+          description: Session is not in ACTIVE state.
+
+  /candidate/sessions/{id}/status:
+    get:
+      summary: Authoritative Session Status & Remaining Time
+      description: Returns authoritative server clock, overall remaining seconds, current question remaining seconds, and palette status (FR-TIME-008, FR-UI-004). Disconnected sessions automatically transition back to ACTIVE without pausing deadlines (BR-010, TC-07).
+      operationId: getSessionStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authoritative session state and timing.
+
+  /candidate/sessions/{id}/heartbeat:
+    post:
+      summary: Candidate Session Heartbeat
+      description: Periodic keepalive updating device presence and detecting interruptions. Deadlines never pause during interruptions (BR-010, UC-12).
+      operationId: sendSessionHeartbeat
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                clientVersion:
+                  type: string
+      responses:
+        '200':
+          description: Heartbeat acknowledged.
+
+  /candidate/sessions/{id}/answers:
+    post:
+      summary: Submit Question Answer
+      description: Submit answer for candidate's currently active question attempt with client-generated Idempotency-Key. Late submissions rejected with 409 QUESTION_EXPIRED (FR-ANS-001..009, FR-TIME-001..011, TC-01..05).
+      operationId: submitAnswer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - answer
+              properties:
+                questionAttemptId:
+                  type: string
+                answer:
+                  type: object
+      responses:
+        '200':
+          description: Answer already processed (duplicate request with original ack) or accepted.
+        '201':
+          description: Answer accepted, persisted durably, and next question activated.
+        '409':
+          description: Question expired (QUESTION_EXPIRED) or invalid state (INVALID_STATE).
+
+  /candidate/sessions/{id}/draft:
+    put:
+      summary: Autosave Draft Response
+      description: Autosaves candidate response draft without extending deadlines or submitting (FR-ANS-005).
+      operationId: saveSessionDraft
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - draftPayload
+              properties:
+                questionAttemptId:
+                  type: string
+                draftPayload:
+                  type: object
+      responses:
+        '200':
+          description: Draft persisted.
+
+  /candidate/sessions/{id}/final-submit:
+    post:
+      summary: Final Assessment Submission
+      description: Explicit final test submission. Finalizes active attempt, marks session SUBMITTED, and locks out further edits (FR-ANS-008, UC-13, Decision 4).
+      operationId: finalSubmitSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assessment finalized and submitted.
+
+  /admin/sessions/{id}/override:
+    post:
+      summary: Admin Session Override
+      description: SuperAdmin session override (EXTEND, REOPEN, PAUSE, RESUME, CANCEL) requiring a mandatory reason, fully audited (BR-012, UC-12, FR-TIME-011).
+      operationId: overrideSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - reason
+              properties:
+                action:
+                  type: string
+                  enum: [EXTEND, REOPEN, PAUSE, RESUME, CANCEL]
+                reason:
+                  type: string
+                extensionMinutes:
+                  type: integer
+      responses:
+        '200':
+          description: Override executed and audited.
+
 components:
   securitySchemes:
     BearerAuth:

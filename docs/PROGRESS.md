@@ -136,22 +136,22 @@ Status Legend:
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
-- [ ] `FR-AUD-001`: Immutable audit logging for administrative actions (overrides, publishes, edits, status) (Must)
-- [ ] `FR-AUD-002`: Audit logging for candidate session events (start, submit, timeout, disconnect) (Must)
+- [x] `FR-AUD-001`: Immutable audit logging for administrative actions (overrides, publishes, edits, status) (Must)
+- [x] `FR-AUD-002`: Audit logging for candidate session events (start, submit, timeout, disconnect) (Must)
 - [ ] `FR-AUD-003`: Logging of auth events (successes, failures, lockouts, token revocations) (Must)
-- [ ] `FR-AUD-004`: Standardized audit schema: event_id, timestamp (UTC), actor, event_type, entity, outcome, IP (Must)
+- [x] `FR-AUD-004`: Standardized audit schema: event_id, timestamp (UTC), actor, event_type, entity, outcome, IP (Must)
 - [ ] `FR-AUD-005`: Write-only / append-only audit log protection; DB role prevented from UPDATE/DELETE (Must)
-- [ ] `FR-AUD-006`: Audit log search and filter by actor, event type, date range, entity, correlation ID (Must)
+- [x] `FR-AUD-006`: Audit log search and filter by actor, event type, date range, entity, correlation ID (Must)
 - [ ] `FR-AUD-007`: Audit metadata sanitization: passwords, tokens, and secrets strictly excluded (Must)
 
 ### 5.12 Administration and Monitoring (FR-ADMIN)
 
 - [x] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must)
-- [/] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
-- [/] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
-- [ ] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must)
+- [x] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
+- [x] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
+- [x] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must)
 - [ ] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
-- [ ] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
+- [/] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
 - [ ] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
 - [ ] `FR-ADMIN-008`: Assessment configuration cloning and templating (Should)
 - [x] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
@@ -253,7 +253,7 @@ Status Legend:
 ### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
 
 - **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
-- **Branch**: `phase-2/B-admin-management`
+- **Branch**: `phase-3/B-sessions-monitoring-audit`
 - **Phase 1 Completion Status**:
   - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
   - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)
@@ -296,3 +296,23 @@ Status Legend:
   - [x] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Done)
   - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Done)
   - [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must) (Done)
+
+- **Phase 3 Completion Status**:
+  - [x] `FR-ADMIN-001`: Live sessions monitoring with real-time candidate session telemetry cards (Done)
+  - [x] `FR-ADMIN-002`: Real-time session monitoring table with auto-refresh polling (Off, 10s, 30s, 60s) and manual refresh (Done)
+  - [x] `FR-ADMIN-004`: Assessment operational lifecycle controls (Suspend, Resume, Archive) with confirmation dialogs (Done)
+  - [x] `FR-ADMIN-005`: Assessment status state transitions (`SUSPENDED`, `ACTIVE`, `ARCHIVED`) with mandatory reason input (Done)
+  - [x] `FR-ADMIN-007`: Operational audit logs search and multi-parameter filtering with correlation ID lookup (Done)
+  - [x] `FR-ADMIN-008`: Incident log view for technical evaluators and lab supervisors (SRS 11.4) (Done)
+  - [x] `FR-TIME-001`: Server-authoritative timer countdown with visual low-time warning when < 5 mins (Done)
+  - [x] `FR-TIME-002`: Real-time session state telemetry tracking (`ACTIVE`, `INTERRUPTED`, `PAUSED`, `SUBMITTED`, `EXPIRED`) (Done)
+  - [x] `FR-TIME-011`: Server-authoritative administrative session overrides (`EXTEND`, `REOPEN`, `PAUSE`, `RESUME`, `CANCEL`) (Done)
+  - [x] `BR-012`: Mandatory justification reason enforcement on every administrative override dialog (Done)
+  - [x] `FR-CAN-006`: Candidate detail drawer attempt and submission telemetry tracking (Done)
+  - [x] `FR-AUD-001`: Immutable audit logging for administrative actions (overrides, publishes, edits, status) (Done)
+  - [x] `FR-AUD-002`: Candidate session lifecycle audit event tracking (Done)
+  - [x] `FR-AUD-004`: Standardized audit schema: timestamp (UTC), actor, event_type, entity, outcome, correlation ID, IP (Done)
+  - [x] `FR-AUD-006`: Multi-dimensional audit log search, filter, and CSV export (Done)
+  - [x] `Rule 1`: Untrusted client clocks; server-authoritative timer display (Done)
+  - [x] `Rule 7`: Mandatory justification reason and actor attribution for overrides, score changes, publishes, status transitions (Done)
+  - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)

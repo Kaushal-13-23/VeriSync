@@ -22,6 +22,8 @@ import {
   AssessmentSummaryReport,
   CandidateRankingItem,
   QuestionPerformanceStats,
+  CodingQuestionConfig,
+  SqlQuestionConfig,
 } from '../types/api';
 
 export const handlers = [
@@ -701,6 +703,8 @@ export const handlers = [
           expectedOutput: string;
           visibility: 'SAMPLE' | 'HIDDEN';
         }>) || [],
+      codingConfig: body.codingConfig as CodingQuestionConfig | undefined,
+      sqlConfig: body.sqlConfig as SqlQuestionConfig | undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -1822,6 +1826,64 @@ const mockQuestions: QuestionRecord[] = [
     options: [],
     createdAt: '2026-10-15T15:00:00Z',
     updatedAt: '2026-10-15T15:00:00Z',
+  },
+  {
+    id: 'q-107',
+    questionType: 'CODING' as const,
+    questionText: 'Given an array of integers and a target sum, return indices of the two numbers such that they add up to the target.',
+    codeSnippet: 'def two_sum(nums, target):\n    # Write solution here\n    pass',
+    topic: 'Algorithms',
+    difficulty: 'Medium' as const,
+    maximumMarks: 10,
+    negativeMarks: 0,
+    explanation: 'Use a hash map to look up complements in O(N) time complexity.',
+    status: 'ACTIVE' as const,
+    options: [],
+    codingConfig: {
+      allowedLanguages: ['c', 'cpp', 'java', 'python', 'javascript'],
+      timeLimitMs: 2000,
+      memoryLimitMb: 256,
+      maxSubmissions: 5,
+    },
+    testCases: [
+      {
+        id: 'tc-sample-1',
+        inputData: '2 7 11 15\n9\n',
+        expectedOutput: '0 1',
+        visibility: 'SAMPLE',
+        marks: 0,
+      },
+      {
+        id: 'tc-hidden-1',
+        inputData: '3 2 4\n6\n',
+        expectedOutput: '1 2',
+        visibility: 'HIDDEN',
+        marks: 10,
+      },
+    ],
+    createdAt: '2026-10-20T10:00:00Z',
+    updatedAt: '2026-10-20T10:00:00Z',
+  },
+  {
+    id: 'q-108',
+    questionType: 'SQL' as const,
+    questionText: 'Write a SQL query to list total salary expenditure for each department, ordered by department name ascending.',
+    codeSnippet: 'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
+    topic: 'Databases',
+    difficulty: 'Easy' as const,
+    maximumMarks: 10,
+    negativeMarks: 0,
+    explanation: 'Aggregate using SUM(salary) and GROUP BY department.',
+    status: 'ACTIVE' as const,
+    options: [],
+    sqlConfig: {
+      schemaDdl: 'CREATE TABLE employees (\n  id INT PRIMARY KEY,\n  name TEXT,\n  department TEXT,\n  salary INT\n);',
+      seedDataSql: "INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 90000), (2, 'Bob', 'HR', 60000);",
+      referenceQuery: 'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
+      comparisonMode: 'EXACT_MATCH' as const,
+    },
+    createdAt: '2026-10-21T11:00:00Z',
+    updatedAt: '2026-10-21T11:00:00Z',
   },
 ];
 

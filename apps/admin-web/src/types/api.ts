@@ -195,6 +195,23 @@ export interface QuestionTestCase {
   marks?: number;
 }
 
+export type SupportedLanguage = 'c' | 'cpp' | 'java' | 'python' | 'javascript';
+export type SqlComparisonMode = 'EXACT_MATCH' | 'UNORDERED_MATCH';
+
+export interface CodingQuestionConfig {
+  allowedLanguages: SupportedLanguage[];
+  timeLimitMs: number;
+  memoryLimitMb: number;
+  maxSubmissions?: number;
+}
+
+export interface SqlQuestionConfig {
+  schemaDdl: string;
+  seedDataSql: string;
+  referenceQuery: string;
+  comparisonMode: SqlComparisonMode;
+}
+
 export interface QuestionRecord {
   id: string;
   questionType: QuestionType;
@@ -208,6 +225,8 @@ export interface QuestionRecord {
   status: 'ACTIVE' | 'ARCHIVED';
   options: QuestionOption[];
   testCases?: QuestionTestCase[];
+  codingConfig?: CodingQuestionConfig;
+  sqlConfig?: SqlQuestionConfig;
   createdAt: string;
   updatedAt: string;
 }
@@ -223,6 +242,8 @@ export interface QuestionInput {
   explanation?: string;
   options?: QuestionOption[];
   testCases?: QuestionTestCase[];
+  codingConfig?: CodingQuestionConfig;
+  sqlConfig?: SqlQuestionConfig;
 }
 
 // ==========================================

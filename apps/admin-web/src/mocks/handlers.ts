@@ -6,7 +6,13 @@
 
 import { http, HttpResponse } from 'msw';
 import { ApiErrorCode } from '@verisync/shared';
-import { DashboardStats } from '../types/api';
+import {
+  DashboardStats,
+  CandidateRecord,
+  QuestionRecord,
+  AssessmentRecord,
+  AssessmentStatus,
+} from '../types/api';
 
 export const handlers = [
   // GET /api/v1/health (Rule 9, FR-TIME-001)
@@ -225,4 +231,1023 @@ export const handlers = [
 
     return HttpResponse.json(stats);
   }),
+
+  // ==========================================
+  // CANDIDATES API (FR-CAN-001..007)
+  // ==========================================
+
+  // GET /api/v1/admin/candidates
+  http.get(/\/api\/v1\/admin\/candidates$/, ({ request }) => {
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+    const status = url.searchParams.get('status') || '';
+    const drive = url.searchParams.get('drive') || '';
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '6', 10);
+
+    let filtered = [...mockCandidates];
+
+    if (search) {
+      filtered = filtered.filter(
+        (c) =>
+          c.fullName.toLowerCase().includes(search) ||
+          c.candidateIdentifier.toLowerCase().includes(search) ||
+          c.email.toLowerCase().includes(search) ||
+          c.username.toLowerCase().includes(search),
+      );
+    }
+
+    if (status && status !== 'ALL') {
+      filtered = filtered.filter((c) => c.accountStatus === status);
+    }
+
+    if (drive && drive !== 'ALL') {
+      filtered = filtered.filter((c) => c.recruitmentReference === drive);
+    }
+
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const offset = (page - 1) * limit;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return HttpResponse.json({
+      candidates: paginated,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
+  }),
+
+  // GET /api/v1/admin/candidates/:id
+  http.get(/\/api\/v1\/admin\/candidates\/([^/]+)$/, ({ params }) => {
+    const candidateId = params[0] as string;
+    const candidate = mockCandidates.find(
+      (c) => c.id === candidateId || c.candidateIdentifier === candidateId,
+    );
+
+    if (!candidate) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Candidate with ID ${candidateId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json({
+      ...candidate,
+      loginHistory: [
+        {
+          id: 'log-1',
+          timestamp: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+          ipAddress: '192.168.1.105',
+          userAgent: 'Chrome 122 / Windows 11',
+          status: 'SUCCESS',
+        },
+        {
+          id: 'log-2',
+          timestamp: new Date(Date.now() - 2 * 86400 * 1000).toISOString(),
+          ipAddress: '192.168.1.105',
+          userAgent: 'Chrome 122 / Windows 11',
+          status: 'SUCCESS',
+        },
+      ],
+      assignments: [
+        {
+          assignmentId: 'asgn-01',
+          assessmentId: 'asmt-01',
+          assessmentTitle: 'Frontend Developer Test',
+          roleCategory: 'Frontend Engineering',
+          assignedAt: '2026-10-20T10:00:00Z',
+          scheduleWindow: '24 Oct 2024, 10:00 AM - 12:00 PM',
+          status: 'READY',
+        },
+      ],
+    });
+  }),
+
+  // POST /api/v1/admin/candidates
+  http.post(/\/api\/v1\/admin\/candidates$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    const candidateIdentifier =
+      (body.candidateIdentifier as string) ||
+      `CAN-2026-${String(mockCandidates.length + 1).padStart(3, '0')}`;
+    const fullName = (body.fullName as string) || '';
+    const username =
+      (body.username as string) || candidateIdentifier.toLowerCase().replace('-', '.');
+    const email = (body.email as string) || '';
+
+    if (!fullName || !email) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message: 'Full name and email are required.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const tempPassword = `Temp@${Math.random().toString(36).slice(-6)}!`;
+
+    const newCandidate = {
+      id: `can-${Date.now().toString(36)}`,
+      candidateIdentifier,
+      fullName,
+      username,
+      email,
+      phone: (body.phone as string) || null,
+      institution: (body.institution as string) || 'National Institute of Technology',
+      qualification: (body.qualification as string) || 'B.Tech CS',
+      graduationYear: Number(body.graduationYear) || 2026,
+      recruitmentReference: (body.recruitmentReference as string) || 'Campus 2026',
+      accountStatus: 'ACTIVE' as const,
+      testsAssignedCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockCandidates.unshift(newCandidate);
+
+    return HttpResponse.json(
+      {
+        candidate: newCandidate,
+        temporaryPassword: tempPassword,
+      },
+      { status: 201 },
+    );
+  }),
+
+  // PUT /api/v1/admin/candidates/:id
+  http.put(/\/api\/v1\/admin\/candidates\/([^/]+)$/, async ({ params, request }) => {
+    const candidateId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const index = mockCandidates.findIndex((c) => c.id === candidateId);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Candidate ${candidateId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockCandidates[index] = {
+      ...mockCandidates[index],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({ candidate: mockCandidates[index] });
+  }),
+
+  // PATCH /api/v1/admin/candidates/:id/status
+  http.patch(/\/api\/v1\/admin\/candidates\/([^/]+)\/status$/, async ({ params, request }) => {
+    const candidateId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as {
+      status?: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+    };
+    const index = mockCandidates.findIndex((c) => c.id === candidateId);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Candidate ${candidateId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockCandidates[index].accountStatus = body.status || 'INACTIVE';
+    mockCandidates[index].updatedAt = new Date().toISOString();
+
+    return HttpResponse.json({ success: true, candidate: mockCandidates[index] });
+  }),
+
+  // POST /api/v1/admin/candidates/:id/reset-password
+  http.post(/\/api\/v1\/admin\/candidates\/([^/]+)\/reset-password$/, ({ params }) => {
+    const candidateId = params[0] as string;
+    const candidate = mockCandidates.find((c) => c.id === candidateId);
+
+    if (!candidate) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Candidate ${candidateId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    const tempPassword = `Reset@${Math.random().toString(36).slice(-6)}#`;
+    return HttpResponse.json({
+      success: true,
+      temporaryPassword: tempPassword,
+      message: 'Temporary password generated successfully.',
+    });
+  }),
+
+  // POST /api/v1/admin/candidates/import-csv
+  http.post(/\/api\/v1\/admin\/candidates\/import-csv$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as { csvData?: string };
+    const lines = (body.csvData || '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (lines.length <= 1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message: 'CSV file is empty or missing headers.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const headers = lines[0]
+      .toLowerCase()
+      .split(',')
+      .map((h) => h.trim().replace(/^["']|["']$/g, ''));
+    const idIdx = headers.findIndex((h) => h.includes('identifier') || h === 'id');
+    const nameIdx = headers.findIndex((h) => h.includes('name'));
+    const emailIdx = headers.findIndex((h) => h.includes('email'));
+    const phoneIdx = headers.findIndex((h) => h.includes('phone'));
+    const instIdx = headers.findIndex((h) => h.includes('inst'));
+    const qualIdx = headers.findIndex((h) => h.includes('qual'));
+    const gradIdx = headers.findIndex((h) => h.includes('grad') || h.includes('year'));
+    const driveIdx = headers.findIndex(
+      (h) => h.includes('drive') || h.includes('reference') || h.includes('ref'),
+    );
+
+    const rows = lines.slice(1).filter((l) => l.trim().length > 0);
+    const errors: Array<{ row: number; candidateId?: string; field?: string; error: string }> = [];
+    const imported: typeof mockCandidates = [];
+
+    rows.forEach((line, idx) => {
+      const cols = line.split(',').map((c) => c.trim().replace(/^["']|["']$/g, ''));
+      const rowNum = idx + 2;
+
+      const identifier = idIdx >= 0 ? cols[idIdx] : cols[0];
+      const fullName = nameIdx >= 0 ? cols[nameIdx] : cols[1];
+      const email = emailIdx >= 0 ? cols[emailIdx] : cols[2];
+      const phone = phoneIdx >= 0 ? cols[phoneIdx] : null;
+      const institution = instIdx >= 0 ? cols[instIdx] : 'Engineering Institute';
+      const qualification = qualIdx >= 0 ? cols[qualIdx] : 'B.Tech';
+      const gradYear = gradIdx >= 0 ? cols[gradIdx] : '2026';
+      const drive = driveIdx >= 0 ? cols[driveIdx] : 'Campus Drive 2026';
+
+      if (!fullName) {
+        errors.push({
+          row: rowNum,
+          candidateId: identifier || `ROW-${rowNum}`,
+          field: 'fullName',
+          error: 'Full name is required',
+        });
+        return;
+      }
+      if (!email || !email.includes('@')) {
+        errors.push({
+          row: rowNum,
+          candidateId: identifier || `ROW-${rowNum}`,
+          field: 'email',
+          error: 'Valid email is required',
+        });
+        return;
+      }
+
+      const newCan = {
+        id: `can-csv-${Date.now().toString(36)}-${idx}`,
+        candidateIdentifier:
+          identifier ||
+          `CAN-2026-${String(mockCandidates.length + imported.length + 1).padStart(3, '0')}`,
+        fullName,
+        username: (identifier || fullName).toLowerCase().replace(/\s+/g, '.'),
+        email,
+        phone,
+        institution,
+        qualification,
+        graduationYear: parseInt(gradYear, 10) || 2026,
+        recruitmentReference: drive,
+        accountStatus: 'ACTIVE' as const,
+        testsAssignedCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      imported.push(newCan);
+    });
+
+    mockCandidates.unshift(...imported);
+
+    return HttpResponse.json({
+      totalRows: rows.length,
+      importedCount: imported.length,
+      errorCount: errors.length,
+      errors,
+      importedCandidates: imported,
+    });
+  }),
+
+  // POST /api/v1/admin/candidates/assign
+  http.post(/\/api\/v1\/admin\/candidates\/assign$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      assessmentId?: string;
+      candidateIds?: string[];
+      groupFilter?: { recruitmentReference?: string };
+    };
+
+    let targetCount = body.candidateIds?.length || 0;
+    if (body.groupFilter?.recruitmentReference) {
+      targetCount = mockCandidates.filter(
+        (c) => c.recruitmentReference === body.groupFilter?.recruitmentReference,
+      ).length;
+    }
+
+    mockCandidates.forEach((c) => {
+      if (
+        body.candidateIds?.includes(c.id) ||
+        (body.groupFilter && c.recruitmentReference === body.groupFilter.recruitmentReference)
+      ) {
+        c.testsAssignedCount += 1;
+      }
+    });
+
+    return HttpResponse.json({
+      success: true,
+      assignedCount: targetCount,
+      alreadyAssignedCount: 0,
+      message: `Successfully assigned assessment to ${targetCount} candidate(s).`,
+    });
+  }),
+
+  // POST /api/v1/admin/candidates/unassign
+  http.post(/\/api\/v1\/admin\/candidates\/unassign$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as { candidateId?: string };
+    const cand = mockCandidates.find((c) => c.id === body.candidateId);
+    if (cand && cand.testsAssignedCount > 0) {
+      cand.testsAssignedCount -= 1;
+    }
+    return HttpResponse.json({
+      success: true,
+      message: 'Candidate assignment successfully revoked.',
+    });
+  }),
+
+  // ==========================================
+  // QUESTION BANK API (FR-QB-001..010)
+  // ==========================================
+
+  // GET /api/v1/admin/questions
+  http.get(/\/api\/v1\/admin\/questions$/, ({ request }) => {
+    const url = new URL(request.url);
+    const topic = url.searchParams.get('topic') || '';
+    const difficulty = url.searchParams.get('difficulty') || '';
+    const type = url.searchParams.get('type') || '';
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+
+    let list = [...mockQuestions];
+
+    if (topic && topic !== 'ALL') {
+      list = list.filter((q) => q.topic.toLowerCase() === topic.toLowerCase());
+    }
+    if (difficulty && difficulty !== 'ALL') {
+      list = list.filter((q) => q.difficulty.toLowerCase() === difficulty.toLowerCase());
+    }
+    if (type && type !== 'ALL') {
+      list = list.filter((q) => q.questionType === type);
+    }
+    if (search) {
+      list = list.filter(
+        (q) =>
+          q.questionText.toLowerCase().includes(search) || q.topic.toLowerCase().includes(search),
+      );
+    }
+
+    return HttpResponse.json({
+      questions: list,
+      total: list.length,
+    });
+  }),
+
+  // GET /api/v1/admin/questions/:id
+  http.get(/\/api\/v1\/admin\/questions\/([^/]+)$/, ({ params }) => {
+    const qId = params[0] as string;
+    const question = mockQuestions.find((q) => q.id === qId);
+
+    if (!question) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Question ${qId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(question);
+  }),
+
+  // POST /api/v1/admin/questions
+  http.post(/\/api\/v1\/admin\/questions$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    const newQuestion = {
+      id: `q-${Date.now().toString(36)}`,
+      questionType: (body.questionType as string) || 'MCQ_SINGLE',
+      questionText: (body.questionText as string) || '',
+      codeSnippet: (body.codeSnippet as string) || null,
+      topic: (body.topic as string) || 'General',
+      difficulty: ((body.difficulty as string) || 'Medium') as 'Easy' | 'Medium' | 'Hard',
+      maximumMarks: Number(body.maximumMarks) || 5,
+      negativeMarks: Number(body.negativeMarks) || 0,
+      explanation: (body.explanation as string) || null,
+      status: 'ACTIVE' as const,
+      options:
+        (body.options as Array<{ optionText: string; displayOrder: number; isCorrect: boolean }>) ||
+        [],
+      testCases:
+        (body.testCases as Array<{
+          inputData: string;
+          expectedOutput: string;
+          visibility: 'SAMPLE' | 'HIDDEN';
+        }>) || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockQuestions.unshift(newQuestion as any);
+
+    return HttpResponse.json(newQuestion, { status: 201 });
+  }),
+
+  // PUT /api/v1/admin/questions/:id
+  http.put(/\/api\/v1\/admin\/questions\/([^/]+)$/, async ({ params, request }) => {
+    const qId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const idx = mockQuestions.findIndex((q) => q.id === qId);
+
+    if (idx === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Question ${qId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockQuestions[idx] = {
+      ...mockQuestions[idx],
+      ...body,
+      updatedAt: new Date().toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    return HttpResponse.json(mockQuestions[idx]);
+  }),
+
+  // PATCH /api/v1/admin/questions/:id/status
+  http.patch(/\/api\/v1\/admin\/questions\/([^/]+)\/status$/, async ({ params, request }) => {
+    const qId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as { status?: 'ACTIVE' | 'ARCHIVED' };
+    const idx = mockQuestions.findIndex((q) => q.id === qId);
+
+    if (idx === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Question ${qId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockQuestions[idx].status = (body.status as 'ACTIVE' | 'ARCHIVED') || 'ARCHIVED';
+    return HttpResponse.json({ success: true, question: mockQuestions[idx] });
+  }),
+
+  // ==========================================
+  // ASSESSMENTS API (FR-ASMT-001..008)
+  // ==========================================
+
+  // GET /api/v1/admin/assessments
+  http.get(/\/api\/v1\/admin\/assessments$/, ({ request }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status') || '';
+    const roleCategory = url.searchParams.get('roleCategory') || '';
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+
+    let list = [...mockAssessments];
+
+    if (status && status !== 'ALL') {
+      list = list.filter((a) => a.status === status);
+    }
+    if (roleCategory && roleCategory !== 'ALL') {
+      list = list.filter((a) => a.roleCategory.toLowerCase().includes(roleCategory.toLowerCase()));
+    }
+    if (search) {
+      list = list.filter(
+        (a) =>
+          a.title.toLowerCase().includes(search) || a.roleCategory.toLowerCase().includes(search),
+      );
+    }
+
+    return HttpResponse.json({
+      assessments: list,
+      total: list.length,
+    });
+  }),
+
+  // GET /api/v1/admin/assessments/:id
+  http.get(/\/api\/v1\/admin\/assessments\/([^/]+)$/, ({ params }) => {
+    const asmtId = params[0] as string;
+    const asmt = mockAssessments.find((a) => a.id === asmtId);
+
+    if (!asmt) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Assessment ${asmtId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(asmt);
+  }),
+
+  // POST /api/v1/admin/assessments
+  http.post(/\/api\/v1\/admin\/assessments$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    const newAsmt = {
+      id: `asmt-${Date.now().toString(36)}`,
+      title: (body.title as string) || 'Untitled Assessment',
+      description: (body.description as string) || null,
+      instructions: (body.instructions as string) || null,
+      roleCategory: (body.roleCategory as string) || 'Software Engineering',
+      overallDuration: Number(body.overallDuration) || 60,
+      totalMarks: Number(body.totalMarks) || 100,
+      passingMarks: Number(body.passingMarks) || 40,
+      negativeMarking: Boolean(body.negativeMarking),
+      negativeMarkValue: Number(body.negativeMarkValue) || 0,
+      randomizeQuestions: Boolean(body.randomizeQuestions),
+      randomizeOptions: Boolean(body.randomizeOptions),
+      navigationMode: (body.navigationMode as 'SEQUENTIAL' | 'FREE') || 'SEQUENTIAL',
+      resultVisibility:
+        (body.resultVisibility as 'IMMEDIATE' | 'SCHEDULED' | 'ADMIN_RELEASE') || 'ADMIN_RELEASE',
+      startAt: (body.startAt as string) || new Date().toISOString(),
+      endAt: (body.endAt as string) || new Date(Date.now() + 86400 * 1000).toISOString(),
+      attemptLimit: Number(body.attemptLimit) || 1,
+      status: 'DRAFT' as const,
+      questionsCount: Array.isArray(body.questions) ? body.questions.length : 0,
+      assignedCandidatesCount: 0,
+      questions: Array.isArray(body.questions) ? body.questions : [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockAssessments.unshift(newAsmt as any);
+
+    return HttpResponse.json(newAsmt, { status: 201 });
+  }),
+
+  // PUT /api/v1/admin/assessments/:id
+  http.put(/\/api\/v1\/admin\/assessments\/([^/]+)$/, async ({ params, request }) => {
+    const asmtId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const idx = mockAssessments.findIndex((a) => a.id === asmtId);
+
+    if (idx === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Assessment ${asmtId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockAssessments[idx] = {
+      ...mockAssessments[idx],
+      ...body,
+      updatedAt: new Date().toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    return HttpResponse.json(mockAssessments[idx]);
+  }),
+
+  // POST /api/v1/admin/assessments/:id/questions
+  http.post(/\/api\/v1\/admin\/assessments\/([^/]+)\/questions$/, async ({ params, request }) => {
+    const asmtId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as { questions?: Array<unknown> };
+    const asmt = mockAssessments.find((a) => a.id === asmtId);
+
+    if (!asmt) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Assessment ${asmtId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    asmt.questions = (body.questions as any) || [];
+    asmt.questionsCount = asmt.questions?.length || 0;
+
+    return HttpResponse.json({ success: true, mappedCount: asmt.questionsCount });
+  }),
+
+  // POST /api/v1/admin/assessments/:id/publish
+  http.post(/\/api\/v1\/admin\/assessments\/([^/]+)\/publish$/, ({ params }) => {
+    const asmtId = params[0] as string;
+    const asmt = mockAssessments.find((a) => a.id === asmtId);
+
+    if (!asmt) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Assessment ${asmtId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    asmt.status = 'SCHEDULED';
+    asmt.updatedAt = new Date().toISOString();
+
+    return HttpResponse.json({
+      success: true,
+      assessment: asmt,
+      snapshotVersion: 1,
+    });
+  }),
+
+  // PATCH /api/v1/admin/assessments/:id/status
+  http.patch(/\/api\/v1\/admin\/assessments\/([^/]+)\/status$/, async ({ params, request }) => {
+    const asmtId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as {
+      status?: 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'SUSPENDED' | 'ARCHIVED';
+    };
+    const asmt = mockAssessments.find((a) => a.id === asmtId);
+
+    if (!asmt) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Assessment ${asmtId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    if (body.status) {
+      asmt.status = body.status as AssessmentStatus;
+    }
+
+    return HttpResponse.json({ success: true, assessment: asmt });
+  }),
+];
+
+// ==========================================
+// In-Memory Seed State for MSW Mocks
+// ==========================================
+
+const mockCandidates: CandidateRecord[] = [
+  {
+    id: 'can-1',
+    candidateIdentifier: 'CAN-2026-001',
+    fullName: 'Rohan Mehta',
+    username: 'rohan.mehta',
+    email: 'rohan.mehta@nitk.edu.in',
+    phone: '+91 9876543210',
+    institution: 'National Institute of Technology Karnataka',
+    qualification: 'B.Tech Computer Science',
+    graduationYear: 2026,
+    recruitmentReference: 'Autumn Campus 2026',
+    accountStatus: 'ACTIVE' as const,
+    testsAssignedCount: 2,
+    createdAt: '2026-10-15T09:30:00Z',
+    updatedAt: '2026-10-15T09:30:00Z',
+  },
+  {
+    id: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    fullName: 'Aisha Khan',
+    username: 'aisha.khan',
+    email: 'aisha.khan@iitb.ac.in',
+    phone: '+91 9811223344',
+    institution: 'Indian Institute of Technology Bombay',
+    qualification: 'B.Tech Electrical & CS',
+    graduationYear: 2026,
+    recruitmentReference: 'Autumn Campus 2026',
+    accountStatus: 'ACTIVE' as const,
+    testsAssignedCount: 1,
+    createdAt: '2026-10-16T10:15:00Z',
+    updatedAt: '2026-10-16T10:15:00Z',
+  },
+  {
+    id: 'can-3',
+    candidateIdentifier: 'CAN-2026-003',
+    fullName: 'Priya Sharma',
+    username: 'priya.sharma',
+    email: 'priya.sharma@bits-pilani.ac.in',
+    phone: '+91 9722334455',
+    institution: 'BITS Pilani',
+    qualification: 'B.E. Information Systems',
+    graduationYear: 2026,
+    recruitmentReference: 'Autumn Campus 2026',
+    accountStatus: 'ACTIVE' as const,
+    testsAssignedCount: 3,
+    createdAt: '2026-10-17T11:45:00Z',
+    updatedAt: '2026-10-17T11:45:00Z',
+  },
+  {
+    id: 'can-4',
+    candidateIdentifier: 'CAN-2026-004',
+    fullName: 'Vikram Patel',
+    username: 'vikram.patel',
+    email: 'vikram.patel@iiit.ac.in',
+    phone: '+91 9633445566',
+    institution: 'IIIT Hyderabad',
+    qualification: 'B.Tech CSE',
+    graduationYear: 2026,
+    recruitmentReference: 'Lateral Drive 2026',
+    accountStatus: 'INACTIVE' as const,
+    testsAssignedCount: 0,
+    createdAt: '2026-10-18T14:20:00Z',
+    updatedAt: '2026-10-18T14:20:00Z',
+  },
+  {
+    id: 'can-5',
+    candidateIdentifier: 'CAN-2026-005',
+    fullName: 'Ananya Reddy',
+    username: 'ananya.reddy',
+    email: 'ananya.reddy@dtu.ac.in',
+    phone: '+91 9544556677',
+    institution: 'Delhi Technological University',
+    qualification: 'B.Tech Software Engineering',
+    graduationYear: 2026,
+    recruitmentReference: 'Autumn Campus 2026',
+    accountStatus: 'ACTIVE' as const,
+    testsAssignedCount: 1,
+    createdAt: '2026-10-19T16:00:00Z',
+    updatedAt: '2026-10-19T16:00:00Z',
+  },
+  {
+    id: 'can-6',
+    candidateIdentifier: 'CAN-2026-006',
+    fullName: 'Suresh Nair',
+    username: 'suresh.nair',
+    email: 'suresh.nair@coep.ac.in',
+    phone: '+91 9455667788',
+    institution: 'COEP Technological University',
+    qualification: 'B.Tech IT',
+    graduationYear: 2025,
+    recruitmentReference: 'Lateral Drive 2026',
+    accountStatus: 'LOCKED' as const,
+    testsAssignedCount: 0,
+    createdAt: '2026-10-20T08:50:00Z',
+    updatedAt: '2026-10-20T08:50:00Z',
+  },
+  {
+    id: 'can-7',
+    candidateIdentifier: 'CAN-2026-007',
+    fullName: 'Divya Iyer',
+    username: 'divya.iyer',
+    email: 'divya.iyer@annauniv.edu',
+    phone: '+91 9366778899',
+    institution: 'Anna University',
+    qualification: 'B.Tech Computer Science',
+    graduationYear: 2026,
+    recruitmentReference: 'Autumn Campus 2026',
+    accountStatus: 'ACTIVE' as const,
+    testsAssignedCount: 1,
+    createdAt: '2026-10-21T12:00:00Z',
+    updatedAt: '2026-10-21T12:00:00Z',
+  },
+];
+
+const mockQuestions: QuestionRecord[] = [
+  {
+    id: 'q-101',
+    questionType: 'MCQ_SINGLE' as const,
+    questionText:
+      'What is the time complexity of searching for an element in a balanced Binary Search Tree (AVL tree)?',
+    codeSnippet: null,
+    topic: 'Data Structures',
+    difficulty: 'Easy' as const,
+    maximumMarks: 2,
+    negativeMarks: 0.5,
+    explanation: 'A balanced binary search tree maintains logarithmic height O(log N).',
+    status: 'ACTIVE' as const,
+    options: [
+      { id: 'opt-1', optionText: 'O(1)', displayOrder: 1, isCorrect: false },
+      { id: 'opt-2', optionText: 'O(log N)', displayOrder: 2, isCorrect: true },
+      { id: 'opt-3', optionText: 'O(N)', displayOrder: 3, isCorrect: false },
+      { id: 'opt-4', optionText: 'O(N log N)', displayOrder: 4, isCorrect: false },
+    ],
+    createdAt: '2026-10-10T10:00:00Z',
+    updatedAt: '2026-10-10T10:00:00Z',
+  },
+  {
+    id: 'q-102',
+    questionType: 'MCQ_MULTIPLE' as const,
+    questionText:
+      'Which of the following sorting algorithms provide an average time complexity of O(N log N)? (Select all that apply)',
+    codeSnippet: null,
+    topic: 'Algorithms',
+    difficulty: 'Medium' as const,
+    maximumMarks: 4,
+    negativeMarks: 1,
+    explanation: 'Merge Sort and Quick Sort both offer O(N log N) average complexity.',
+    status: 'ACTIVE' as const,
+    options: [
+      { id: 'opt-5', optionText: 'Merge Sort', displayOrder: 1, isCorrect: true },
+      { id: 'opt-6', optionText: 'Quick Sort', displayOrder: 2, isCorrect: true },
+      { id: 'opt-7', optionText: 'Bubble Sort', displayOrder: 3, isCorrect: false },
+      { id: 'opt-8', optionText: 'Insertion Sort', displayOrder: 4, isCorrect: false },
+    ],
+    createdAt: '2026-10-11T11:00:00Z',
+    updatedAt: '2026-10-11T11:00:00Z',
+  },
+  {
+    id: 'q-103',
+    questionType: 'TRUE_FALSE' as const,
+    questionText: 'HTTP/2 supports request multiplexing over a single TCP connection.',
+    codeSnippet: null,
+    topic: 'Networking',
+    difficulty: 'Easy' as const,
+    maximumMarks: 1,
+    negativeMarks: 0,
+    explanation:
+      'HTTP/2 introduces binary framing and stream multiplexing over a single connection.',
+    status: 'ACTIVE' as const,
+    options: [
+      { id: 'opt-9', optionText: 'True', displayOrder: 1, isCorrect: true },
+      { id: 'opt-10', optionText: 'False', displayOrder: 2, isCorrect: false },
+    ],
+    createdAt: '2026-10-12T12:00:00Z',
+    updatedAt: '2026-10-12T12:00:00Z',
+  },
+  {
+    id: 'q-104',
+    questionType: 'SHORT_ANSWER' as const,
+    questionText:
+      'What HTTP status code is used for requesting client upgrade or rejecting outdated client versions in strict protocol checks?',
+    codeSnippet: null,
+    topic: 'Web Protocols',
+    difficulty: 'Medium' as const,
+    maximumMarks: 3,
+    negativeMarks: 0,
+    explanation: 'HTTP 426 Upgrade Required (SRS FR-LAB-003).',
+    status: 'ACTIVE' as const,
+    options: [],
+    createdAt: '2026-10-13T13:00:00Z',
+    updatedAt: '2026-10-13T13:00:00Z',
+  },
+  {
+    id: 'q-105',
+    questionType: 'SCENARIO' as const,
+    questionText:
+      'A banking application receives duplicate POST requests during temporary network timeout. Design an idempotency strategy that avoids duplicate debit transactions.',
+    codeSnippet: null,
+    topic: 'System Design',
+    difficulty: 'Hard' as const,
+    maximumMarks: 10,
+    negativeMarks: 0,
+    explanation:
+      'Evaluate idempotency key deduplication with durable distributed lock or unique constraint.',
+    status: 'ACTIVE' as const,
+    options: [],
+    createdAt: '2026-10-14T14:00:00Z',
+    updatedAt: '2026-10-14T14:00:00Z',
+  },
+  {
+    id: 'q-106',
+    questionType: 'DESCRIPTIVE' as const,
+    questionText:
+      'Explain the difference between optimistic concurrency control and pessimistic concurrency control in database transactions.',
+    codeSnippet: null,
+    topic: 'Databases',
+    difficulty: 'Medium' as const,
+    maximumMarks: 5,
+    negativeMarks: 0,
+    explanation:
+      'Optimistic checks on commit using version/timestamp, pessimistic acquires locks upfront.',
+    status: 'ACTIVE' as const,
+    options: [],
+    createdAt: '2026-10-15T15:00:00Z',
+    updatedAt: '2026-10-15T15:00:00Z',
+  },
+];
+
+const mockAssessments: AssessmentRecord[] = [
+  {
+    id: 'asmt-01',
+    title: 'Frontend Developer Test',
+    description: 'Comprehensive screening for React, JavaScript ES6+, and CSS layout proficiency.',
+    instructions:
+      'Complete all questions sequentially. Once submitted, answers cannot be modified.',
+    roleCategory: 'Frontend Engineering',
+    overallDuration: 60,
+    totalMarks: 50,
+    passingMarks: 30,
+    negativeMarking: true,
+    negativeMarkValue: 0.5,
+    randomizeQuestions: true,
+    randomizeOptions: true,
+    navigationMode: 'SEQUENTIAL' as const,
+    resultVisibility: 'ADMIN_RELEASE' as const,
+    startAt: '2026-10-24T10:00:00Z',
+    endAt: '2026-10-24T12:00:00Z',
+    attemptLimit: 1,
+    status: 'SCHEDULED' as const,
+    questionsCount: 4,
+    assignedCandidatesCount: 24,
+    questions: [
+      { questionId: 'q-101', sequenceNumber: 1, timeLimitSeconds: 60, marksOverride: 2 },
+      { questionId: 'q-102', sequenceNumber: 2, timeLimitSeconds: 120, marksOverride: 4 },
+      { questionId: 'q-103', sequenceNumber: 3, timeLimitSeconds: 45, marksOverride: 1 },
+      { questionId: 'q-104', sequenceNumber: 4, timeLimitSeconds: 90, marksOverride: 3 },
+    ],
+    createdAt: '2026-10-18T10:00:00Z',
+    updatedAt: '2026-10-18T10:00:00Z',
+  },
+  {
+    id: 'asmt-02',
+    title: 'Data Analyst Assessment',
+    description: 'Evaluation of SQL queries, relational modeling, and analytical problem-solving.',
+    instructions: 'Each question has an individual timer. Auto-advances upon timeout.',
+    roleCategory: 'Data & Analytics',
+    overallDuration: 90,
+    totalMarks: 75,
+    passingMarks: 45,
+    negativeMarking: false,
+    negativeMarkValue: 0,
+    randomizeQuestions: false,
+    randomizeOptions: false,
+    navigationMode: 'SEQUENTIAL' as const,
+    resultVisibility: 'SCHEDULED' as const,
+    startAt: '2026-10-25T14:00:00Z',
+    endAt: '2026-10-25T17:00:00Z',
+    attemptLimit: 1,
+    status: 'ACTIVE' as const,
+    questionsCount: 5,
+    assignedCandidatesCount: 18,
+    questions: [],
+    createdAt: '2026-10-19T11:00:00Z',
+    updatedAt: '2026-10-19T11:00:00Z',
+  },
+  {
+    id: 'asmt-03',
+    title: 'Full Stack Engineering Assessment',
+    description:
+      'Full stack assessment covering backend API design, system architecture, and client logic.',
+    instructions: 'Free navigation enabled. Review all answers before final submission.',
+    roleCategory: 'Software Engineering',
+    overallDuration: 120,
+    totalMarks: 100,
+    passingMarks: 60,
+    negativeMarking: true,
+    negativeMarkValue: 1,
+    randomizeQuestions: true,
+    randomizeOptions: false,
+    navigationMode: 'FREE' as const,
+    resultVisibility: 'IMMEDIATE' as const,
+    startAt: '2026-10-30T09:00:00Z',
+    endAt: '2026-10-30T13:00:00Z',
+    attemptLimit: 1,
+    status: 'DRAFT' as const,
+    questionsCount: 6,
+    assignedCandidatesCount: 0,
+    questions: [],
+    createdAt: '2026-10-20T12:00:00Z',
+    updatedAt: '2026-10-20T12:00:00Z',
+  },
 ];

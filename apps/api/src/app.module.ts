@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AuditModule } from './audit/audit.module';
+import { CandidatesModule } from './candidates/candidates.module';
+import { QuestionsModule } from './questions/questions.module';
+import { AssessmentsModule } from './assessments/assessments.module';
 import { PrismaService } from './common/prisma.service';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
@@ -11,7 +14,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
-  imports: [AuditModule, AuthModule],
+  imports: [AuditModule, AuthModule, CandidatesModule, QuestionsModule, AssessmentsModule],
   controllers: [AppController],
   providers: [
     AppService,

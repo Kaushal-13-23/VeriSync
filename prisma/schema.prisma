@@ -169,13 +169,23 @@ model Assessment {
   id                   String           @id @default(uuid()) @map("assessment_id")
   title                String
   description          String?
+  instructions         String?
   roleCategory         String           @map("role_category")
   overallDuration      Int              @map("overall_duration") // in minutes
+  totalMarks           Decimal?         @map("total_marks") @db.Decimal(6, 2)
+  passingMarks         Decimal?         @map("passing_marks") @db.Decimal(6, 2)
+  negativeMarking      Boolean          @default(false) @map("negative_marking")
+  negativeMarkValue    Decimal?         @default(0.00) @map("negative_mark_value") @db.Decimal(5, 2)
+  randomizeQuestions   Boolean          @default(false) @map("randomize_questions")
+  randomizeOptions     Boolean          @default(false) @map("randomize_options")
+  navigationMode       String           @default("SEQUENTIAL") @map("navigation_mode")
+  resultVisibility     String           @default("ADMIN_RELEASE") @map("result_visibility")
   startAt              DateTime         @map("start_at")
   endAt                DateTime         @map("end_at")
   status               AssessmentStatus @default(DRAFT)
   attemptLimit         Int              @default(1) @map("attempt_limit")
   configurationVersion Int              @default(1) @map("configuration_version")
+  publishedSnapshot    Json?            @map("published_snapshot")
   createdBy            String           @map("created_by")
   createdAt            DateTime         @default(now()) @map("created_at")
   updatedAt            DateTime         @updatedAt @map("updated_at")
@@ -196,6 +206,7 @@ model Question {
   id                  String               @id @default(uuid()) @map("question_id")
   questionType        QuestionType         @map("question_type")
   questionText        String               @map("question_text")
+  codeSnippet         String?              @map("code_snippet")
   topic               String
   difficulty          String
   maximumMarks        Decimal              @map("maximum_marks") @db.Decimal(5, 2)

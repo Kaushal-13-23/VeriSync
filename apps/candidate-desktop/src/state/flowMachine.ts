@@ -10,13 +10,21 @@
  */
 
 import { MockAssessmentSession, MockUser } from '../services/mockApi';
+import { CandidateAssignedAssessment } from '../types/assessment';
 
-export type ScreenState = 'LOGIN' | 'SYSTEM_CHECK' | 'INSTRUCTIONS' | 'EXAM' | 'SUBMITTED';
+export type ScreenState =
+  | 'LOGIN'
+  | 'SYSTEM_CHECK'
+  | 'ASSIGNED_ASSESSMENTS'
+  | 'INSTRUCTIONS'
+  | 'EXAM'
+  | 'SUBMITTED';
 
 export interface FlowState {
   currentScreen: ScreenState;
   user: MockUser | null;
   systemCheckCompleted: boolean;
+  selectedAssessment: CandidateAssignedAssessment | null;
   instructionsAcknowledged: boolean;
   session: MockAssessmentSession | null;
   currentQuestionIndex: number;
@@ -29,6 +37,8 @@ export interface FlowState {
 export type FlowAction =
   | { type: 'LOGIN_SUCCESS'; payload: { user: MockUser } }
   | { type: 'SYSTEM_CHECK_COMPLETE'; payload: { passed: boolean } }
+  | { type: 'SELECT_ASSESSMENT'; payload: { assessment: CandidateAssignedAssessment } }
+  | { type: 'BACK_TO_ASSESSMENTS' }
   | { type: 'TOGGLE_INSTRUCTIONS_ACK'; payload: { acknowledged: boolean } }
   | { type: 'START_EXAM'; payload: { session: MockAssessmentSession } }
   | { type: 'NEXT_QUESTION' }
@@ -44,6 +54,7 @@ export const initialFlowState: FlowState = {
   currentScreen: 'LOGIN',
   user: null,
   systemCheckCompleted: false,
+  selectedAssessment: null,
   instructionsAcknowledged: false,
   session: null,
   currentQuestionIndex: 0,
@@ -73,7 +84,24 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return {
         ...state,
         systemCheckCompleted: true,
+        currentScreen: 'ASSIGNED_ASSESSMENTS',
+        error: null,
+      };
+
+    case 'SELECT_ASSESSMENT':
+      return {
+        ...state,
+        selectedAssessment: action.payload.assessment,
         currentScreen: 'INSTRUCTIONS',
+        instructionsAcknowledged: false,
+        error: null,
+      };
+
+    case 'BACK_TO_ASSESSMENTS':
+      return {
+        ...state,
+        currentScreen: 'ASSIGNED_ASSESSMENTS',
+        instructionsAcknowledged: false,
         error: null,
       };
 

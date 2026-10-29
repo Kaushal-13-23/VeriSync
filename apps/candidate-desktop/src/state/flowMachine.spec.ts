@@ -88,7 +88,7 @@ describe('flowMachine (SRS Section 3.3, 3.4 & FR-UI-001 - FR-UI-007)', () => {
     expect(next.error).toBeNull();
   });
 
-  it('FR-LAB-001: transitions from SYSTEM_CHECK to INSTRUCTIONS when checks pass', () => {
+  it('FR-LAB-001: transitions from SYSTEM_CHECK to ASSIGNED_ASSESSMENTS when checks pass', () => {
     const loggedInState: FlowState = {
       ...initialFlowState,
       currentScreen: 'SYSTEM_CHECK',
@@ -100,9 +100,62 @@ describe('flowMachine (SRS Section 3.3, 3.4 & FR-UI-001 - FR-UI-007)', () => {
       payload: { passed: true },
     });
 
-    expect(next.currentScreen).toBe('INSTRUCTIONS');
+    expect(next.currentScreen).toBe('ASSIGNED_ASSESSMENTS');
     expect(next.systemCheckCompleted).toBe(true);
     expect(next.error).toBeNull();
+  });
+
+  it('FR-UI-001: transitions from ASSIGNED_ASSESSMENTS to INSTRUCTIONS when assessment is selected', () => {
+    const onAssessmentsState: FlowState = {
+      ...initialFlowState,
+      currentScreen: 'ASSIGNED_ASSESSMENTS',
+      user: dummyUser,
+      systemCheckCompleted: true,
+    };
+
+    const dummyAssessment = {
+      assignmentId: 'asgn_01',
+      assessmentId: 'asmt_001',
+      title: 'Frontend Developer Assessment',
+      roleCategory: 'Frontend',
+      overallDuration: 90,
+      totalMarks: 100,
+      startAt: new Date().toISOString(),
+      endAt: new Date(Date.now() + 3600000).toISOString(),
+      status: 'ACTIVE',
+      attemptLimit: 1,
+      attemptsUsed: 0,
+      attemptsRemaining: 1,
+      isEligible: true,
+      navigationMode: 'SEQUENTIAL' as const,
+      serverTime: new Date().toISOString(),
+    };
+
+    const next = flowReducer(onAssessmentsState, {
+      type: 'SELECT_ASSESSMENT',
+      payload: { assessment: dummyAssessment },
+    });
+
+    expect(next.currentScreen).toBe('INSTRUCTIONS');
+    expect(next.selectedAssessment).toEqual(dummyAssessment);
+    expect(next.instructionsAcknowledged).toBe(false);
+  });
+
+  it('allows navigating back from INSTRUCTIONS to ASSIGNED_ASSESSMENTS', () => {
+    const onInstructionsState: FlowState = {
+      ...initialFlowState,
+      currentScreen: 'INSTRUCTIONS',
+      user: dummyUser,
+      systemCheckCompleted: true,
+      instructionsAcknowledged: true,
+    };
+
+    const next = flowReducer(onInstructionsState, {
+      type: 'BACK_TO_ASSESSMENTS',
+    });
+
+    expect(next.currentScreen).toBe('ASSIGNED_ASSESSMENTS');
+    expect(next.instructionsAcknowledged).toBe(false);
   });
 
   it('FR-LAB-006: prevents advancement when system check fails', () => {

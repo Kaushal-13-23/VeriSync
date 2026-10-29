@@ -123,6 +123,71 @@ async function detectProhibitedApps(): Promise<{ hasProhibitedApps: boolean; app
   });
 }
 
+// Local Rotating Log File with Secret Scrubbing (Rule 5, Rule 9, FR-AUD-007, NFR-MNT-005)
+const MAX_LOG_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_LOG_FILES = 3;
+
+function scrubSensitiveData(text: string): string {
+  return text
+    .replace(/(password|token|secret|key|authorization|bearer)\s*[:=]\s*["']?[^"',\s]+["']?/gi, '$1=[REDACTED]')
+    .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
+    .replace(/[A-Za-z0-9]{32,}/g, (match) => match.slice(0, 4) + '...[REDACTED]');
+}
+
+function appendLocalLog(
+  level: string,
+  message: string,
+  correlationId?: string,
+  metadata?: Record<string, unknown>
+): boolean {
+  try {
+    const userDataPath = app.getPath('userData');
+    const logsDir = path.join(userDataPath, 'logs');
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+    const logPath = path.join(logsDir, 'candidate-desktop.log');
+
+    // Check file size for rotation
+    if (fs.existsSync(logPath)) {
+      const stats = fs.statSync(logPath);
+      if (stats.size >= MAX_LOG_SIZE_BYTES) {
+        // Rotate: log.2 -> deleted, log.1 -> log.2, log -> log.1
+        for (let i = MAX_LOG_FILES - 1; i >= 1; i--) {
+          const src = path.join(logsDir, `candidate-desktop.${i}.log`);
+          const dest = path.join(logsDir, `candidate-desktop.${i + 1}.log`);
+          if (fs.existsSync(src)) {
+            if (i === MAX_LOG_FILES - 1) {
+              fs.unlinkSync(src);
+            } else {
+              fs.renameSync(src, dest);
+            }
+          }
+        }
+        fs.renameSync(logPath, path.join(logsDir, 'candidate-desktop.1.log'));
+      }
+    }
+
+    const timestamp = new Date().toISOString();
+    const cleanMessage = scrubSensitiveData(message);
+    const cleanMeta = metadata ? scrubSensitiveData(JSON.stringify(metadata)) : undefined;
+
+    const logEntry =
+      JSON.stringify({
+        timestamp,
+        level,
+        message: cleanMessage,
+        correlationId: correlationId || null,
+        metadata: cleanMeta ? JSON.parse(cleanMeta) : undefined,
+      }) + '\n';
+
+    fs.appendFileSync(logPath, logEntry, 'utf-8');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Register IPC handlers before window creation
 function setupIpcHandlers() {
   ipcMain.handle('verisync:getAppVersion', () => '1.1.0');
@@ -137,6 +202,13 @@ function setupIpcHandlers() {
     arch: process.arch,
     isWindows: process.platform === 'win32',
   }));
+  ipcMain.handle(
+    'verisync:writeLog',
+    (
+      _event,
+      entry: { level: string; message: string; correlationId?: string; metadata?: Record<string, unknown> }
+    ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata)
+  );
   ipcMain.handle('verisync:closeApp', () => {
     app.quit();
   });

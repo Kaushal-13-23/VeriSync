@@ -47,4 +47,28 @@ describe('CandidateDesktop App Component (FR-AUTH-002, FR-CAN-007, FR-UI-001)', 
       expect(screen.getByText('Please ensure your system meets all requirements before starting the test.')).toBeInTheDocument();
     });
   });
+
+  it('FR-UI-001: advances from System Check to Assigned Assessments screen when checks pass', async () => {
+    render(<App />);
+
+    // Login
+    fireEvent.change(screen.getByLabelText(/Candidate ID/i), { target: { value: 'CAN-2026-081' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'CandidatePass123' } });
+    fireEvent.click(screen.getByRole('button', { name: /Login/i }));
+
+    // Wait for System Check
+    await waitFor(() => {
+      expect(screen.getByText('System Check')).toBeInTheDocument();
+    });
+
+    // Continue to Assessments
+    const continueBtn = await screen.findByRole('button', { name: /Continue to Assessments/i });
+    fireEvent.click(continueBtn);
+
+    // Verify Assigned Assessments screen mounts
+    await waitFor(() => {
+      expect(screen.getByText('Assigned Assessments')).toBeInTheDocument();
+      expect(screen.getByText(/Frontend Developer Assessment/i)).toBeInTheDocument();
+    });
+  });
 });

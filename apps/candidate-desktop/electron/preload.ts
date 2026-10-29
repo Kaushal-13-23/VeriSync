@@ -16,6 +16,12 @@ export interface VeriSyncBridge {
   clearToken: () => Promise<boolean>;
   checkProhibitedApps: () => Promise<{ hasProhibitedApps: boolean; apps: string[] }>;
   getSystemInfo: () => Promise<{ platform: string; arch: string; isWindows: boolean }>;
+  writeLog: (entry: {
+    level: string;
+    message: string;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+  }) => Promise<boolean>;
   closeApp: () => Promise<void>;
 }
 
@@ -28,6 +34,7 @@ const bridge: VeriSyncBridge = {
   clearToken: () => ipcRenderer.invoke('verisync:clearToken'),
   checkProhibitedApps: () => ipcRenderer.invoke('verisync:checkProhibitedApps'),
   getSystemInfo: () => ipcRenderer.invoke('verisync:getSystemInfo'),
+  writeLog: (entry) => ipcRenderer.invoke('verisync:writeLog', entry),
   closeApp: () => ipcRenderer.invoke('verisync:closeApp'),
 };
 

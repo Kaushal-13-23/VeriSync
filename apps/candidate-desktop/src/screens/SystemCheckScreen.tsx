@@ -12,6 +12,7 @@ import {
   Video,
   Mic,
   MonitorCheck,
+  RefreshCw,
   LucideIcon,
 } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
@@ -22,6 +23,7 @@ import { apiClient } from '../services/apiClient';
  * Reconciled via docs/DECISIONS.md (Decision 2):
  * - Webcam & microphone checks are gated behind administrative feature flag (default OFF per SRS 1.4.2)
  * - Verifies: Internet, server reachability, client version (FR-LAB-003), device registered (FR-LAB-002), prohibited apps (FR-LAB-006)
+ * - Strictly handles 426 UNSUPPORTED_CLIENT with clear 'contact lab staff' message
  */
 
 interface SystemCheckScreenProps {
@@ -44,6 +46,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
 }) => {
   const [deviceId, setDeviceId] = useState<string>('Detecting...');
   const [clientVersion, setClientVersion] = useState<string>('1.1.0');
+  const [unsupportedClientError, setUnsupportedClientError] = useState<string | null>(null);
   const [checks, setChecks] = useState<CheckItem[]>([
     {
       id: 'internet',
@@ -84,113 +87,113 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
 
   const [isRunningChecks, setIsRunningChecks] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
+  async function runDiagnostics() {
+    setIsRunningChecks(true);
+    setUnsupportedClientError(null);
 
-    async function runDiagnostics() {
-      // 1. Device ID & Client Version
-      const devId = await apiClient.getDeviceId();
-      const ver = await apiClient.getClientVersion();
-      if (!isMounted) return;
-      setDeviceId(devId);
-      setClientVersion(ver);
+    // 1. Device ID & Client Version
+    const devId = await apiClient.getDeviceId();
+    const ver = await apiClient.getClientVersion();
+    setDeviceId(devId);
+    setClientVersion(ver);
 
-      // 2. Health check / server reachability
-      let serverOk = false;
-      let latencyMs = 0;
+    // 2. Real server handshake & version check (FR-LAB-003, SRS 8.3.3)
+    const handshake = await apiClient.checkServerHandshake();
+
+    // 3. Prohibited Apps check via Bridge (FR-LAB-006)
+    let prohibitedResult = { hasProhibitedApps: false, apps: [] as string[] };
+    if (typeof window !== 'undefined' && window.verisyncBridge) {
       try {
-        const start = Date.now();
-        await apiClient.getHealth();
-        latencyMs = Date.now() - start;
-        serverOk = true;
+        prohibitedResult = await window.verisyncBridge.checkProhibitedApps();
       } catch {
-        serverOk = false;
+        // ignore
       }
-
-      // 3. Prohibited Apps check via Bridge (FR-LAB-006)
-      let prohibitedResult = { hasProhibitedApps: false, apps: [] as string[] };
-      if (typeof window !== 'undefined' && window.verisyncBridge) {
-        try {
-          prohibitedResult = await window.verisyncBridge.checkProhibitedApps();
-        } catch {
-          // ignore
-        }
-      }
-
-      if (!isMounted) return;
-
-      const updatedChecks: CheckItem[] = [
-        {
-          id: 'internet',
-          label: 'Internet Connection',
-          status: navigator.onLine ? 'passed' : 'failed',
-          value: navigator.onLine ? 'Connected' : 'Offline',
-          icon: Wifi,
-        },
-        {
-          id: 'server',
-          label: 'Server Reachability',
-          status: serverOk ? 'passed' : 'warning',
-          value: serverOk ? `Connected (${latencyMs}ms)` : 'Degraded / Mock fallback',
-          icon: Server,
-        },
-        {
-          id: 'version',
-          label: 'Client Version',
-          status: 'passed',
-          value: `v${ver} (Approved)`,
-          icon: ShieldCheck,
-        },
-        {
-          id: 'device',
-          label: 'Device Registered',
-          status: 'passed',
-          value: devId.slice(0, 16) + '...',
-          icon: MonitorCheck,
-        },
-        {
-          id: 'apps',
-          label: 'Prohibited Applications',
-          status: prohibitedResult.hasProhibitedApps ? 'failed' : 'passed',
-          value: prohibitedResult.hasProhibitedApps
-            ? `Detected: ${prohibitedResult.apps.join(', ')}`
-            : 'No unauthorized apps running',
-          icon: Cpu,
-        },
-      ];
-
-      // Gated Hardware Proctoring rows (Decision 2: default OFF)
-      if (hardwareProctoringEnabled) {
-        updatedChecks.push(
-          {
-            id: 'webcam',
-            label: 'Webcam',
-            status: 'passed',
-            value: 'Detected',
-            icon: Video,
-          },
-          {
-            id: 'mic',
-            label: 'Microphone',
-            status: 'passed',
-            value: 'Detected',
-            icon: Mic,
-          }
-        );
-      }
-
-      setChecks(updatedChecks);
-      setIsRunningChecks(false);
     }
 
-    runDiagnostics();
+    if (handshake.isUnsupportedClient) {
+      setUnsupportedClientError(
+        handshake.errorMessage ||
+          'Unsupported client version (HTTP 426). Please contact lab staff immediately to update this machine.'
+      );
+    }
 
-    return () => {
-      isMounted = false;
-    };
+    const updatedChecks: CheckItem[] = [
+      {
+        id: 'internet',
+        label: 'Internet Connection',
+        status: navigator.onLine ? 'passed' : 'failed',
+        value: navigator.onLine ? 'Connected' : 'Offline',
+        icon: Wifi,
+      },
+      {
+        id: 'server',
+        label: 'Server Reachability',
+        status: handshake.ok ? 'passed' : handshake.isUnsupportedClient ? 'failed' : 'warning',
+        value: handshake.ok
+          ? `Connected (${handshake.latencyMs}ms)`
+          : handshake.isUnsupportedClient
+          ? 'Rejected (426)'
+          : 'Degraded / Mock fallback',
+        icon: Server,
+      },
+      {
+        id: 'version',
+        label: 'Client Version Handshake',
+        status: handshake.isUnsupportedClient ? 'failed' : 'passed',
+        value: handshake.isUnsupportedClient
+          ? `v${ver} (Rejected 426)`
+          : `v${ver} (Approved)`,
+        icon: ShieldCheck,
+      },
+      {
+        id: 'device',
+        label: 'Lab Device Registration',
+        status: 'passed',
+        value: devId.slice(0, 16) + '...',
+        icon: MonitorCheck,
+      },
+      {
+        id: 'apps',
+        label: 'Prohibited Applications',
+        status: prohibitedResult.hasProhibitedApps ? 'failed' : 'passed',
+        value: prohibitedResult.hasProhibitedApps
+          ? `Detected: ${prohibitedResult.apps.join(', ')}`
+          : 'No unauthorized apps running',
+        icon: Cpu,
+      },
+    ];
+
+    // Gated Hardware Proctoring rows (Decision 2: default OFF)
+    if (hardwareProctoringEnabled) {
+      updatedChecks.push(
+        {
+          id: 'webcam',
+          label: 'Webcam',
+          status: 'passed',
+          value: 'Detected',
+          icon: Video,
+        },
+        {
+          id: 'mic',
+          label: 'Microphone',
+          status: 'passed',
+          value: 'Detected',
+          icon: Mic,
+        }
+      );
+    }
+
+    setChecks(updatedChecks);
+    setIsRunningChecks(false);
+  }
+
+  useEffect(() => {
+    void runDiagnostics();
   }, [hardwareProctoringEnabled]);
 
-  const allPassed = checks.every((c) => c.status === 'passed' || c.status === 'warning');
+  const allPassed =
+    !unsupportedClientError &&
+    checks.every((c) => c.status === 'passed' || c.status === 'warning');
 
   return (
     <div
@@ -218,29 +221,80 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
         }}
       >
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                backgroundColor: '#2563eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShieldCheck size={20} color="#ffffff" />
+        <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  backgroundColor: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <ShieldCheck size={20} color="#ffffff" />
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+                System Check
+              </h2>
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: '#f8fafc' }}>
-              System Check
-            </h2>
+            <p style={{ margin: 0, fontSize: 14, color: '#9ca3af' }}>
+              Please ensure your system meets all requirements before starting the test.
+            </p>
           </div>
-          <p style={{ margin: 0, fontSize: 14, color: '#9ca3af' }}>
-            Please ensure your system meets all requirements before starting the test.
-          </p>
+
+          <button
+            onClick={() => void runDiagnostics()}
+            disabled={isRunningChecks}
+            title="Re-run Diagnostics"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 12px',
+              backgroundColor: '#1f2937',
+              border: '1px solid #374151',
+              borderRadius: 8,
+              color: '#93c5fd',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: isRunningChecks ? 'not-allowed' : 'pointer',
+              opacity: isRunningChecks ? 0.6 : 1,
+            }}
+          >
+            <RefreshCw size={14} className={isRunningChecks ? 'animate-spin' : ''} />
+            <span>Re-check</span>
+          </button>
         </div>
+
+        {/* 426 UNSUPPORTED_CLIENT Banner (FR-LAB-003, SRS 8.3.3) */}
+        {unsupportedClientError && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              padding: 16,
+              borderRadius: 10,
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              marginBottom: 20,
+            }}
+          >
+            <XCircle size={22} color="#ef4444" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f87171', marginBottom: 4 }}>
+                Unsupported Client Version (HTTP 426)
+              </div>
+              <div style={{ fontSize: 13, color: '#fca5a5', lineHeight: 1.5 }}>
+                {unsupportedClientError}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Check Items List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
@@ -256,7 +310,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
                   padding: '14px 18px',
                   backgroundColor: '#1f2937',
                   borderRadius: 10,
-                  border: '1px solid #374151',
+                  border: item.status === 'failed' ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid #374151',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -347,7 +401,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
             transition: 'all 0.2s',
           }}
         >
-          <span>Continue to Instructions</span>
+          <span>Continue to Assessments</span>
           <ArrowRight size={16} />
         </button>
 

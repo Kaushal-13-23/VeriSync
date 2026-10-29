@@ -89,4 +89,28 @@ describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 
     expect(duplicateResult).toEqual(firstResult);
     expect(duplicateResult.submittedAt).toBe(firstResult.submittedAt);
   });
+
+  it('FR-UI-001 & TC09: getAssignedAssessments returns assessments list without answer keys or hidden cases', async () => {
+    const list = await apiClient.getAssignedAssessments();
+    expect(list.length).toBeGreaterThan(0);
+
+    const first = list[0];
+    expect(first.assignmentId).toBeDefined();
+    expect(first.assessmentId).toBeDefined();
+    expect(first.title).toBeDefined();
+    expect(first.isEligible).toBe(true);
+    expect(first.attemptsRemaining).toBe(1);
+
+    // Strict TC09 verification: Zero answer keys or correct option flags
+    const serialized = JSON.stringify(list);
+    expect(serialized).not.toContain('answerKey');
+    expect(serialized).not.toContain('hiddenTestCase');
+    expect(serialized).not.toContain('isCorrect');
+  });
+
+  it('FR-LAB-003: checkServerHandshake validates client version handshake', async () => {
+    const handshake = await apiClient.checkServerHandshake();
+    expect(handshake.ok).toBe(true);
+    expect(handshake.isUnsupportedClient).toBe(false);
+  });
 });

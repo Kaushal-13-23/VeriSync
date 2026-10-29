@@ -91,6 +91,14 @@ class TimeSyncService {
     return this.serverOffsetMs;
   }
 
+  public getClockOffsetMs(): number {
+    return this.serverOffsetMs;
+  }
+
+  public setClockOffsetMs(offset: number): void {
+    this.serverOffsetMs = offset;
+  }
+
   public getLastSyncTime(): number | null {
     return this.lastSyncTime;
   }

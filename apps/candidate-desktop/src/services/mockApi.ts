@@ -1,11 +1,13 @@
 import {
   ApiErrorCode,
   ApiErrorResponse,
+  AssessmentStatus,
   HealthStatusResponse,
   SubmitAnswerPayload,
   SubmitAnswerResponse,
   UserRole,
 } from '@verisync/shared';
+import { CandidateAssignedAssessment } from '../types/assessment';
 
 /**
  * Local Mock Server strictly matching packages/shared/openapi.yaml & SRS 8.3.3
@@ -35,7 +37,7 @@ export interface MockQuestion {
   explanation?: string;
   sampleInput?: string;
   sampleOutput?: string;
-  type: 'single_choice' | 'coding' | 'sql';
+  type: 'single_choice' | 'multiple_select' | 'true_false' | 'short_answer' | 'coding' | 'sql';
   options?: Array<{ id: string; text: string }>;
   codeSnippet?: string;
   language?: string;
@@ -61,15 +63,15 @@ export interface MockAssessmentSession {
 // In-memory idempotency cache (SRS FR-ANS-009, Rule 3)
 const idempotencyStore = new Map<string, SubmitAnswerResponse>();
 
-// Sample mock questions matching docs/design/UI_Sample.jpeg
+// Sample mock questions matching docs/design/UI_Sample.jpeg & SRS FR-QB-003
 const sampleQuestions: MockQuestion[] = [
   {
     id: 'q_01',
     attemptId: 'qa_0001',
     index: 1,
-    totalQuestions: 20,
+    totalQuestions: 6,
     section: 'MCQ',
-    title: 'Question 1 (MCQ)',
+    title: 'Question 1 (Single Choice MCQ)',
     statement: 'Which of the following is true regarding React synthetic events?',
     type: 'single_choice',
     options: [
@@ -81,12 +83,55 @@ const sampleQuestions: MockQuestion[] = [
     durationMinutes: 2,
   },
   {
-    id: 'q_12',
-    attemptId: 'qa_0012',
-    index: 12,
-    totalQuestions: 20,
+    id: 'q_02',
+    attemptId: 'qa_0002',
+    index: 2,
+    totalQuestions: 6,
+    section: 'MCQ',
+    title: 'Question 2 (Multiple Select MCQ)',
+    statement: 'Select all features supported in ECMAScript 2020 (ES11):',
+    type: 'multiple_select',
+    options: [
+      { id: 'opt_2a', text: 'BigInt primitive type' },
+      { id: 'opt_2b', text: 'Nullish coalescing operator (??)' },
+      { id: 'opt_2c', text: 'Optional chaining (?.)' },
+      { id: 'opt_2d', text: 'Macro-tasks scheduling API' },
+    ],
+    durationMinutes: 3,
+  },
+  {
+    id: 'q_03',
+    attemptId: 'qa_0003',
+    index: 3,
+    totalQuestions: 6,
+    section: 'MCQ',
+    title: 'Question 3 (True / False)',
+    statement: 'In TypeScript, `unknown` is a type-safe counterpart of the `any` type and requires type narrowing before use.',
+    type: 'true_false',
+    options: [
+      { id: 'true', text: 'True' },
+      { id: 'false', text: 'False' },
+    ],
+    durationMinutes: 2,
+  },
+  {
+    id: 'q_04',
+    attemptId: 'qa_0004',
+    index: 4,
+    totalQuestions: 6,
+    section: 'MCQ',
+    title: 'Question 4 (Short Answer)',
+    statement: 'What HTTP status code is officially returned by the server when the client software version is rejected as obsolete?',
+    type: 'short_answer',
+    durationMinutes: 3,
+  },
+  {
+    id: 'q_05',
+    attemptId: 'qa_0005',
+    index: 5,
+    totalQuestions: 6,
     section: 'Coding',
-    title: 'Question 12 (Coding)',
+    title: 'Question 5 (Coding)',
     statement: 'Write a function to find the sum of all prime numbers up to a given number n.',
     sampleInput: 'n = 10',
     sampleOutput: '17',
@@ -97,12 +142,12 @@ const sampleQuestions: MockQuestion[] = [
     durationMinutes: 15,
   },
   {
-    id: 'q_16',
-    attemptId: 'qa_0016',
-    index: 16,
-    totalQuestions: 20,
+    id: 'q_06',
+    attemptId: 'qa_0006',
+    index: 6,
+    totalQuestions: 6,
     section: 'SQL',
-    title: 'Question 16 (SQL)',
+    title: 'Question 6 (SQL)',
     statement: 'Write an SQL query to find the second highest salary from the Employee table.',
     sampleInput: 'Employee(id INT, salary INT)',
     sampleOutput: 'SecondHighestSalary: 200',
@@ -171,16 +216,96 @@ export const mockApi = {
   },
 
   /**
+   * GET /candidate/assessments (matches openapi.yaml & Dev A Phase 2)
+   * Guaranteed zero answer keys or hidden test cases (BR-009, Rule 2, TC09)
+   */
+  async getAssignedAssessments(): Promise<CandidateAssignedAssessment[]> {
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - 60 * 60 * 1000); // 1 hr ago
+    const windowEnd = new Date(now.getTime() + 4 * 60 * 60 * 1000); // in 4 hrs
+
+    const futureStart = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const futureEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    const pastStart = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const pastEnd = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    return [
+      {
+        assignmentId: 'asgn_01',
+        assessmentId: 'asmt-frontend-2026',
+        title: 'Frontend Developer Assessment',
+        description: 'Comprehensive technical evaluation covering React, TypeScript, ECMAScript, Coding, and SQL.',
+        instructions: 'Please read all rules carefully before proceeding. Sequential examination mode enforced.',
+        roleCategory: 'Frontend Engineering',
+        overallDuration: 90,
+        totalMarks: 100,
+        totalQuestions: 6,
+        startAt: windowStart.toISOString(),
+        endAt: windowEnd.toISOString(),
+        status: AssessmentStatus.ACTIVE,
+        attemptLimit: 1,
+        attemptsUsed: 0,
+        attemptsRemaining: 1,
+        isEligible: true,
+        navigationMode: 'SEQUENTIAL',
+        serverTime: now.toISOString(),
+      },
+      {
+        assignmentId: 'asgn_02',
+        assessmentId: 'asmt-backend-2026',
+        title: 'Backend Systems & Database Assessment',
+        description: 'Covers NestJS, PostgreSQL concurrency, caching, and algorithmic problem solving.',
+        instructions: 'Lockdown kiosk policy applies throughout the session.',
+        roleCategory: 'Backend Engineering',
+        overallDuration: 120,
+        totalMarks: 120,
+        totalQuestions: 8,
+        startAt: futureStart.toISOString(),
+        endAt: futureEnd.toISOString(),
+        status: AssessmentStatus.SCHEDULED,
+        attemptLimit: 1,
+        attemptsUsed: 0,
+        attemptsRemaining: 1,
+        isEligible: false,
+        eligibilityReason: 'Assessment availability window has not opened yet',
+        navigationMode: 'SEQUENTIAL',
+        serverTime: now.toISOString(),
+      },
+      {
+        assignmentId: 'asgn_03',
+        assessmentId: 'asmt-cs-core-2026',
+        title: 'Core CS Fundamentals & Data Structures',
+        description: 'Evaluates basic operating system concepts, networking, and algorithms.',
+        roleCategory: 'General Software Engineering',
+        overallDuration: 60,
+        totalMarks: 50,
+        totalQuestions: 5,
+        startAt: pastStart.toISOString(),
+        endAt: pastEnd.toISOString(),
+        status: AssessmentStatus.COMPLETED,
+        attemptLimit: 1,
+        attemptsUsed: 1,
+        attemptsRemaining: 0,
+        isEligible: false,
+        eligibilityReason: 'Maximum attempt limit exhausted',
+        navigationMode: 'SEQUENTIAL',
+        serverTime: now.toISOString(),
+      },
+    ];
+  },
+
+  /**
    * Initialize candidate assessment session per UI Sample
    */
-  initMockSession(candidateId: string): MockAssessmentSession {
+  initMockSession(candidateId: string, assessmentId?: string): MockAssessmentSession {
     const now = new Date();
     const durationMinutes = 90;
     const deadline = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
     activeMockSession = {
       sessionId: `sess-${Math.random().toString(36).slice(2, 8)}`,
-      assessmentId: 'asmt-frontend-2026',
+      assessmentId: assessmentId || 'asmt-frontend-2026',
       title: 'Frontend Developer Assessment',
       candidateId: candidateId || 'CND12345',
       totalQuestions: 20,

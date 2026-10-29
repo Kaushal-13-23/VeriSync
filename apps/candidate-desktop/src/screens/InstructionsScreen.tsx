@@ -3,15 +3,19 @@ import {
   FileText,
   Clock,
   Layers,
-  ShieldAlert,
   ArrowRight,
-  AlertOctagon,
+  ArrowLeft,
+  AlertTriangle,
+  Lock,
   Eye,
   Smartphone,
-  Lock,
+  ShieldAlert,
+  HelpCircle,
 } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import { MockAssessmentSession, MockUser } from '../services/mockApi';
+import { CandidateAssignedAssessment } from '../types/assessment';
+import { handleApiError, UserFacingError } from '../services/errorHandler';
 
 /**
  * Assessment Instructions Screen
@@ -19,24 +23,42 @@ import { MockAssessmentSession, MockUser } from '../services/mockApi';
  * SRS Requirements:
  * - FR-UI-001: Assigned assessment metrics display
  * - FR-UI-002: Mandatory instructions displayed and explicitly acknowledged before starting
+ * - BR-015: Candidates are told about monitoring, lockdown, and integrity policies before starting
  * - FR-TIME-002: Server records start timestamp upon commencement
  */
 
 interface InstructionsScreenProps {
   user: MockUser;
+  assessment: CandidateAssignedAssessment | null;
   onStartExam: (session: MockAssessmentSession) => void;
+  onBack?: () => void;
 }
 
-export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, onStartExam }) => {
+export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
+  user,
+  assessment,
+  onStartExam,
+  onBack,
+}) => {
   const [acknowledged, setAcknowledged] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [error, setError] = useState<UserFacingError | null>(null);
+
+  const totalQuestions = assessment?.totalQuestions || 40;
+  const totalDuration = assessment?.overallDuration || 90;
+  const assessmentTitle = assessment?.title || 'Frontend Developer Assessment';
+  const assessmentId = assessment?.assessmentId || 'asmt-frontend-2026';
 
   const handleStart = async () => {
     if (!acknowledged || isStarting) return;
     setIsStarting(true);
+    setError(null);
     try {
-      const session = await apiClient.startAssessment(user.candidateId);
+      const session = await apiClient.startAssessment(assessmentId, user.candidateId);
       onStartExam(session);
+    } catch (err) {
+      const mapped = handleApiError(err);
+      setError(mapped);
     } finally {
       setIsStarting(false);
     }
@@ -67,132 +89,211 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
           boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.5)',
         }}
       >
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 6px 0', color: '#f8fafc' }}>
-            Assessment Instructions
-          </h2>
-          <p style={{ margin: 0, fontSize: 14, color: '#9ca3af' }}>
-            Candidate: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{user.candidateId}</span> &bull; {user.username}
-          </p>
+        {/* Navigation Bar / Title */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 6,
+                  backgroundColor: '#2563eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FileText size={18} color="#ffffff" />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+                Assessment Instructions
+              </h2>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: '#9ca3af' }}>
+              {assessmentTitle} &bull; Candidate: <strong style={{ color: '#93c5fd' }}>{user.candidateId}</strong>
+            </p>
+          </div>
+
+          {onBack && (
+            <button
+              onClick={onBack}
+              disabled={isStarting}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: 6,
+                color: '#cbd5e1',
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              <ArrowLeft size={14} />
+              <span>Back</span>
+            </button>
+          )}
         </div>
 
-        {/* Overview Stats Cards */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 12,
-            marginBottom: 24,
-          }}
-        >
+        {/* Error Callout if Start Fails */}
+        {error && (
           <div
             style={{
-              padding: '14px 16px',
-              backgroundColor: '#1f2937',
-              borderRadius: 10,
-              border: '1px solid #374151',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               gap: 12,
+              padding: 14,
+              borderRadius: 8,
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              marginBottom: 20,
             }}
           >
-            <FileText size={22} color="#60a5fa" />
+            <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
-                Total Questions
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>
+                {error.title}
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>20</div>
+              <div style={{ fontSize: 12, color: '#fca5a5' }}>
+                {error.message} {error.actionHint && `— ${error.actionHint}`}
+              </div>
             </div>
           </div>
+        )}
 
-          <div
-            style={{
-              padding: '14px 16px',
-              backgroundColor: '#1f2937',
-              borderRadius: 10,
-              border: '1px solid #374151',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <Clock size={22} color="#34d399" />
-            <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
-                Total Duration
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>90 Minutes</div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: '14px 16px',
-              backgroundColor: '#1f2937',
-              borderRadius: 10,
-              border: '1px solid #374151',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-            }}
-          >
-            <Layers size={22} color="#fbbf24" />
-            <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
-                Question Types
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>MCQ, Coding, SQL</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Guidelines List per UI Sample & Decisions */}
+        {/* Summary Rows per UI Sample (Screen 3) */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 12,
-            backgroundColor: '#1f2937',
-            padding: 20,
-            borderRadius: 10,
-            border: '1px solid #374151',
+            gap: 10,
             marginBottom: 24,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <AlertOctagon size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#1f2937',
+              borderRadius: 8,
+              border: '1px solid #374151',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <FileText size={18} color="#60a5fa" />
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Total Questions</span>
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>{totalQuestions}</span>
+          </div>
+
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#1f2937',
+              borderRadius: 8,
+              border: '1px solid #374151',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Clock size={18} color="#34d399" />
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Total Duration</span>
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>{totalDuration} Minutes</span>
+          </div>
+
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#1f2937',
+              borderRadius: 8,
+              border: '1px solid #374151',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Layers size={18} color="#fbbf24" />
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Question Types</span>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>MCQ, Coding, SQL</span>
+          </div>
+        </div>
+
+        {/* Rules List per UI Sample */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            backgroundColor: '#1f2937',
+            padding: 18,
+            borderRadius: 10,
+            border: '1px solid #374151',
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <Lock size={16} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Lockdown mode:</strong> Do not attempt to switch applications, minimize the window, or launch prohibited tools.
+              Do not switch applications or use browser.
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <Eye size={18} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <Eye size={16} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Audit Logging:</strong> Window focus loss and abnormal process events are logged with timestamps (FR-LAB-006).
+              Your session and active window will be monitored.
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <Smartphone size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <Smartphone size={16} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              Do not use mobile phones, headphones, or external electronic devices during the session.
+              Do not use mobile phones or external devices.
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <Lock size={18} color="#fbbf24" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <HelpCircle size={16} color="#34d399" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Sequential Progression:</strong> Questions must be answered in sequence. Once submitted or timed out, past questions cannot be revisited (FR-UI-004, Decision 1).
+              Attempt all questions. Sequential navigation is enforced per exam policy.
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <ShieldAlert size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <ShieldAlert size={16} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#f87171' }}>
-              Any suspicious activity, tampering, or policy violations will result in immediate disqualification.
+              Any suspicious activity or policy breach may lead to disqualification.
             </span>
+          </div>
+        </div>
+
+        {/* Monitoring & Lockdown Policy Text (BR-015, FR-UI-002) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 12,
+            padding: 14,
+            borderRadius: 8,
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.25)',
+            marginBottom: 24,
+          }}
+        >
+          <Lock size={18} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5 }}>
+            <strong style={{ color: '#93c5fd' }}>BR-015 Policy Disclosure:</strong> This assessment operates in a secured lockdown environment. System focus loss, unauthorized shortcut key combinations, external display changes, or blacklisted background tools will generate audit events with server-validated timestamps.
           </div>
         </div>
 
@@ -205,10 +306,10 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
               gap: 12,
               cursor: 'pointer',
               userSelect: 'none',
-              padding: '10px 14px',
+              padding: '12px 14px',
               borderRadius: 8,
-              backgroundColor: acknowledged ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-              border: `1px solid ${acknowledged ? '#3b82f6' : '#374151'}`,
+              backgroundColor: acknowledged ? 'rgba(37, 99, 235, 0.12)' : 'transparent',
+              border: `1px solid ${acknowledged ? '#2563eb' : '#374151'}`,
               transition: 'all 0.15s',
             }}
           >
@@ -243,8 +344,8 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
             border: 'none',
             fontSize: 15,
             fontWeight: 600,
-            cursor: acknowledged ? 'pointer' : 'not-allowed',
-            opacity: acknowledged ? 1 : 0.6,
+            cursor: acknowledged && !isStarting ? 'pointer' : 'not-allowed',
+            opacity: acknowledged && !isStarting ? 1 : 0.6,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -253,7 +354,7 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
             transition: 'all 0.2s',
           }}
         >
-          <span>{isStarting ? 'Starting Session...' : 'Start Test'}</span>
+          <span>{isStarting ? 'Starting Test...' : 'Start Test'}</span>
           <ArrowRight size={16} />
         </button>
       </div>

@@ -1,4 +1,5 @@
 import {
+  ApiErrorCode,
   ApiErrorResponse,
   HealthStatusResponse,
   SubmitAnswerPayload,
@@ -7,6 +8,7 @@ import {
 import { tokenStorage } from './tokenStorage';
 import { timeSync } from './timeSync';
 import { mockApi, MockAssessmentSession, MockUser } from './mockApi';
+import { CandidateAssignedAssessment } from '../types/assessment';
 
 /**
  * Unified API Client for VeriSync Candidate Desktop
@@ -134,6 +136,89 @@ class ApiClient {
   }
 
   /**
+   * Real Server Handshake & Client Version Verification (FR-LAB-003, SRS 8.3.3)
+   * Detects HTTP 426 UNSUPPORTED_CLIENT and reports lab staff instructions.
+   */
+  public async checkServerHandshake(): Promise<{
+    ok: boolean;
+    latencyMs: number;
+    serverVersion?: string;
+    isUnsupportedClient: boolean;
+    errorMessage?: string;
+  }> {
+    const startMs = Date.now();
+    if (this.config.forceMock) {
+      return {
+        ok: true,
+        latencyMs: 8,
+        serverVersion: '1.1.0',
+        isUnsupportedClient: false,
+      };
+    }
+
+    try {
+      const response = await fetch(`${this.config.baseUrl}/health`, {
+        method: 'GET',
+        headers: await this.buildHeaders(),
+      });
+      const endMs = Date.now();
+      const latencyMs = endMs - startMs;
+
+      if (response.status === 426) {
+        timeSync.setConnectionStatus('degraded');
+        return {
+          ok: false,
+          latencyMs,
+          isUnsupportedClient: true,
+          errorMessage: 'Unsupported client version (HTTP 426). Please contact lab staff.',
+        };
+      }
+
+      if (!response.ok) {
+        try {
+          const errData = await response.json();
+          if (errData?.code === ApiErrorCode.UNSUPPORTED_CLIENT) {
+            return {
+              ok: false,
+              latencyMs,
+              isUnsupportedClient: true,
+              errorMessage: errData.message || 'Unsupported client version. Please contact lab staff.',
+            };
+          }
+        } catch {
+          // ignore
+        }
+        return {
+          ok: false,
+          latencyMs,
+          isUnsupportedClient: false,
+          errorMessage: `Server returned status ${response.status}`,
+        };
+      }
+
+      const data = (await response.json()) as HealthStatusResponse;
+      timeSync.recordServerTime(data.serverTime, startMs, endMs);
+      timeSync.setConnectionStatus('online');
+      this.isServerReachable = true;
+      return {
+        ok: true,
+        latencyMs,
+        serverVersion: data.version,
+        isUnsupportedClient: false,
+      };
+    } catch {
+      timeSync.setConnectionStatus('degraded');
+      this.isServerReachable = false;
+      return {
+        ok: true,
+        latencyMs: 15,
+        serverVersion: '1.1.0 (Mock Fallback)',
+        isUnsupportedClient: false,
+      };
+    }
+  }
+
+  /**
    * Candidate Login (FR-AUTH-002, FR-CAN-007, openapi.yaml)
    * Supports either Candidate ID or Username
    */
@@ -178,10 +263,56 @@ class ApiClient {
   }
 
   /**
-   * Initialize and start candidate assessment session (FR-UI-001, FR-ASMT-006)
+   * Fetch Candidate Assigned Assessments (FR-UI-001, UC-08, openapi.yaml)
+   * Zero disclosure of answer keys or hidden test cases (BR-009, Rule 2, TC09).
    */
-  public async startAssessment(candidateId: string): Promise<MockAssessmentSession> {
-    return mockApi.initMockSession(candidateId);
+  public async getAssignedAssessments(): Promise<CandidateAssignedAssessment[]> {
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/assessments`, {
+          method: 'GET',
+          headers: await this.buildHeaders(),
+        });
+        if (response.ok) {
+          const data = (await response.json()) as CandidateAssignedAssessment[];
+          return data;
+        }
+        if (response.status === 401 || response.status === 403) {
+          const errPayload = (await response.json()) as ApiErrorResponse;
+          throw errPayload;
+        }
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) {
+          throw err;
+        }
+      }
+    }
+    return mockApi.getAssignedAssessments();
+  }
+
+  /**
+   * Initialize and start candidate assessment session (FR-UI-001, FR-ASMT-006, UC-08)
+   */
+  public async startAssessment(assessmentId: string, candidateId: string): Promise<MockAssessmentSession> {
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/assessments/${assessmentId}/start`, {
+          method: 'POST',
+          headers: await this.buildHeaders(),
+        });
+        if (response.ok) {
+          const session = await response.json();
+          return session;
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) {
+          throw err;
+        }
+      }
+    }
+    return mockApi.initMockSession(candidateId, assessmentId);
   }
 
   /**

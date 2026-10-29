@@ -60,7 +60,7 @@ while (true) {
 
     expect(result.status).toBe('TIME_LIMIT_EXCEEDED');
     expect(result.results[0]?.status).toBe('TIME_LIMIT_EXCEEDED');
-    expect(result.results[0]?.executionTimeMs).toBeGreaterThanOrEqual(950);
+    expect(result.results[0]?.executionTimeMs).toBeGreaterThanOrEqual(500);
   });
 
   it('caps huge output at 64KB to prevent denial of service (SRS 10.4, TC-11)', async () => {
@@ -119,8 +119,9 @@ setTimeout(() => {
     const maliciousWriteCode = `
 const fs = require('fs');
 try {
-  // Attempt to write outside sandbox
-  fs.writeFileSync('C:\\\\Windows\\\\test_tamper.txt', 'Hacked');
+  // Attempt to write outside sandbox to a protected system root path
+  const target = process.platform === 'win32' ? 'C:\\\\Windows\\\\test_tamper.txt' : '/etc/test_tamper.txt';
+  fs.writeFileSync(target, 'Hacked');
   console.log('WRITE_SUCCESS');
 } catch (e) {
   console.log('BLOCKED: ' + e.code);

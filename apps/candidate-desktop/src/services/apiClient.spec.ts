@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { apiClient } from './apiClient';
 import { mockApi } from './mockApi';
-import { ApiErrorCode } from '@verisync/shared';
+import { ApiErrorCode, SessionState } from '@verisync/shared';
 
 /**
  * API Client & Mock Server Tests
@@ -12,6 +12,7 @@ import { ApiErrorCode } from '@verisync/shared';
  * - FR-LAB-002: Unique application-managed device identifier persistence
  * - FR-LAB-003: Client version handshake verification
  * - SRS 8.3.3: Standard error codes and correlation ID validation
+ * - Phase 3 APIs: startSession, getCurrentQuestion, getSessionStatus, submitSessionAnswer, finalSubmitSession
  */
 
 describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 8.3.3)', () => {
@@ -112,5 +113,92 @@ describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 
     const handshake = await apiClient.checkServerHandshake();
     expect(handshake.ok).toBe(true);
     expect(handshake.isUnsupportedClient).toBe(false);
+  });
+
+  // ==========================================
+  // Phase 3 Session Runtime API Tests
+  // ==========================================
+
+  it('FR-TIME-002 & FR-UI-002: startSession initializes active exam session with first question and palette', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    expect(session.sessionId).toBeDefined();
+    expect(session.overallDeadline).toBeDefined();
+    expect(session.currentQuestion).toBeDefined();
+    expect(session.currentQuestion.sequenceNumber).toBe(1);
+    expect(session.currentQuestion.questionAttemptId).toBe('qa_0001');
+    expect(session.palette.length).toBe(6);
+    expect(session.palette[0].status).toBe('CURRENT');
+  });
+
+  it('FR-UI-003 & TC09: getCurrentQuestion retrieves active question without answer keys', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    const question = await apiClient.getCurrentQuestion(session.sessionId);
+    expect(question.questionAttemptId).toBe('qa_0001');
+    expect(question.questionText).toBeDefined();
+    expect(question.options?.length).toBe(4);
+
+    // Strict TC09 verification
+    const serialized = JSON.stringify(question);
+    expect(serialized).not.toContain('isCorrect');
+    expect(serialized).not.toContain('answerKey');
+  });
+
+  it('FR-TIME-008 & FR-UI-004: getSessionStatus returns authoritative countdown and palette state', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    const status = await apiClient.getSessionStatus(session.sessionId);
+    expect(status.sessionId).toBe(session.sessionId);
+    expect(status.sessionStatus).toBe(SessionState.ACTIVE);
+    expect(status.overallRemainingSeconds).toBeGreaterThan(0);
+    expect(status.palette.length).toBe(6);
+  });
+
+  it('FR-ANS-009 & TC-04: submitSessionAnswer records answer idempotently and advances question', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    const idempotencyKey = crypto.randomUUID();
+
+    const ack1 = await apiClient.submitSessionAnswer(
+      session.sessionId,
+      {
+        questionAttemptId: 'qa_0001',
+        answer: 'opt_2',
+      },
+      idempotencyKey
+    );
+
+    expect(ack1.status).toBe('accepted');
+    expect(ack1.questionAttemptId).toBe('qa_0001');
+    expect(ack1.next?.questionAttemptId).toBe('qa_0002');
+
+    // Duplicate request with identical idempotency-key (TC04)
+    const ack2 = await apiClient.submitSessionAnswer(
+      session.sessionId,
+      {
+        questionAttemptId: 'qa_0001',
+        answer: 'opt_2',
+      },
+      idempotencyKey
+    );
+
+    expect(ack2).toEqual(ack1);
+  });
+
+  it('FR-ANS-005: saveDraft saves candidate draft without altering attempt state', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    const res = await apiClient.saveDraft(session.sessionId, {
+      questionAttemptId: 'qa_0001',
+      draftPayload: 'draft answer text',
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it('FR-ANS-008 & FR-UI-009: finalSubmitSession marks session as submitted', async () => {
+    const session = await apiClient.startSession('asmt-frontend-2026');
+    const result = await apiClient.finalSubmitSession(session.sessionId);
+    expect(result.status).toBe('submitted');
+    expect(result.sessionId).toBe(session.sessionId);
+    expect(result.submittedAt).toBeDefined();
+
+    const statusAfter = await apiClient.getSessionStatus(session.sessionId);
+    expect(statusAfter.sessionStatus).toBe(SessionState.SUBMITTED);
   });
 });

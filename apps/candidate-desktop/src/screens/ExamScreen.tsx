@@ -1,5 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { Play, AlertCircle, Bookmark, Code2, Database } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Play,
+  AlertCircle,
+  Bookmark,
+  Code2,
+  Database,
+  RotateCcw,
+  RefreshCw,
+  Clock,
+} from 'lucide-react';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { apiClient } from '../services/apiClient';
 import { MockAssessmentSession, MockQuestion } from '../services/mockApi';
@@ -11,22 +20,31 @@ import { ShortAnswerRenderer } from '../components/exam/renderers/ShortAnswerRen
 import { TimerComponent } from '../components/exam/TimerComponent';
 import { SubmitNextButton, SubmissionButtonState } from '../components/exam/SubmitNextButton';
 import { handleApiError } from '../services/errorHandler';
+import {
+  CandidateQuestionDto,
+  FinalSubmitResponseDto,
+  QuestionType,
+  SessionState,
+} from '@verisync/shared';
 
 /**
  * Exam Interface Screen
- * Source of truth: docs/design/UI_Sample.jpeg (Screen 4), docs/DECISIONS.md
+ * Source of truth: docs/design/UI_Sample.jpeg (Screen 4), docs/DECISIONS.md, docs/SRS/srs.md
  * Non-Negotiable Rules & SRS Requirements:
- * - Rule 1: Server authority for timing & deadlines (FR-TIME-001)
+ * - Rule 1 & FR-TIME-001: Server authority for timing & deadlines (display never decides acceptance)
  * - Rule 3 & FR-ANS-009: Every submission carries client-generated Idempotency-Key
- * - Decision 1: Read-only question status palette in sequential mode (FR-UI-005)
- * - Decision 1: Previous button is hidden in sequential mode
- * - Decision 4: Mark for Review is local visual aid only
+ * - Rule 4 & FR-ANS-003: Durable backend persistence before client acknowledgement
+ * - Decision 1 & FR-UI-005: Read-only question status palette in sequential mode
+ * - Decision 1 & FR-UI-004: Previous button is hidden in sequential mode
+ * - Decision 4 & FR-ANS-005: Mark for Review is local visual aid only
  * - FR-UI-006: Multiple-submission / double-click protection (in-flight state)
+ * - FR-UI-007 & FR-TIME-005: Timeout notice and automatic transition to next question (TC-05)
+ * - FR-TIME-010 & FR-ANS-007: Safe reconnection & resumption from authoritative state (TC-07)
  */
 
 interface ExamScreenProps {
   session: MockAssessmentSession;
-  onFinishExam: () => void;
+  onFinishExam: (finalResult?: FinalSubmitResponseDto) => void;
 }
 
 export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam }) => {
@@ -37,19 +55,26 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
   const [submissionState, setSubmissionState] = useState<SubmissionButtonState>('idle');
   const [showEndTestModal, setShowEndTestModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [timeoutNotice, setTimeoutNotice] = useState<string | null>(null);
   const [codeOutput, setCodeOutput] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [activeQuestionDto, setActiveQuestionDto] = useState<CandidateQuestionDto | null>(null);
 
-  // Store current idempotency key per attempt to preserve on retry (Rule 3, FR-ANS-009)
+  // Prevent duplicate final submissions
+  const hasFinishedRef = useRef(false);
+
+  // Store persistent idempotency key per question attempt (Rule 3, FR-ANS-009, TC-04)
   const currentKeyRef = useRef<Record<string, string>>({});
 
+  const totalQuestions = session.questions?.length || 6;
   const currentQuestion: MockQuestion = session.questions[currentIdx] || session.questions[0];
-  const qAttemptId = currentQuestion.attemptId;
-  const isLastQuestion = currentIdx + 1 >= session.questions.length;
+  const qAttemptId = activeQuestionDto?.questionAttemptId || currentQuestion.attemptId;
+  const isLastQuestion = currentIdx + 1 >= totalQuestions;
 
   // Local answer state for current question
   const currentAnswer = selectedAnswers[qAttemptId];
 
-  // Map session questions to QuestionStatusItem
+  // Map questions to QuestionStatusItem for read-only palette
   const statusItems: QuestionStatusItem[] = session.questions.map((q, idx) => ({
     id: q.id,
     index: idx,
@@ -60,22 +85,94 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
     isMarkedForReview: !!markedForReview[q.attemptId],
   }));
 
+  /**
+   * Reconnect & Resume: Synchronize authoritative session state (FR-TIME-010, FR-ANS-007, TC-07)
+   */
+  const syncAuthoritativeState = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const status = await apiClient.getSessionStatus(session.sessionId);
+
+      if (status.sessionStatus === SessionState.SUBMITTED) {
+        if (!hasFinishedRef.current) {
+          hasFinishedRef.current = true;
+          onFinishExam();
+        }
+        return;
+      }
+
+      // Update answered attempts from authoritative server palette
+      const serverAnswered = new Set<string>();
+      let serverActiveIdx = currentIdx;
+
+      status.palette.forEach((item, idx) => {
+        if (item.status === 'ANSWERED') {
+          serverAnswered.add(item.questionAttemptId);
+        } else if (item.status === 'CURRENT') {
+          serverActiveIdx = idx;
+        }
+      });
+
+      setAnsweredIds(serverAnswered);
+      setCurrentIdx(serverActiveIdx);
+
+      // Fetch active question details
+      const qDto = await apiClient.getCurrentQuestion(session.sessionId);
+      if (qDto) {
+        setActiveQuestionDto(qDto);
+      }
+    } catch {
+      // Reconnection sync error: keep local working state
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [session.sessionId, currentIdx, onFinishExam]);
+
+  // Listen for online reconnection events (TC-07)
+  useEffect(() => {
+    const handleOnline = () => {
+      syncAuthoritativeState();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [syncAuthoritativeState]);
+
+  // Initial authoritative sync on mount
+  useEffect(() => {
+    syncAuthoritativeState();
+  }, [syncAuthoritativeState]);
+
+  // Local Mark for Review toggle (Decision 4 - strictly local visual aid)
   const handleToggleMarkReview = () => {
     setMarkedForReview((prev) => ({ ...prev, [qAttemptId]: !prev[qAttemptId] }));
   };
 
+  // Clear current question response
+  const handleClearResponse = () => {
+    setSelectedAnswers((prev) => {
+      const copy = { ...prev };
+      delete copy[qAttemptId];
+      return copy;
+    });
+  };
+
   const handleRunCode = () => {
-    if (currentQuestion.type === 'coding') {
+    if (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING) {
       setCodeOutput('Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.');
-    } else if (currentQuestion.type === 'sql') {
+    } else if (currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL) {
       setCodeOutput('Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).');
     }
   };
 
+  /**
+   * Submit and Next with Idempotency-Key & Double-Click Protection
+   * (FR-ANS-001..009, Rule 3, Rule 4, TC-04, TC-05)
+   */
   const handleSubmitAnswer = async () => {
-    if (submissionState === 'in-flight') return; // Multiple-click prevention (FR-UI-006)
+    if (submissionState === 'in-flight') return; // Multiple-click protection (FR-UI-006)
     setSubmissionState('in-flight');
     setErrorMessage(null);
+    setTimeoutNotice(null);
 
     // Retrieve or generate persistent Idempotency-Key for this question attempt
     if (!currentKeyRef.current[qAttemptId]) {
@@ -83,23 +180,36 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
     }
     const idempotencyKey = currentKeyRef.current[qAttemptId];
 
-    const answerPayload = {
-      questionAttemptId: qAttemptId,
-      response:
-        currentAnswer ??
-        (currentQuestion.type === 'coding' ? currentQuestion.codeSnippet : currentQuestion.type === 'sql' ? currentQuestion.codeSnippet : ''),
-    };
+    const answerValue =
+      currentAnswer ??
+      (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING
+        ? currentQuestion.codeSnippet
+        : currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL
+        ? currentQuestion.codeSnippet
+        : '');
 
     try {
-      // Rule 3 & FR-ANS-009: Client-generated idempotency key UUID
-      await apiClient.submitAnswer(answerPayload, idempotencyKey);
+      // Send answer with Idempotency-Key header to server
+      const ack = await apiClient.submitSessionAnswer(
+        session.sessionId,
+        {
+          questionAttemptId: qAttemptId,
+          answer: answerValue,
+        },
+        idempotencyKey
+      );
 
+      // Display success ONLY upon receipt of server acknowledgement (FR-ANS-006)
       setAnsweredIds((prev) => new Set(prev).add(qAttemptId));
       setSubmissionState('success');
 
       setTimeout(() => {
         if (!isLastQuestion) {
-          setCurrentIdx((prev) => prev + 1);
+          if (ack.next) {
+            setCurrentIdx((prev) => prev + 1);
+          } else {
+            setCurrentIdx((prev) => prev + 1);
+          }
           setCodeOutput(null);
           setSubmissionState('idle');
         } else {
@@ -109,17 +219,67 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       }, 400);
     } catch (err: unknown) {
       const formatted = handleApiError(err);
+
+      // Handle QUESTION_EXPIRED (HTTP 409) - automatic advance (FR-TIME-004, TC-05)
+      if (formatted.code === 'QUESTION_EXPIRED') {
+        setTimeoutNotice('Question time limit has expired. Automatically advancing to next question...');
+        setSubmissionState('idle');
+        setTimeout(() => {
+          setTimeoutNotice(null);
+          if (!isLastQuestion) {
+            setCurrentIdx((prev) => prev + 1);
+            setCodeOutput(null);
+          } else {
+            setShowEndTestModal(true);
+          }
+        }, 1500);
+        return;
+      }
+
+      // Lost response or retryable network interruption: keep SAME idempotency key (TC-04, Rule 3)
       setErrorMessage(formatted.message);
       setSubmissionState('retry');
     }
   };
 
+  /**
+   * Question Countdown Expiry Handler (FR-TIME-005, FR-UI-007, TC-05)
+   */
+  const handleQuestionTimeout = () => {
+    setTimeoutNotice('Time limit expired for this question. Moving to next question...');
+    setTimeout(() => {
+      setTimeoutNotice(null);
+      if (!isLastQuestion) {
+        setCurrentIdx((prev) => prev + 1);
+        setCodeOutput(null);
+      } else {
+        setShowEndTestModal(true);
+      }
+    }, 1500);
+  };
+
+  /**
+   * Overall Assessment Deadline Expiry Handler (FR-TIME-007)
+   */
+  const handleOverallTimeout = () => {
+    setTimeoutNotice('Assessment overall deadline reached. Finalizing submissions...');
+    setTimeout(() => {
+      handleConfirmFinalSubmit();
+    }, 1200);
+  };
+
+  /**
+   * Final Assessment Submission (FR-ANS-008, UC-13, Decision 4)
+   */
   const handleConfirmFinalSubmit = async () => {
+    if (hasFinishedRef.current) return;
+    hasFinishedRef.current = true;
     setSubmissionState('in-flight');
     try {
-      await apiClient.finalSubmit(session.sessionId);
-      onFinishExam();
+      const finalResult = await apiClient.finalSubmitSession(session.sessionId);
+      onFinishExam(finalResult);
     } catch (err: unknown) {
+      hasFinishedRef.current = false;
       const formatted = handleApiError(err);
       setErrorMessage(formatted.message);
       setSubmissionState('retry');
@@ -127,6 +287,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       setShowEndTestModal(false);
     }
   };
+
+  // Question Deadline: prioritize authoritative activeQuestionDto deadline or default to overall
+  const questionDeadline = activeQuestionDto?.deadlineAt || session.overallDeadlineAt;
 
   return (
     <div
@@ -149,9 +312,32 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
         onEndTest={() => setShowEndTestModal(true)}
       />
 
+      {/* Timeout Alert Notification Toast (FR-UI-007, TC-05) */}
+      {timeoutNotice && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: '#ef4444',
+            color: '#ffffff',
+            padding: '10px 24px',
+            fontSize: 14,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+            zIndex: 40,
+          }}
+        >
+          <Clock size={18} />
+          <span>{timeoutNotice}</span>
+        </div>
+      )}
+
       {/* Main Workspace Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left: Question Status Panel (Read-only in sequential mode per Decision 1) */}
+        {/* Left: Question Status Panel (Read-only in sequential mode per Decision 1, FR-UI-005) */}
         <QuestionStatusPanel
           questions={statusItems}
           currentIndex={currentIdx}
@@ -169,7 +355,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             padding: '24px 32px',
           }}
         >
-          {/* Header Info: Section, Timer, Mark for Review */}
+          {/* Header Info: Section, Authoritative Timer, Actions */}
           <div
             style={{
               display: 'flex',
@@ -182,21 +368,53 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           >
             <div>
               <div style={{ fontSize: 13, color: '#93c5fd', fontWeight: 600, textTransform: 'uppercase' }}>
-                {currentQuestion.section} &bull; Question {currentIdx + 1} of {session.questions.length}
+                {currentQuestion.section} &bull; Question {currentIdx + 1} of {totalQuestions}
               </div>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0 0', color: '#f8fafc' }}>
                 {currentQuestion.title}
               </h2>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              {/* Question Countdown Timer with Drift Correction (FR-TIME-001, FR-TIME-008) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Sync Status Button (FR-TIME-010, TC-07) */}
+              <button
+                type="button"
+                onClick={syncAuthoritativeState}
+                disabled={isSyncing}
+                title="Synchronize session status from authoritative server"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  color: '#94a3b8',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: isSyncing ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
+                <span>Sync</span>
+              </button>
+
+              {/* Question Countdown Timer with Drift Correction (FR-TIME-001, FR-TIME-008, TC-01) */}
               <TimerComponent
-                serverDeadline={session.overallDeadlineAt}
-                label="Exam Timer"
+                serverDeadline={questionDeadline}
+                label="Question Timer"
+                onExpire={handleQuestionTimeout}
               />
 
-              {/* Local Mark for Review Checkbox (Decision 4) */}
+              {/* Overall Exam Countdown Timer */}
+              <TimerComponent
+                serverDeadline={session.overallDeadlineAt}
+                label="Total Time"
+                onExpire={handleOverallTimeout}
+              />
+
+              {/* Local Mark for Review Action (Decision 4) */}
               <button
                 type="button"
                 onClick={handleToggleMarkReview}
@@ -254,25 +472,27 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
           {/* Renderers per Question Type (FR-QB-003) */}
           <div style={{ marginBottom: 32 }}>
-            {currentQuestion.type === 'single_choice' && currentQuestion.options && (
-              <SingleChoiceRenderer
-                questionId={qAttemptId}
-                options={currentQuestion.options}
-                value={(currentAnswer as string) || null}
-                onChange={(optId) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))}
-              />
-            )}
+            {(currentQuestion.type === 'single_choice' || currentQuestion.type === QuestionType.MCQ_SINGLE) &&
+              currentQuestion.options && (
+                <SingleChoiceRenderer
+                  questionId={qAttemptId}
+                  options={currentQuestion.options}
+                  value={(currentAnswer as string) || null}
+                  onChange={(optId) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))}
+                />
+              )}
 
-            {currentQuestion.type === 'multiple_select' && currentQuestion.options && (
-              <MultipleSelectRenderer
-                questionId={qAttemptId}
-                options={currentQuestion.options}
-                value={Array.isArray(currentAnswer) ? (currentAnswer as string[]) : []}
-                onChange={(optIds) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))}
-              />
-            )}
+            {(currentQuestion.type === 'multiple_select' || currentQuestion.type === QuestionType.MCQ_MULTIPLE) &&
+              currentQuestion.options && (
+                <MultipleSelectRenderer
+                  questionId={qAttemptId}
+                  options={currentQuestion.options}
+                  value={Array.isArray(currentAnswer) ? (currentAnswer as string[]) : []}
+                  onChange={(optIds) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))}
+                />
+              )}
 
-            {currentQuestion.type === 'true_false' && (
+            {(currentQuestion.type === 'true_false' || currentQuestion.type === QuestionType.TRUE_FALSE) && (
               <TrueFalseRenderer
                 questionId={qAttemptId}
                 value={(currentAnswer as string) || null}
@@ -280,7 +500,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               />
             )}
 
-            {currentQuestion.type === 'short_answer' && (
+            {(currentQuestion.type === 'short_answer' || currentQuestion.type === QuestionType.SHORT_ANSWER) && (
               <ShortAnswerRenderer
                 questionId={qAttemptId}
                 value={(currentAnswer as string) || ''}
@@ -289,8 +509,11 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               />
             )}
 
-            {/* Coding & SQL Editor Mock (Retained for Technical Questions) */}
-            {(currentQuestion.type === 'coding' || currentQuestion.type === 'sql') && (
+            {/* Technical Question / Code Editor Area */}
+            {(currentQuestion.type === 'coding' ||
+              currentQuestion.type === QuestionType.CODING ||
+              currentQuestion.type === 'sql' ||
+              currentQuestion.type === QuestionType.SQL) && (
               <div>
                 <div
                   style={{
@@ -305,8 +528,16 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#93c5fd' }}>
-                    {currentQuestion.type === 'coding' ? <Code2 size={16} /> : <Database size={16} />}
-                    <span>{currentQuestion.type === 'coding' ? 'Python 3.10' : 'SQLite Ephemeral'}</span>
+                    {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING ? (
+                      <Code2 size={16} />
+                    ) : (
+                      <Database size={16} />
+                    )}
+                    <span>
+                      {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING
+                        ? 'Python 3.10'
+                        : 'SQLite Ephemeral'}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -375,7 +606,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             )}
           </div>
 
-          {/* Bottom Action Bar: Previous hidden (Decision 1), SubmitNextButton with in-flight/retry states */}
+          {/* Bottom Action Bar: Previous is strictly hidden in sequential mode (Decision 1, FR-UI-005) */}
           <div
             style={{
               marginTop: 'auto',
@@ -386,10 +617,36 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               alignItems: 'center',
             }}
           >
-            <div style={{ fontSize: 13, color: '#64748b' }}>
-              Sequential mode: Questions cannot be revisited after submitting (FR-TIME-009).
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Clear Response Button */}
+              <button
+                type="button"
+                onClick={handleClearResponse}
+                disabled={submissionState === 'in-flight'}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 14px',
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: 6,
+                  color: '#94a3b8',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: submissionState === 'in-flight' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <RotateCcw size={14} />
+                <span>Clear Response</span>
+              </button>
+
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                Sequential mode: Questions cannot be revisited once submitted (FR-TIME-009).
+              </span>
             </div>
 
+            {/* Submit & Next Button with in-flight / retry / double-click protection */}
             <SubmitNextButton
               state={submissionState}
               isLastQuestion={isLastQuestion}
@@ -449,7 +706,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             </div>
 
             <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-              Are you sure you want to end and submit your assessment? Any unanswered questions will be auto-finalized. Once confirmed, your responses cannot be modified.
+              Are you sure you want to end and submit your assessment? Any unanswered questions will be auto-finalized.
+              Once confirmed, your responses cannot be modified.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>

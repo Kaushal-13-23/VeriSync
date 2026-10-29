@@ -2,7 +2,18 @@ import {
   ApiErrorCode,
   ApiErrorResponse,
   AssessmentStatus,
+  CandidateQuestionDto,
+  FinalSubmitResponseDto,
   HealthStatusResponse,
+  PaletteItemDto,
+  QuestionType,
+  SaveDraftDto,
+  SessionHeartbeatResponseDto,
+  SessionState,
+  SessionStatusDto,
+  StartSessionResponseDto,
+  SubmitAnswerAckDto,
+  SubmitAnswerDto,
   SubmitAnswerPayload,
   SubmitAnswerResponse,
   UserRole,
@@ -13,9 +24,9 @@ import { CandidateAssignedAssessment } from '../types/assessment';
  * Local Mock Server strictly matching packages/shared/openapi.yaml & SRS 8.3.3
  * Source of truth: packages/shared/openapi.yaml, docs/SRS/srs.md, docs/design/UI_Sample.jpeg
  * Non-Negotiable Rules:
- * - Rule 1: Server authority for deadlines, scoring, acceptance
- * - Rule 2: Candidate APIs never return answer keys or hidden test cases
- * - Rule 3: Every answer submission carries an Idempotency-Key; duplicates return original result
+ * - Rule 1: Server authority for deadlines, scoring, acceptance (FR-TIME-001)
+ * - Rule 2: Candidate APIs never return answer keys or hidden test cases (TC09)
+ * - Rule 3: Every answer submission carries an Idempotency-Key; duplicates return original result (FR-ANS-009, TC04, TC05)
  * - Rule 9: Timestamps are UTC ISO-8601; API errors use SRS 8.3.3 codes with correlationId
  */
 
@@ -37,8 +48,8 @@ export interface MockQuestion {
   explanation?: string;
   sampleInput?: string;
   sampleOutput?: string;
-  type: 'single_choice' | 'multiple_select' | 'true_false' | 'short_answer' | 'coding' | 'sql';
-  options?: Array<{ id: string; text: string }>;
+  type: 'single_choice' | 'multiple_select' | 'true_false' | 'short_answer' | 'coding' | 'sql' | QuestionType;
+  options?: Array<{ id: string; text: string; optionText?: string }>;
   codeSnippet?: string;
   language?: string;
   durationMinutes: number;
@@ -60,8 +71,10 @@ export interface MockAssessmentSession {
   isFinalSubmitted: boolean;
 }
 
-// In-memory idempotency cache (SRS FR-ANS-009, Rule 3)
+// In-memory stores
 const idempotencyStore = new Map<string, SubmitAnswerResponse>();
+const sessionAckStore = new Map<string, SubmitAnswerAckDto>();
+const sessionDraftsStore = new Map<string, unknown>();
 
 // Sample mock questions matching docs/design/UI_Sample.jpeg & SRS FR-QB-003
 const sampleQuestions: MockQuestion[] = [
@@ -158,6 +171,46 @@ const sampleQuestions: MockQuestion[] = [
 ];
 
 let activeMockSession: MockAssessmentSession | null = null;
+let mockSessionStatus: SessionState = SessionState.NOT_STARTED;
+let currentQuestionDeadline: Date = new Date();
+
+function mapMockQuestionToDto(q: MockQuestion, sequence: number, deadlineAt: string, remainingSec: number): CandidateQuestionDto {
+  let mappedType: QuestionType = QuestionType.MCQ_SINGLE;
+  if (q.type === 'single_choice' || q.type === QuestionType.MCQ_SINGLE) mappedType = QuestionType.MCQ_SINGLE;
+  else if (q.type === 'multiple_select' || q.type === QuestionType.MCQ_MULTIPLE) mappedType = QuestionType.MCQ_MULTIPLE;
+  else if (q.type === 'true_false' || q.type === QuestionType.TRUE_FALSE) mappedType = QuestionType.TRUE_FALSE;
+  else if (q.type === 'short_answer' || q.type === QuestionType.SHORT_ANSWER) mappedType = QuestionType.SHORT_ANSWER;
+  else if (q.type === 'coding' || q.type === QuestionType.CODING) mappedType = QuestionType.CODING;
+  else if (q.type === 'sql' || q.type === QuestionType.SQL) mappedType = QuestionType.SQL;
+
+  return {
+    questionAttemptId: q.attemptId,
+    questionId: q.id,
+    sequenceNumber: sequence,
+    questionType: mappedType,
+    questionText: q.statement,
+    codeSnippet: q.codeSnippet,
+    maximumMarks: 2,
+    timeLimitSeconds: q.durationMinutes * 60,
+    startedAt: new Date().toISOString(),
+    deadlineAt,
+    remainingSeconds: remainingSec,
+    options: q.options?.map((opt, oIdx) => ({
+      id: opt.id,
+      optionText: opt.text || (opt as { optionText?: string }).optionText || '',
+      displayOrder: oIdx + 1,
+    })),
+    sampleTestCases: q.sampleInput
+      ? [
+          {
+            id: `stc_${q.id}`,
+            inputData: q.sampleInput,
+            expectedOutput: q.sampleOutput || '',
+          },
+        ]
+      : undefined,
+  };
+}
 
 export const mockApi = {
   /**
@@ -199,7 +252,6 @@ export const mockApi = {
       throw err;
     }
 
-    // In mock mode, any non-empty password is accepted for testing candidate credentials
     const candidateId = identifier.startsWith('CAN-') ? identifier : `CAN-2026-${identifier.toUpperCase().slice(0, 3)}`;
     const user: MockUser = {
       id: `usr-${candidateId.toLowerCase()}`,
@@ -221,8 +273,8 @@ export const mockApi = {
    */
   async getAssignedAssessments(): Promise<CandidateAssignedAssessment[]> {
     const now = new Date();
-    const windowStart = new Date(now.getTime() - 60 * 60 * 1000); // 1 hr ago
-    const windowEnd = new Date(now.getTime() + 4 * 60 * 60 * 1000); // in 4 hrs
+    const windowStart = new Date(now.getTime() - 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
     const futureStart = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const futureEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000);
@@ -296,7 +348,205 @@ export const mockApi = {
   },
 
   /**
-   * Initialize candidate assessment session per UI Sample
+   * Phase 3: Start Assessment Session (POST /candidate/assessments/:id/start)
+   * FR-UI-002, BR-007, TC-15, TC-16
+   */
+  async startSession(assessmentId?: string): Promise<StartSessionResponseDto> {
+    const session = this.initMockSession('CAN-2026-081', assessmentId);
+    mockSessionStatus = SessionState.ACTIVE;
+
+    const currentQ = session.questions[0];
+    const qDurationMs = currentQ.durationMinutes * 60 * 1000;
+    currentQuestionDeadline = new Date(Date.now() + qDurationMs);
+
+    const palette: PaletteItemDto[] = session.questions.map((q, idx) => ({
+      sequenceNumber: idx + 1,
+      questionAttemptId: q.attemptId,
+      status: idx === 0 ? 'CURRENT' : 'NOT_ANSWERED',
+    }));
+
+    const dto = mapMockQuestionToDto(currentQ, 1, currentQuestionDeadline.toISOString(), currentQ.durationMinutes * 60);
+
+    return {
+      sessionId: session.sessionId,
+      assignmentId: `asgn_${session.assessmentId}`,
+      attemptNumber: 1,
+      startedAt: session.startedAt,
+      overallDeadline: session.overallDeadlineAt,
+      overallRemainingSeconds: session.totalDurationMinutes * 60,
+      currentQuestion: dto,
+      palette,
+      serverTime: new Date().toISOString(),
+    };
+  },
+
+  /**
+   * Phase 3: Get Active Question (GET /candidate/sessions/:id/current-question)
+   * FR-UI-003, TC-08, TC-09
+   */
+  async getCurrentQuestion(_sessionId: string): Promise<CandidateQuestionDto> {
+    if (!activeMockSession) {
+      this.initMockSession('CAN-2026-081');
+    }
+    const session = activeMockSession!;
+    const idx = session.currentQuestionIndex;
+    const currentQ = session.questions[idx] || session.questions[0];
+    const remainingSec = Math.max(0, Math.floor((currentQuestionDeadline.getTime() - Date.now()) / 1000));
+
+    return mapMockQuestionToDto(currentQ, idx + 1, currentQuestionDeadline.toISOString(), remainingSec);
+  },
+
+  /**
+   * Phase 3: Get Session Status (GET /candidate/sessions/:id/status)
+   * FR-TIME-008, FR-UI-004, TC-07
+   */
+  async getSessionStatus(sessionId: string): Promise<SessionStatusDto> {
+    if (!activeMockSession) {
+      this.initMockSession('CAN-2026-081');
+    }
+    const session = activeMockSession!;
+    const now = Date.now();
+    const overallDeadlineMs = new Date(session.overallDeadlineAt).getTime();
+    const overallRemainingSeconds = Math.max(0, Math.floor((overallDeadlineMs - now) / 1000));
+
+    const palette: PaletteItemDto[] = session.questions.map((q, idx) => {
+      let st: 'ANSWERED' | 'CURRENT' | 'NOT_ANSWERED' = 'NOT_ANSWERED';
+      if (session.answeredAttemptIds.has(q.attemptId)) {
+        st = 'ANSWERED';
+      } else if (idx === session.currentQuestionIndex) {
+        st = 'CURRENT';
+      }
+      return {
+        sequenceNumber: idx + 1,
+        questionAttemptId: q.attemptId,
+        status: st,
+      };
+    });
+
+    const currentDto = await this.getCurrentQuestion(sessionId);
+
+    return {
+      sessionId: session.sessionId,
+      sessionStatus: mockSessionStatus,
+      startedAt: session.startedAt,
+      overallDeadline: session.overallDeadlineAt,
+      overallRemainingSeconds,
+      currentQuestion: currentDto,
+      palette,
+      serverTime: new Date().toISOString(),
+    };
+  },
+
+  /**
+   * Phase 3: Submit Question Answer with Idempotency-Key
+   * POST /candidate/sessions/:id/answers (FR-ANS-001..009, TC-01..05)
+   */
+  async submitSessionAnswer(
+    _sessionId: string,
+    dto: SubmitAnswerDto,
+    idempotencyKey: string
+  ): Promise<SubmitAnswerAckDto> {
+    if (!idempotencyKey || idempotencyKey.trim() === '') {
+      throw {
+        status: 'rejected',
+        code: ApiErrorCode.VALIDATION_FAILED,
+        message: 'Missing required Idempotency-Key header.',
+        correlationId: `c-${Math.random().toString(36).slice(2, 8)}`,
+      } as ApiErrorResponse;
+    }
+
+    // Check duplicate request with same idempotency key (TC04, Rule 3)
+    if (sessionAckStore.has(idempotencyKey)) {
+      return sessionAckStore.get(idempotencyKey)!;
+    }
+
+    if (!activeMockSession) {
+      this.initMockSession('CAN-2026-081');
+    }
+    const session = activeMockSession!;
+
+    // Deadline check (TC05, FR-TIME-004): reject late submission
+    if (Date.now() > currentQuestionDeadline.getTime()) {
+      throw {
+        status: 'rejected',
+        code: ApiErrorCode.QUESTION_EXPIRED,
+        message: 'Question attempt time limit has expired.',
+        correlationId: `c-${Math.random().toString(36).slice(2, 8)}`,
+      } as ApiErrorResponse;
+    }
+
+    session.answeredAttemptIds.add(dto.questionAttemptId);
+
+    const nextIdx = session.currentQuestionIndex + 1;
+    let nextInfo: { questionAttemptId: string; sequenceNumber: number; deadlineAt: string } | null = null;
+
+    if (nextIdx < session.questions.length) {
+      session.currentQuestionIndex = nextIdx;
+      const nextQ = session.questions[nextIdx];
+      currentQuestionDeadline = new Date(Date.now() + nextQ.durationMinutes * 60 * 1000);
+      nextInfo = {
+        questionAttemptId: nextQ.attemptId,
+        sequenceNumber: nextIdx + 1,
+        deadlineAt: currentQuestionDeadline.toISOString(),
+      };
+    }
+
+    const ack: SubmitAnswerAckDto = {
+      status: 'accepted',
+      questionAttemptId: dto.questionAttemptId,
+      submittedAt: new Date().toISOString(),
+      next: nextInfo,
+      serverTime: new Date().toISOString(),
+    };
+
+    sessionAckStore.set(idempotencyKey, ack);
+    return ack;
+  },
+
+  /**
+   * Phase 3: Autosave Draft (PUT /candidate/sessions/:id/draft)
+   */
+  async saveDraft(_sessionId: string, dto: SaveDraftDto): Promise<{ success: boolean }> {
+    sessionDraftsStore.set(dto.questionAttemptId, dto.draftPayload);
+    return { success: true };
+  },
+
+  /**
+   * Phase 3: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
+   */
+  async finalSubmitSession(_sessionId: string): Promise<FinalSubmitResponseDto> {
+    if (!activeMockSession) {
+      this.initMockSession('CAN-2026-081');
+    }
+    const session = activeMockSession!;
+    mockSessionStatus = SessionState.SUBMITTED;
+    session.isFinalSubmitted = true;
+
+    return {
+      status: 'submitted',
+      sessionId: session.sessionId,
+      candidateIdentifier: session.candidateId,
+      assessmentTitle: session.title,
+      totalQuestions: session.totalQuestions,
+      answeredCount: session.answeredAttemptIds.size,
+      submittedAt: new Date().toISOString(),
+      serverTime: new Date().toISOString(),
+    };
+  },
+
+  /**
+   * Phase 3: Session Heartbeat (POST /candidate/sessions/:id/heartbeat)
+   */
+  async sendHeartbeat(_sessionId: string): Promise<SessionHeartbeatResponseDto> {
+    return {
+      status: 'ok',
+      sessionStatus: mockSessionStatus,
+      serverTime: new Date().toISOString(),
+    };
+  },
+
+  /**
+   * Legacy mock methods retained for backwards compatibility
    */
   initMockSession(candidateId: string, assessmentId?: string): MockAssessmentSession {
     const now = new Date();
@@ -308,7 +558,7 @@ export const mockApi = {
       assessmentId: assessmentId || 'asmt-frontend-2026',
       title: 'Frontend Developer Assessment',
       candidateId: candidateId || 'CND12345',
-      totalQuestions: 20,
+      totalQuestions: sampleQuestions.length,
       totalDurationMinutes: durationMinutes,
       startedAt: now.toISOString(),
       overallDeadlineAt: deadline.toISOString(),
@@ -318,6 +568,8 @@ export const mockApi = {
       markedForReviewIds: new Set<string>(),
       isFinalSubmitted: false,
     };
+    mockSessionStatus = SessionState.ACTIVE;
+    currentQuestionDeadline = new Date(now.getTime() + sampleQuestions[0].durationMinutes * 60 * 1000);
 
     return activeMockSession;
   },
@@ -326,15 +578,14 @@ export const mockApi = {
     return activeMockSession;
   },
 
-  /**
-   * POST /assessments/active/submit-answer (matches openapi.yaml)
-   * Enforces Idempotency-Key and SRS 8.3.3 error contracts
-   */
+  setQuestionDeadline(date: Date): void {
+    currentQuestionDeadline = date;
+  },
+
   async submitAnswer(
     payload: SubmitAnswerPayload,
     idempotencyKey?: string
   ): Promise<SubmitAnswerResponse> {
-    // Non-Negotiable Rule 3 & openapi.yaml: Idempotency-Key is required UUID header
     if (!idempotencyKey || idempotencyKey.trim() === '') {
       const err: ApiErrorResponse = {
         status: 'rejected',
@@ -345,7 +596,6 @@ export const mockApi = {
       throw err;
     }
 
-    // Idempotency check: return cached original result if key seen before (FR-ANS-009)
     if (idempotencyStore.has(idempotencyKey)) {
       return idempotencyStore.get(idempotencyKey)!;
     }
@@ -383,14 +633,10 @@ export const mockApi = {
       serverTime: nowIso,
     };
 
-    // Commit durably before acknowledging (Non-Negotiable Rule 4 & FR-ANS-003)
     idempotencyStore.set(idempotencyKey, response);
     return response;
   },
 
-  /**
-   * Mark attempt as final submitted (FR-UI-007, FR-ANS-008)
-   */
   async finalSubmit(_sessionId: string, idempotencyKey?: string): Promise<{ status: 'accepted'; submittedAt: string }> {
     if (!idempotencyKey) {
       const err: ApiErrorResponse = {
@@ -405,6 +651,7 @@ export const mockApi = {
     if (activeMockSession) {
       activeMockSession.isFinalSubmitted = true;
     }
+    mockSessionStatus = SessionState.SUBMITTED;
 
     return {
       status: 'accepted',
@@ -414,6 +661,9 @@ export const mockApi = {
 
   resetStore(): void {
     idempotencyStore.clear();
+    sessionAckStore.clear();
+    sessionDraftsStore.clear();
     activeMockSession = null;
+    mockSessionStatus = SessionState.NOT_STARTED;
   },
 };

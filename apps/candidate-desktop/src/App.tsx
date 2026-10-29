@@ -8,6 +8,7 @@ import { ExamScreen } from './screens/ExamScreen';
 import { SubmittedScreen } from './screens/SubmittedScreen';
 import { MockAssessmentSession, MockUser } from './services/mockApi';
 import { CandidateAssignedAssessment } from './types/assessment';
+import { FinalSubmitResponseDto } from '@verisync/shared';
 
 /**
  * Main Application Component for VeriSync Candidate Desktop
@@ -39,8 +40,8 @@ export const App: React.FC = () => {
     dispatch({ type: 'START_EXAM', payload: { session } });
   };
 
-  const handleFinishExam = () => {
-    dispatch({ type: 'EXAM_SUBMITTED' });
+  const handleFinishExam = (finalResult?: FinalSubmitResponseDto) => {
+    dispatch({ type: 'EXAM_SUBMITTED', payload: { finalResult } });
   };
 
   const handleLogout = () => {
@@ -94,6 +95,7 @@ export const App: React.FC = () => {
         <SubmittedScreen
           user={state.user}
           session={state.session}
+          finalResult={state.finalResult}
         />
       )}
     </div>

@@ -1,7 +1,15 @@
 import {
   ApiErrorCode,
   ApiErrorResponse,
+  CandidateQuestionDto,
+  FinalSubmitResponseDto,
   HealthStatusResponse,
+  SaveDraftDto,
+  SessionHeartbeatResponseDto,
+  SessionStatusDto,
+  StartSessionResponseDto,
+  SubmitAnswerAckDto,
+  SubmitAnswerDto,
   SubmitAnswerPayload,
   SubmitAnswerResponse,
 } from '@verisync/shared';
@@ -126,7 +134,6 @@ class ApiClient {
       this.isServerReachable = true;
       return data;
     } catch {
-      // Dev A might not have merged Phase 1 auth yet; fall back to local mock server
       timeSync.setConnectionStatus('degraded');
       const fallback = await mockApi.getHealth();
       timeSync.recordServerTime(fallback.serverTime, startMs, Date.now());
@@ -244,18 +251,15 @@ class ApiClient {
           return data;
         }
 
-        // Parse structured API error response per SRS 8.3.3
         const errPayload = (await response.json()) as ApiErrorResponse;
         throw errPayload;
       } catch (err) {
         if ((err as ApiErrorResponse)?.code) {
           throw err;
         }
-        // Fall back to mock server if backend network error
       }
     }
 
-    // Local mock server path
     const mockResult = await mockApi.login(identifier, password);
     await tokenStorage.setToken(mockResult.accessToken);
     timeSync.recordServerTime(new Date().toISOString(), startMs, Date.now());
@@ -291,32 +295,219 @@ class ApiClient {
   }
 
   /**
-   * Initialize and start candidate assessment session (FR-UI-001, FR-ASMT-006, UC-08)
+   * Phase 3: Start Assessment Session (POST /candidate/assessments/:id/start)
+   * FR-UI-002, BR-007, TC-15, TC-16
    */
-  public async startAssessment(assessmentId: string, candidateId: string): Promise<MockAssessmentSession> {
+  public async startSession(assessmentId: string): Promise<StartSessionResponseDto> {
+    const clientVersion = await this.getClientVersion();
+    const deviceId = await this.getDeviceId();
+    const startMs = Date.now();
+
     if (!this.config.forceMock && this.isServerReachable) {
       try {
         const response = await fetch(`${this.config.baseUrl}/candidate/assessments/${assessmentId}/start`, {
           method: 'POST',
           headers: await this.buildHeaders(),
+          body: JSON.stringify({
+            clientVersion,
+            deviceId,
+            acknowledgedInstructions: true,
+          }),
         });
+        const endMs = Date.now();
         if (response.ok) {
-          const session = await response.json();
-          return session;
+          const data = (await response.json()) as StartSessionResponseDto;
+          timeSync.recordServerTime(data.serverTime, startMs, endMs);
+          return data;
         }
         const errPayload = (await response.json()) as ApiErrorResponse;
         throw errPayload;
       } catch (err) {
-        if ((err as ApiErrorResponse)?.code) {
-          throw err;
-        }
+        if ((err as ApiErrorResponse)?.code) throw err;
       }
     }
+
+    return mockApi.startSession(assessmentId);
+  }
+
+  /**
+   * Phase 3: Get Active Question & Authoritative Deadline (GET /candidate/sessions/:id/current-question)
+   * FR-UI-003, TC-08, TC-09
+   */
+  public async getCurrentQuestion(sessionId: string): Promise<CandidateQuestionDto> {
+    const startMs = Date.now();
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/current-question`, {
+          method: 'GET',
+          headers: await this.buildHeaders(),
+        });
+        const endMs = Date.now();
+        if (response.ok) {
+          const data = (await response.json()) as CandidateQuestionDto;
+          if (data.startedAt) {
+            timeSync.recordServerTime(data.startedAt, startMs, endMs);
+          }
+          return data;
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) throw err;
+      }
+    }
+
+    return mockApi.getCurrentQuestion(sessionId);
+  }
+
+  /**
+   * Phase 3: Authoritative Session Status & Remaining Time (GET /candidate/sessions/:id/status)
+   * FR-TIME-008, FR-UI-004, TC-07
+   */
+  public async getSessionStatus(sessionId: string): Promise<SessionStatusDto> {
+    const startMs = Date.now();
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/status`, {
+          method: 'GET',
+          headers: await this.buildHeaders(),
+        });
+        const endMs = Date.now();
+        if (response.ok) {
+          const data = (await response.json()) as SessionStatusDto;
+          timeSync.recordServerTime(data.serverTime, startMs, endMs);
+          return data;
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) throw err;
+      }
+    }
+
+    return mockApi.getSessionStatus(sessionId);
+  }
+
+  /**
+   * Phase 3: Submit Question Answer with Idempotency-Key (POST /candidate/sessions/:id/answers)
+   * FR-ANS-001..009, FR-TIME-001..011, TC-01..05
+   */
+  public async submitSessionAnswer(
+    sessionId: string,
+    dto: SubmitAnswerDto,
+    idempotencyKey?: string
+  ): Promise<SubmitAnswerAckDto> {
+    const key = idempotencyKey || crypto.randomUUID();
+    const startMs = Date.now();
+
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/answers`, {
+          method: 'POST',
+          headers: await this.buildHeaders(key),
+          body: JSON.stringify(dto),
+        });
+        const endMs = Date.now();
+        if (response.ok) {
+          const data = (await response.json()) as SubmitAnswerAckDto;
+          timeSync.recordServerTime(data.serverTime, startMs, endMs);
+          return data;
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) throw err;
+      }
+    }
+
+    return mockApi.submitSessionAnswer(sessionId, dto, key);
+  }
+
+  /**
+   * Phase 3: Autosave Draft without Submitting or Extending Deadlines (PUT /candidate/sessions/:id/draft)
+   * FR-ANS-005
+   */
+  public async saveDraft(sessionId: string, dto: SaveDraftDto): Promise<{ success: boolean }> {
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/draft`, {
+          method: 'PUT',
+          headers: await this.buildHeaders(),
+          body: JSON.stringify(dto),
+        });
+        if (response.ok) {
+          return { success: true };
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) throw err;
+      }
+    }
+    return mockApi.saveDraft(sessionId, dto);
+  }
+
+  /**
+   * Phase 3: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
+   * FR-ANS-008, UC-13, Decision 4
+   */
+  public async finalSubmitSession(sessionId: string): Promise<FinalSubmitResponseDto> {
+    const startMs = Date.now();
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/final-submit`, {
+          method: 'POST',
+          headers: await this.buildHeaders(),
+        });
+        const endMs = Date.now();
+        if (response.ok) {
+          const data = (await response.json()) as FinalSubmitResponseDto;
+          timeSync.recordServerTime(data.serverTime, startMs, endMs);
+          return data;
+        }
+        const errPayload = (await response.json()) as ApiErrorResponse;
+        throw errPayload;
+      } catch (err) {
+        if ((err as ApiErrorResponse)?.code) throw err;
+      }
+    }
+
+    return mockApi.finalSubmitSession(sessionId);
+  }
+
+  /**
+   * Phase 3: Session Heartbeat (POST /candidate/sessions/:id/heartbeat)
+   * BR-010, UC-12
+   */
+  public async sendHeartbeat(sessionId: string): Promise<SessionHeartbeatResponseDto> {
+    const deviceId = await this.getDeviceId();
+    const clientVersion = await this.getClientVersion();
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/heartbeat`, {
+          method: 'POST',
+          headers: await this.buildHeaders(),
+          body: JSON.stringify({ deviceId, clientVersion }),
+        });
+        if (response.ok) {
+          return (await response.json()) as SessionHeartbeatResponseDto;
+        }
+      } catch {
+        // Heartbeat is best-effort
+      }
+    }
+    return mockApi.sendHeartbeat(sessionId);
+  }
+
+  /**
+   * Legacy method for backwards compatibility with earlier phase screens/tests
+   */
+  public async startAssessment(assessmentId: string, candidateId: string): Promise<MockAssessmentSession> {
     return mockApi.initMockSession(candidateId, assessmentId);
   }
 
   /**
-   * Submit Answer with Idempotency-Key (FR-ANS-009, Rule 3, openapi.yaml)
+   * Legacy method for backwards compatibility
    */
   public async submitAnswer(
     payload: SubmitAnswerPayload,
@@ -349,14 +540,13 @@ class ApiClient {
       }
     }
 
-    // Mock API path
     const mockRes = await mockApi.submitAnswer(payload, key);
     timeSync.recordServerTime(mockRes.serverTime, startMs, Date.now());
     return mockRes;
   }
 
   /**
-   * Final Assessment Submission (FR-UI-007, FR-ANS-008)
+   * Legacy final submit for backwards compatibility
    */
   public async finalSubmit(sessionId: string): Promise<{ status: 'accepted'; submittedAt: string }> {
     const key = crypto.randomUUID();

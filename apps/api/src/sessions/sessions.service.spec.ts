@@ -13,7 +13,6 @@ import {
   QuestionType,
   ApiErrorCode,
 } from '@verisync/shared';
-import { ApiErrorException } from '../common/api-error.exception';
 
 describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC15, TC16)', () => {
   let service: SessionsService;
@@ -810,7 +809,6 @@ describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC
     });
 
     it('SessionExpiryWorker should scan and process expired sessions and heartbeats', async () => {
-      const past = new Date(Date.now() - 5000);
       mockPrisma.assessmentSession.findMany.mockImplementation(({ where }: any) => {
         if (where.overallDeadline) {
           return Promise.resolve([{ id: 'sess_expired_1' }]);

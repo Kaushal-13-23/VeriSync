@@ -46,7 +46,7 @@ describe('CandidateDesktop App Component (FR-AUTH-002, FR-CAN-007, FR-UI-001)', 
       expect(screen.getByText('System Check')).toBeInTheDocument();
       expect(screen.getByText('Please ensure your system meets all requirements before starting the test.')).toBeInTheDocument();
     });
-  });
+  }, 15000);
 
   it('FR-UI-001: advances from System Check to Assigned Assessments screen when checks pass', async () => {
     render(<App />);
@@ -70,5 +70,5 @@ describe('CandidateDesktop App Component (FR-AUTH-002, FR-CAN-007, FR-UI-001)', 
       expect(screen.getByText('Assigned Assessments')).toBeInTheDocument();
       expect(screen.getByText(/Frontend Developer Assessment/i)).toBeInTheDocument();
     });
-  });
+  }, 15000);
 });

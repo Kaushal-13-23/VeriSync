@@ -206,3 +206,4 @@ pnpm --filter @verisync/candidate-desktop build
 # 3. Launch candidate desktop application in development mode
 pnpm --filter @verisync/candidate-desktop dev
 ```
+

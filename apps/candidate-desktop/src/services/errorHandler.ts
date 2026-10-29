@@ -115,3 +115,4 @@ export function handleApiError(error: unknown): UserFacingError {
 
   return result;
 }
+

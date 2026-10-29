@@ -69,3 +69,4 @@ export const ShortAnswerRenderer: React.FC<ShortAnswerRendererProps> = ({
     </div>
   );
 };
+

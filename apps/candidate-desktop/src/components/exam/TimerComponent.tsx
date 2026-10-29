@@ -161,3 +161,4 @@ export const TimerComponent: React.FC<TimerComponentProps> = ({
     </div>
   );
 };
+

@@ -5,13 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  FileText,
-  CheckCircle2,
-  HelpCircle,
-  RefreshCw,
-  AlertCircle,
-} from 'lucide-react';
+import { FileText, CheckCircle2, HelpCircle, RefreshCw, AlertCircle } from 'lucide-react';
 import { EvaluationQueueItem, SubmitEvaluationPayload } from '../../types/api';
 
 interface EvaluationCardProps {
@@ -150,11 +144,16 @@ export const EvaluationCard: React.FC<EvaluationCardProps> = ({
                   <div className="font-semibold text-slate-800 truncate" title={criterion.name}>
                     {criterion.name}
                   </div>
-                  <p className="text-[11px] text-slate-500 line-clamp-2" title={criterion.description}>
+                  <p
+                    className="text-[11px] text-slate-500 line-clamp-2"
+                    title={criterion.description}
+                  >
                     {criterion.description}
                   </p>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-slate-400">Max: {criterion.maxMarks} pts</span>
+                    <span className="text-[10px] text-slate-400">
+                      Max: {criterion.maxMarks} pts
+                    </span>
                     <input
                       type="number"
                       aria-label={`Score for ${criterion.name}`}

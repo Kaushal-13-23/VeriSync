@@ -6,11 +6,7 @@
  */
 
 import { createRequire } from 'module';
-import {
-  SqlExecutionRequest,
-  SqlExecutionResponse,
-  SqlComparisonMode,
-} from '../types.js';
+import { SqlExecutionRequest, SqlExecutionResponse, SqlComparisonMode } from '../types.js';
 
 const require = createRequire(import.meta.url);
 const { DatabaseSync } = require('node:sqlite');

@@ -6,13 +6,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Inbox,
-  Filter,
-  CheckCircle2,
-  RefreshCw,
-  AlertCircle,
-} from 'lucide-react';
+import { Inbox, Filter, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import { resultsApi } from '../../api/results';
 import { assessmentsApi } from '../../api/assessments';
 import { EvaluationQueueItem, SubmitEvaluationPayload } from '../../types/api';
@@ -153,7 +147,8 @@ export const EvaluationQueueView: React.FC<EvaluationQueueViewProps> = ({
           </div>
           <h4 className="text-base font-bold text-slate-900">Evaluation Queue Clear</h4>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            All submitted candidate responses for subjective questions have been evaluated. All corresponding candidate results are marked Final (FR-SCORE-008).
+            All submitted candidate responses for subjective questions have been evaluated. All
+            corresponding candidate results are marked Final (FR-SCORE-008).
           </p>
         </div>
       ) : (

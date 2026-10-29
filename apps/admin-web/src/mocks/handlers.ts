@@ -183,7 +183,8 @@ export const handlers = [
     const totalCandidatesCount = 1248 + (mockCandidates.length - 7);
     const totalAssessmentsCount = 24 + (mockAssessments.length - 3);
     const completedCount = 892 + (mockResults.length - 8);
-    const activeCandidatesCount = 356 + (mockLiveSessions.filter((s) => s.status === 'ACTIVE').length - 1);
+    const activeCandidatesCount =
+      356 + (mockLiveSessions.filter((s) => s.status === 'ACTIVE').length - 1);
     const inProgressCount = 214;
     const notStartedCount = 142;
 
@@ -1395,67 +1396,70 @@ export const handlers = [
   }),
 
   // POST /api/v1/admin/evaluation-queue/:id/evaluate (UC-14, FR-SCORE-004, FR-SCORE-005, FR-SCORE-008)
-  http.post(/\/api\/v1\/admin\/evaluation-queue\/([^/]+)\/evaluate$/, async ({ params, request }) => {
-    const queueItemId = params[0] as string;
-    const body = (await request.json().catch(() => ({}))) as {
-      awardedMarks?: number;
-      rubricScores?: Record<string, number>;
-      comments?: string;
-    };
+  http.post(
+    /\/api\/v1\/admin\/evaluation-queue\/([^/]+)\/evaluate$/,
+    async ({ params, request }) => {
+      const queueItemId = params[0] as string;
+      const body = (await request.json().catch(() => ({}))) as {
+        awardedMarks?: number;
+        rubricScores?: Record<string, number>;
+        comments?: string;
+      };
 
-    const queueIndex = mockEvaluationQueue.findIndex((item) => item.id === queueItemId);
-    if (queueIndex === -1) {
-      return HttpResponse.json(
-        {
-          code: ApiErrorCode.NOT_ELIGIBLE,
-          message: `Evaluation queue item ${queueItemId} not found.`,
-          correlationId: `cid-${Date.now().toString(36)}`,
-        },
-        { status: 404 },
-      );
-    }
-
-    const queueItem = mockEvaluationQueue[queueIndex];
-    const awardedMarks = typeof body.awardedMarks === 'number' ? body.awardedMarks : 0;
-    const correlationId = `cid-eval-${Date.now().toString(36)}`;
-
-    // Update corresponding result
-    const result = mockResults.find((r) => r.id === queueItem.resultId);
-    if (result) {
-      const question = result.questions.find((q) => q.questionId === queueItem.questionId);
-      if (question) {
-        question.marksAwarded = awardedMarks;
-        question.evaluationStatus = 'EVALUATED';
-        question.evaluatorComments = body.comments || '';
-        question.evaluatorName = 'Technical Evaluator';
-        question.evaluatedAt = new Date().toISOString();
+      const queueIndex = mockEvaluationQueue.findIndex((item) => item.id === queueItemId);
+      if (queueIndex === -1) {
+        return HttpResponse.json(
+          {
+            code: ApiErrorCode.NOT_ELIGIBLE,
+            message: `Evaluation queue item ${queueItemId} not found.`,
+            correlationId: `cid-${Date.now().toString(36)}`,
+          },
+          { status: 404 },
+        );
       }
 
-      // Recalculate total score
-      result.totalScore = result.questions.reduce((sum, q) => sum + q.marksAwarded, 0);
-      result.scorePercentage = Math.round((result.totalScore / result.maxScore) * 100);
-      result.passFailStatus =
-        result.scorePercentage >= result.passingScorePercentage ? 'PASS' : 'FAIL';
-      result.pendingManualCount = Math.max(0, result.pendingManualCount - 1);
+      const queueItem = mockEvaluationQueue[queueIndex];
+      const awardedMarks = typeof body.awardedMarks === 'number' ? body.awardedMarks : 0;
+      const correlationId = `cid-eval-${Date.now().toString(36)}`;
 
-      // FR-SCORE-008: Once all manual questions are evaluated, status becomes FINAL
-      if (result.pendingManualCount === 0) {
-        result.status = 'FINAL';
+      // Update corresponding result
+      const result = mockResults.find((r) => r.id === queueItem.resultId);
+      if (result) {
+        const question = result.questions.find((q) => q.questionId === queueItem.questionId);
+        if (question) {
+          question.marksAwarded = awardedMarks;
+          question.evaluationStatus = 'EVALUATED';
+          question.evaluatorComments = body.comments || '';
+          question.evaluatorName = 'Technical Evaluator';
+          question.evaluatedAt = new Date().toISOString();
+        }
+
+        // Recalculate total score
+        result.totalScore = result.questions.reduce((sum, q) => sum + q.marksAwarded, 0);
+        result.scorePercentage = Math.round((result.totalScore / result.maxScore) * 100);
+        result.passFailStatus =
+          result.scorePercentage >= result.passingScorePercentage ? 'PASS' : 'FAIL';
+        result.pendingManualCount = Math.max(0, result.pendingManualCount - 1);
+
+        // FR-SCORE-008: Once all manual questions are evaluated, status becomes FINAL
+        if (result.pendingManualCount === 0) {
+          result.status = 'FINAL';
+        }
       }
-    }
 
-    // Remove from queue
-    mockEvaluationQueue.splice(queueIndex, 1);
+      // Remove from queue
+      mockEvaluationQueue.splice(queueIndex, 1);
 
-    return HttpResponse.json({
-      success: true,
-      resultId: queueItem.resultId,
-      resultStatus: result?.status || 'FINAL',
-      updatedMarks: result?.totalScore || awardedMarks,
-      correlationId,
-      message: 'Evaluation submitted successfully and result updated.',
-    });
-  }),
+      return HttpResponse.json({
+        success: true,
+        resultId: queueItem.resultId,
+        resultStatus: result?.status || 'FINAL',
+        updatedMarks: result?.totalScore || awardedMarks,
+        correlationId,
+        message: 'Evaluation submitted successfully and result updated.',
+      });
+    },
+  ),
 
   // ==========================================
   // REPORTS & ANALYTICS API (FR-ADMIN-005, FR-ADMIN-006, FR-SCORE-009)
@@ -1551,7 +1555,13 @@ export const handlers = [
           { optionKey: 'A', optionLabel: 'O(1)', count: 4, percentage: 5, isCorrect: false },
           { optionKey: 'B', optionLabel: 'O(log N)', count: 68, percentage: 85, isCorrect: true },
           { optionKey: 'C', optionLabel: 'O(N)', count: 6, percentage: 7.5, isCorrect: false },
-          { optionKey: 'D', optionLabel: 'O(N log N)', count: 2, percentage: 2.5, isCorrect: false },
+          {
+            optionKey: 'D',
+            optionLabel: 'O(N log N)',
+            count: 2,
+            percentage: 2.5,
+            isCorrect: false,
+          },
         ],
       },
       {
@@ -1566,8 +1576,20 @@ export const handlers = [
         responseDistribution: [
           { optionKey: 'A', optionLabel: 'Merge Sort', count: 72, percentage: 90, isCorrect: true },
           { optionKey: 'B', optionLabel: 'Quick Sort', count: 65, percentage: 81, isCorrect: true },
-          { optionKey: 'C', optionLabel: 'Bubble Sort', count: 8, percentage: 10, isCorrect: false },
-          { optionKey: 'D', optionLabel: 'Insertion Sort', count: 12, percentage: 15, isCorrect: false },
+          {
+            optionKey: 'C',
+            optionLabel: 'Bubble Sort',
+            count: 8,
+            percentage: 10,
+            isCorrect: false,
+          },
+          {
+            optionKey: 'D',
+            optionLabel: 'Insertion Sort',
+            count: 12,
+            percentage: 15,
+            isCorrect: false,
+          },
         ],
       },
       {
@@ -1830,7 +1852,8 @@ const mockQuestions: QuestionRecord[] = [
   {
     id: 'q-107',
     questionType: 'CODING' as const,
-    questionText: 'Given an array of integers and a target sum, return indices of the two numbers such that they add up to the target.',
+    questionText:
+      'Given an array of integers and a target sum, return indices of the two numbers such that they add up to the target.',
     codeSnippet: 'def two_sum(nums, target):\n    # Write solution here\n    pass',
     topic: 'Algorithms',
     difficulty: 'Medium' as const,
@@ -1867,8 +1890,10 @@ const mockQuestions: QuestionRecord[] = [
   {
     id: 'q-108',
     questionType: 'SQL' as const,
-    questionText: 'Write a SQL query to list total salary expenditure for each department, ordered by department name ascending.',
-    codeSnippet: 'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
+    questionText:
+      'Write a SQL query to list total salary expenditure for each department, ordered by department name ascending.',
+    codeSnippet:
+      'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
     topic: 'Databases',
     difficulty: 'Easy' as const,
     maximumMarks: 10,
@@ -1877,9 +1902,12 @@ const mockQuestions: QuestionRecord[] = [
     status: 'ACTIVE' as const,
     options: [],
     sqlConfig: {
-      schemaDdl: 'CREATE TABLE employees (\n  id INT PRIMARY KEY,\n  name TEXT,\n  department TEXT,\n  salary INT\n);',
-      seedDataSql: "INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 90000), (2, 'Bob', 'HR', 60000);",
-      referenceQuery: 'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
+      schemaDdl:
+        'CREATE TABLE employees (\n  id INT PRIMARY KEY,\n  name TEXT,\n  department TEXT,\n  salary INT\n);',
+      seedDataSql:
+        "INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 90000), (2, 'Bob', 'HR', 60000);",
+      referenceQuery:
+        'SELECT department, SUM(salary) as total_salary FROM employees GROUP BY department ORDER BY department ASC;',
       comparisonMode: 'EXACT_MATCH' as const,
     },
     createdAt: '2026-10-21T11:00:00Z',
@@ -2358,7 +2386,8 @@ const mockResults: AssessmentResultRecord[] = [
         maxMarks: 25,
         marksAwarded: 20,
         evaluationStatus: 'AUTOMATED',
-        candidateAnswer: 'SELECT dept_id, emp_id, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) as rnk FROM employees;',
+        candidateAnswer:
+          'SELECT dept_id, emp_id, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) as rnk FROM employees;',
         testCasesPassed: 4,
         totalTestCases: 5,
       },
@@ -2389,7 +2418,7 @@ const mockResults: AssessmentResultRecord[] = [
         maxMarks: 25,
         marksAwarded: 9,
         evaluationStatus: 'AUTOMATED',
-        candidateAnswer: 'SELECT date_trunc(\'day\', event_time), count(*) FROM events GROUP BY 1;',
+        candidateAnswer: "SELECT date_trunc('day', event_time), count(*) FROM events GROUP BY 1;",
         testCasesPassed: 2,
         totalTestCases: 5,
       },
@@ -2538,7 +2567,8 @@ const mockResults: AssessmentResultRecord[] = [
         maxMarks: 25,
         marksAwarded: 20,
         evaluationStatus: 'AUTOMATED',
-        candidateAnswer: 'SELECT dept_id, emp_id, RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) FROM employees;',
+        candidateAnswer:
+          'SELECT dept_id, emp_id, RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) FROM employees;',
         testCasesPassed: 4,
         totalTestCases: 5,
       },
@@ -2745,4 +2775,3 @@ const mockResults: AssessmentResultRecord[] = [
     corrections: [],
   },
 ];
-

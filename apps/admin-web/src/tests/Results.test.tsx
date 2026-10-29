@@ -109,7 +109,9 @@ describe('Results & Answer Review (FR-ADMIN-005, FR-SCORE-007, FR-SCORE-008, UI_
       expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
     });
 
-    expect(await screen.findByText(/Exported \d+ candidate result records to CSV/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Exported \d+ candidate result records to CSV/i),
+    ).toBeInTheDocument();
   });
 
   it('[FR-SCORE-008, FR-ADMIN-003] opens Result Detail Review drawer with per-question score breakdown', async () => {

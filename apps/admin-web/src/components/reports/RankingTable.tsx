@@ -93,7 +93,10 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rankings, isLoading 
               rankings.map((candidate) => {
                 const isPass = candidate.passFailStatus === 'PASS';
                 return (
-                  <tr key={candidate.candidateId} className="hover:bg-slate-50/80 transition-colors">
+                  <tr
+                    key={candidate.candidateId}
+                    className="hover:bg-slate-50/80 transition-colors"
+                  >
                     {/* Rank */}
                     <td className="py-3 px-4 text-center">{getRankBadge(candidate.rank)}</td>
 

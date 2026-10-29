@@ -40,7 +40,11 @@ describe('Manual Evaluation Queue (UC-14, FR-SCORE-004, FR-SCORE-005, FR-SCORE-0
     renderResultsView();
 
     // Click "Evaluation Queue" tab
-    const queueTab = await screen.findByRole('button', { name: /Evaluation Queue/i }, { timeout: 3000 });
+    const queueTab = await screen.findByRole(
+      'button',
+      { name: /Evaluation Queue/i },
+      { timeout: 3000 },
+    );
     fireEvent.click(queueTab);
 
     // Queue header renders
@@ -66,7 +70,11 @@ describe('Manual Evaluation Queue (UC-14, FR-SCORE-004, FR-SCORE-005, FR-SCORE-0
     renderResultsView();
 
     // Switch to queue
-    const queueTab = await screen.findByRole('button', { name: /Evaluation Queue/i }, { timeout: 3000 });
+    const queueTab = await screen.findByRole(
+      'button',
+      { name: /Evaluation Queue/i },
+      { timeout: 3000 },
+    );
     fireEvent.click(queueTab);
 
     expect(await screen.findByText(/Subjective Evaluation Queue/i)).toBeInTheDocument();
@@ -76,7 +84,8 @@ describe('Manual Evaluation Queue (UC-14, FR-SCORE-004, FR-SCORE-005, FR-SCORE-0
     const commentsInput = screen.getAllByLabelText(/Evaluator Comments/i)[0];
     fireEvent.change(commentsInput, {
       target: {
-        value: 'Comprehensive comparison of locking overhead vs optimistic versioning. Awarded full rubric marks.',
+        value:
+          'Comprehensive comparison of locking overhead vs optimistic versioning. Awarded full rubric marks.',
       },
     });
 

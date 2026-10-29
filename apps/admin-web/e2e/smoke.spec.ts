@@ -114,7 +114,9 @@ test.describe('Admin Web Portal Smoke Test', () => {
     await page.getByRole('button', { name: /Confirm Score Correction/i }).click();
     await expect(page.getByTestId('correction-error-banner')).toBeVisible();
     await expect(
-      page.getByText(/Mandatory justification reason is required for administrative score correction/i),
+      page.getByText(
+        /Mandatory justification reason is required for administrative score correction/i,
+      ),
     ).toBeVisible();
 
     // Fill valid reason and confirm
@@ -137,5 +139,3 @@ test.describe('Admin Web Portal Smoke Test', () => {
     await expect(page.getByText('Option Response Distribution').first()).toBeVisible();
   });
 });
-
-

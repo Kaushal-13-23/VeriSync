@@ -30,7 +30,9 @@ export class InputSanitizer {
     if (buffer.length <= maxBytes) {
       return output;
     }
-    return buffer.subarray(0, maxBytes).toString('utf8') + '\n[Output truncated at maximum size cap]';
+    return (
+      buffer.subarray(0, maxBytes).toString('utf8') + '\n[Output truncated at maximum size cap]'
+    );
   }
 
   /**

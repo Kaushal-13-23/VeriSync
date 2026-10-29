@@ -51,7 +51,10 @@ const TYPE_CONFIG: Record<QuestionType, { label: string; badgeClass: string }> =
   },
   SCENARIO: { label: 'Scenario', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200' },
   DESCRIPTIVE: { label: 'Descriptive', badgeClass: 'bg-slate-100 text-slate-700 border-slate-300' },
-  CODING: { label: 'Coding Sandbox', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
+  CODING: {
+    label: 'Coding Sandbox',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+  },
   SQL: { label: 'SQL Sandbox', badgeClass: 'bg-teal-50 text-teal-700 border-teal-300' },
 };
 
@@ -184,7 +187,8 @@ export const QuestionTable: React.FC<QuestionTableProps> = ({
                           </span>
                           {q.codingConfig && (
                             <span className="text-slate-400">
-                              {q.codingConfig.allowedLanguages.join(', ')} • {q.codingConfig.timeLimitMs}ms
+                              {q.codingConfig.allowedLanguages.join(', ')} •{' '}
+                              {q.codingConfig.timeLimitMs}ms
                             </span>
                           )}
                         </div>

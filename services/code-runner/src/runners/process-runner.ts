@@ -10,12 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
-import {
-  SupportedLanguage,
-  ExecutionStatus,
-  TestCase,
-  TestCaseResult,
-} from '../types.js';
+import { SupportedLanguage, ExecutionStatus, TestCase, TestCaseResult } from '../types.js';
 import { LANGUAGE_DEFINITIONS } from './language-configs.js';
 import { InputSanitizer } from '../security/input-sanitizer.js';
 import { config } from '../config.js';
@@ -50,7 +45,10 @@ export class ProcessSandboxRunner {
       throw new Error(`Unsupported programming language: ${options.language}`);
     }
 
-    const timeLimitMs = Math.min(options.timeLimitMs || config.defaultTimeLimitMs, config.maxTimeLimitMs);
+    const timeLimitMs = Math.min(
+      options.timeLimitMs || config.defaultTimeLimitMs,
+      config.maxTimeLimitMs,
+    );
     const sandboxId = `vs-box-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     const workDir = path.join(os.tmpdir(), sandboxId);
 
@@ -157,7 +155,10 @@ export class ProcessSandboxRunner {
         }
 
         if (procResult.stderr && tcStatus === 'RUNTIME_ERROR') {
-          tcItemResult.errorMessage = InputSanitizer.sanitizeErrorMessage(procResult.stderr, workDir);
+          tcItemResult.errorMessage = InputSanitizer.sanitizeErrorMessage(
+            procResult.stderr,
+            workDir,
+          );
         }
 
         testResults.push(tcItemResult);
@@ -192,7 +193,13 @@ export class ProcessSandboxRunner {
     inputData: string,
     workDir: string,
     timeoutMs: number,
-  ): Promise<{ exitCode: number | null; stdout: string; stderr: string; status: ExecutionStatus; memoryKb: number }> {
+  ): Promise<{
+    exitCode: number | null;
+    stdout: string;
+    stderr: string;
+    status: ExecutionStatus;
+    memoryKb: number;
+  }> {
     return new Promise((resolve) => {
       let isTimedOut = false;
       let stdoutBuffer = '';

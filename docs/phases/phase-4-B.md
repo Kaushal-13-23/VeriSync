@@ -123,6 +123,7 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
 ## 2. Endpoints / Screens / Modules Added
 
 ### UI Components (`apps/admin-web/src/components/`)
+
 - `src/components/results/ResultsView.tsx`: Main results orchestrator with tabs for Results Table and Manual Evaluation Queue.
 - `src/components/results/ResultsFilters.tsx`: Assessment, status, pass/fail, date range, search, and CSV export.
 - `src/components/results/ResultsTable.tsx`: UI Sample table with pass/fail chips, provisional badges, and pagination.
@@ -135,6 +136,7 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
 - `src/components/reports/QuestionStatsCharts.tsx`: Question accuracy bars, discrimination index, and option response distribution.
 
 ### API Clients (`apps/admin-web/src/api/`)
+
 - `src/api/results.ts`:
   - `getResults(params)` -> `GET /api/v1/admin/results`
   - `getResultById(id)` -> `GET /api/v1/admin/results/:id`
@@ -147,6 +149,7 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
   - `getQuestionStats(assessmentId)` -> `GET /api/v1/admin/reports/:assessmentId/question-stats`
 
 ### MSW Mock Handlers (`apps/admin-web/src/mocks/handlers.ts`)
+
 - `GET /api/v1/admin/results`: Filtered and paginated candidate assessment results matching UI sample tokens.
 - `GET /api/v1/admin/results/:id`: Result detail with per-question breakdown, submitted responses, rubric, and correction history.
 - `POST /api/v1/admin/results/:id/correct`: Score correction endpoint enforcing mandatory justification reason per BR-012/Rule 7 (returns 422 if empty), recalculating percentages and outcomes, updating candidate record, and appending durable audit log.
@@ -160,33 +163,34 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
 
 ## 3. SRS Requirements Covered
 
-| SRS Requirement ID | Description | Status |
-| :--- | :--- | :--- |
-| **FR-SCORE-001** | Automated scoring of objective questions against published assessment snapshot key | **Done** |
-| **FR-SCORE-002** | Configurable negative marking deduction for incorrect objective responses | **Done** |
-| **FR-SCORE-003** | Configurable partial credit for multi-select questions | **Done** |
-| **FR-SCORE-004** | Evaluation queue and scoring rubric for subjective/descriptive questions (`UC-14`) | **Done** |
-| **FR-SCORE-005** | Manual score entry and evaluator feedback comments (`UC-14`) | **Done** |
-| **FR-SCORE-006** | Configured scoring policy for timed-out or unanswered questions | **Done** |
-| **FR-SCORE-007** | Candidate and assessment-level aggregate score calculations | **Done** |
-| **FR-SCORE-008** | Provisional vs. Final result status handling with pending subjective count | **Done** |
-| **FR-SCORE-009** | Result ranking calculation with deterministic tie-break criteria (Score ↓, Time ↑, ID ↑) | **Done** |
-| **FR-SCORE-010** | Audited score correction workflow requiring original value, new value, reason, actor (`UC-15`) | **Done** |
-| **FR-ADMIN-001** | Admin dashboard overview metrics and operational status cards with real data | **Done** |
-| **FR-ADMIN-003** | Candidate profile, score breakdown, and completion rate breakdown chart | **Done** |
-| **FR-ADMIN-005** | Comprehensive assessment results report (scores, rankings, category breakdown) | **Done** |
-| **FR-ADMIN-006** | Export of results in CSV format with ISO-8601 UTC timestamps | **Done** |
-| **FR-ADMIN-007** | Question-level performance analytics (difficulty index, discrimination index, option distribution) | **Done** |
-| **FR-ADMIN-009** | Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) | **Done** |
-| **BR-012** | Mandatory justification reason required for every administrative override and score adjustment | **Done** |
-| **Rule 7** | All score adjustments, overrides, and status transitions audited with reason and actor | **Done** |
-| **Rule 9** | UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs | **Done** |
+| SRS Requirement ID | Description                                                                                         | Status   |
+| :----------------- | :-------------------------------------------------------------------------------------------------- | :------- |
+| **FR-SCORE-001**   | Automated scoring of objective questions against published assessment snapshot key                  | **Done** |
+| **FR-SCORE-002**   | Configurable negative marking deduction for incorrect objective responses                           | **Done** |
+| **FR-SCORE-003**   | Configurable partial credit for multi-select questions                                              | **Done** |
+| **FR-SCORE-004**   | Evaluation queue and scoring rubric for subjective/descriptive questions (`UC-14`)                  | **Done** |
+| **FR-SCORE-005**   | Manual score entry and evaluator feedback comments (`UC-14`)                                        | **Done** |
+| **FR-SCORE-006**   | Configured scoring policy for timed-out or unanswered questions                                     | **Done** |
+| **FR-SCORE-007**   | Candidate and assessment-level aggregate score calculations                                         | **Done** |
+| **FR-SCORE-008**   | Provisional vs. Final result status handling with pending subjective count                          | **Done** |
+| **FR-SCORE-009**   | Result ranking calculation with deterministic tie-break criteria (Score ↓, Time ↑, ID ↑)            | **Done** |
+| **FR-SCORE-010**   | Audited score correction workflow requiring original value, new value, reason, actor (`UC-15`)      | **Done** |
+| **FR-ADMIN-001**   | Admin dashboard overview metrics and operational status cards with real data                        | **Done** |
+| **FR-ADMIN-003**   | Candidate profile, score breakdown, and completion rate breakdown chart                             | **Done** |
+| **FR-ADMIN-005**   | Comprehensive assessment results report (scores, rankings, category breakdown)                      | **Done** |
+| **FR-ADMIN-006**   | Export of results in CSV format with ISO-8601 UTC timestamps                                        | **Done** |
+| **FR-ADMIN-007**   | Question-level performance analytics (difficulty index, discrimination index, option distribution)  | **Done** |
+| **FR-ADMIN-009**   | Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) | **Done** |
+| **BR-012**         | Mandatory justification reason required for every administrative override and score adjustment      | **Done** |
+| **Rule 7**         | All score adjustments, overrides, and status transitions audited with reason and actor              | **Done** |
+| **Rule 9**         | UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs               | **Done** |
 
 ---
 
 ## 4. Tests Added
 
 ### 4.1 Vitest Unit Tests (15 new tests added; 64 total passing across 17 files)
+
 1. **`src/tests/Results.test.tsx` (5 tests)**:
    - `renders results table with candidate names, assessments, scores, and pass/fail chips` (FR-ADMIN-005, UI_Sample.jpeg)
    - `filters results by result status and pass/fail outcome` (FR-ADMIN-005)
@@ -209,6 +213,7 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
    - `permits SUPER_ADMIN full access to score correction and all tabs` (FR-ADMIN-009)
 
 ### 4.2 Playwright E2E Smoke Tests (`apps/admin-web/e2e/smoke.spec.ts`)
+
 - Added Phase 4 end-to-end flows:
   - Step 13: Navigating to `Results & Scoring`, asserting candidate rows and percentage scores.
   - Step 14: Triggering client-side CSV Export and verifying suggested filename format (`VeriSync_Results_Export_YYYY-MM-DD.csv`).
@@ -233,28 +238,34 @@ In Phase 4, Developer B implemented the Results and Reporting subsystem in `apps
 ## 7. Exact Instructions to Run It
 
 ### Running the Vitest Unit Test Suite
+
 ```powershell
 pnpm --filter @verisync/admin-web test
 ```
 
 ### Running Typecheck and Lint
+
 ```powershell
 pnpm --filter @verisync/admin-web typecheck
 pnpm --filter @verisync/admin-web lint
 ```
 
 ### Running the Playwright E2E Test Suite
+
 ```powershell
 pnpm --filter @verisync/admin-web test:e2e
 ```
 
 ### Running the Production Bundle Build
+
 ```powershell
 pnpm --filter @verisync/admin-web build
 ```
 
 ### Launching the Development Server
+
 ```powershell
 pnpm --filter @verisync/admin-web dev
 ```
+
 Navigate to `http://localhost:5173/` in your browser. Log in with `admin@verisync.internal` / `Password123!` and MFA code `123456`, then click **Results** or **Reports** in the navy sidebar.

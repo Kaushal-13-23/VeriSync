@@ -66,7 +66,9 @@ describe('Role-Based Permissions Enforcement (FR-ADMIN-009, UC-14, UC-15)', () =
     // Queue is accessible and actionable
     expect(await screen.findByText(/Subjective Evaluation Queue/i)).toBeInTheDocument();
     expect(await screen.findByText('Ananya Reddy', {}, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /Submit Evaluation/i }).length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByRole('button', { name: /Submit Evaluation/i }).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('[FR-ADMIN-009, UC-15] TECHNICAL_EVALUATOR is restricted and cannot see or access "Correct" score action', async () => {
@@ -86,7 +88,9 @@ describe('Role-Based Permissions Enforcement (FR-ADMIN-009, UC-14, UC-15)', () =
     expect(await screen.findByText(/Question-by-Question Score Breakdown/i)).toBeInTheDocument();
 
     // Inside drawer, "Correct Score (Audited)" is also hidden from Evaluator
-    expect(screen.queryByRole('button', { name: /Correct Score \(Audited\)/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Correct Score \(Audited\)/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('[FR-ADMIN-009, UC-15] SUPER_ADMIN has full permissions to perform audited score corrections', async () => {

@@ -138,7 +138,9 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
 
       // Coding Config
       if (questionToEdit.codingConfig) {
-        setAllowedLanguages(questionToEdit.codingConfig.allowedLanguages || ['python', 'javascript']);
+        setAllowedLanguages(
+          questionToEdit.codingConfig.allowedLanguages || ['python', 'javascript'],
+        );
         setTimeLimitMs(questionToEdit.codingConfig.timeLimitMs || 2000);
         setMemoryLimitMb(questionToEdit.codingConfig.memoryLimitMb || 256);
         setMaxSubmissions(questionToEdit.codingConfig.maxSubmissions || 5);
@@ -151,7 +153,11 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
           .map((tc) => ({ inputData: tc.inputData, expectedOutput: tc.expectedOutput }));
         const hiddens = questionToEdit.testCases
           .filter((tc) => tc.visibility === 'HIDDEN')
-          .map((tc) => ({ inputData: tc.inputData, expectedOutput: tc.expectedOutput, marks: tc.marks || 1 }));
+          .map((tc) => ({
+            inputData: tc.inputData,
+            expectedOutput: tc.expectedOutput,
+            marks: tc.marks || 1,
+          }));
 
         if (samples.length > 0) setSampleTestCases(samples);
         if (hiddens.length > 0) setHiddenTestCases(hiddens);
@@ -273,7 +279,11 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
     setSampleTestCases(sampleTestCases.filter((_, i) => i !== idx));
   };
 
-  const handleUpdateSampleCase = (idx: number, field: keyof EditableSampleTestCase, val: string) => {
+  const handleUpdateSampleCase = (
+    idx: number,
+    field: keyof EditableSampleTestCase,
+    val: string,
+  ) => {
     const updated = [...sampleTestCases];
     updated[idx][field] = val;
     setSampleTestCases(updated);
@@ -289,7 +299,11 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
     setHiddenTestCases(hiddenTestCases.filter((_, i) => i !== idx));
   };
 
-  const handleUpdateHiddenCase = (idx: number, field: keyof EditableHiddenTestCase, val: string | number) => {
+  const handleUpdateHiddenCase = (
+    idx: number,
+    field: keyof EditableHiddenTestCase,
+    val: string | number,
+  ) => {
     const updated = [...hiddenTestCases];
     updated[idx] = { ...updated[idx], [field]: val };
     setHiddenTestCases(updated);
@@ -437,7 +451,10 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div data-testid="question-form-modal" className="bg-white rounded-2xl max-w-3xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col my-8">
+      <div
+        data-testid="question-form-modal"
+        className="bg-white rounded-2xl max-w-3xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col my-8"
+      >
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/75 shrink-0">
           <div className="flex items-center gap-2.5">
@@ -455,7 +472,8 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                 {isEditing ? 'Edit Question Definition' : 'Author New Assessment Question'}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Comprehensive question authoring: MCQ, Subjective, Coding & SQL (FR-QB-001..010, FR-CODE, FR-SQL)
+                Comprehensive question authoring: MCQ, Subjective, Coding & SQL (FR-QB-001..010,
+                FR-CODE, FR-SQL)
               </p>
             </div>
           </div>
@@ -720,7 +738,8 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                       Sample Test Cases (Visible to Candidates - FR-CODE-003)
                     </span>
                     <p className="text-[11px] text-slate-500">
-                      Inputs and expected outputs are disclosed in candidate exam interface for testing.
+                      Inputs and expected outputs are disclosed in candidate exam interface for
+                      testing.
                     </p>
                   </div>
                   <button
@@ -757,7 +776,9 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 block mb-0.5">Input Data (stdin)</span>
+                        <span className="text-[10px] text-slate-500 block mb-0.5">
+                          Input Data (stdin)
+                        </span>
                         <textarea
                           rows={2}
                           value={tc.inputData}
@@ -767,11 +788,15 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block mb-0.5">Expected Output (stdout)</span>
+                        <span className="text-[10px] text-slate-500 block mb-0.5">
+                          Expected Output (stdout)
+                        </span>
                         <textarea
                           rows={2}
                           value={tc.expectedOutput}
-                          onChange={(e) => handleUpdateSampleCase(idx, 'expectedOutput', e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateSampleCase(idx, 'expectedOutput', e.target.value)
+                          }
                           className="w-full p-2 font-mono text-xs border border-slate-300 rounded-lg bg-white"
                           data-testid={`input-sample-stdout-${idx}`}
                         />
@@ -824,7 +849,9 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                             min="1"
                             max="50"
                             value={tc.marks}
-                            onChange={(e) => handleUpdateHiddenCase(idx, 'marks', Number(e.target.value))}
+                            onChange={(e) =>
+                              handleUpdateHiddenCase(idx, 'marks', Number(e.target.value))
+                            }
                             className="w-14 px-1.5 py-0.5 border border-slate-300 rounded bg-white text-xs font-bold text-center"
                             data-testid={`input-hidden-marks-${idx}`}
                           />
@@ -844,7 +871,9 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 block mb-0.5">Input Data (stdin)</span>
+                        <span className="text-[10px] text-slate-500 block mb-0.5">
+                          Input Data (stdin)
+                        </span>
                         <textarea
                           rows={2}
                           value={tc.inputData}
@@ -854,11 +883,15 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block mb-0.5">Expected Output (stdout)</span>
+                        <span className="text-[10px] text-slate-500 block mb-0.5">
+                          Expected Output (stdout)
+                        </span>
                         <textarea
                           rows={2}
                           value={tc.expectedOutput}
-                          onChange={(e) => handleUpdateHiddenCase(idx, 'expectedOutput', e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateHiddenCase(idx, 'expectedOutput', e.target.value)
+                          }
                           className="w-full p-2 font-mono text-xs border border-slate-300 rounded-lg bg-white"
                           data-testid={`input-hidden-stdout-${idx}`}
                         />
@@ -922,7 +955,8 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Reference Query / Solution Key (Admin-only) <span className="text-rose-500">*</span>
+                    Reference Query / Solution Key (Admin-only){' '}
+                    <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     rows={3}
@@ -1054,7 +1088,8 @@ export const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
               data-testid="textarea-explanation"
             />
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Strictly protected: Candidates are never provided with solution keys or explanations (Rule 2).
+              Strictly protected: Candidates are never provided with solution keys or explanations
+              (Rule 2).
             </p>
           </div>
 

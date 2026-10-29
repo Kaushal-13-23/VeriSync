@@ -5,12 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  X,
-  AlertTriangle,
-  ShieldCheck,
-  RefreshCw,
-} from 'lucide-react';
+import { X, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 import { AssessmentResultRecord, ScoreCorrectionPayload } from '../../types/api';
 
 interface ScoreCorrectionModalProps {
@@ -148,9 +143,7 @@ export const ScoreCorrectionModal: React.FC<ScoreCorrectionModalProps> = ({
 
           {/* Target Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
-              Correction Target
-            </label>
+            <label className="block text-xs font-semibold text-slate-700">Correction Target</label>
             <select
               aria-label="Correction Target"
               value={selectedTarget}
@@ -162,7 +155,8 @@ export const ScoreCorrectionModal: React.FC<ScoreCorrectionModalProps> = ({
               </option>
               {result.questions.map((q, idx) => (
                 <option key={q.questionId} value={q.questionId}>
-                  Q{idx + 1}: {q.questionTitle} ({q.marksAwarded} / {q.maxMarks} pts - {q.questionType})
+                  Q{idx + 1}: {q.questionTitle} ({q.marksAwarded} / {q.maxMarks} pts -{' '}
+                  {q.questionType})
                 </option>
               ))}
             </select>
@@ -238,7 +232,8 @@ export const ScoreCorrectionModal: React.FC<ScoreCorrectionModalProps> = ({
               className="mt-0.5 w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500"
             />
             <span className="text-xs text-slate-600 font-medium">
-              I confirm this score modification will recalculate dependent percentages, update ranking, and be stamped permanently into the immutable audit trail.
+              I confirm this score modification will recalculate dependent percentages, update
+              ranking, and be stamped permanently into the immutable audit trail.
             </span>
           </label>
 

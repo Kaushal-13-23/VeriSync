@@ -91,43 +91,43 @@ Built a dedicated, container-ready evaluation microservice isolated from the pri
 
 ## 2. Endpoints, Screens, and Modules Added
 
-| Layer | Subsystem / Path | Description | Traceability |
-| :--- | :--- | :--- | :--- |
-| **Microservice** | `GET /api/v1/health` | Code runner service health and version check | `SRS 10.4` |
-| **Microservice** | `POST /api/v1/execute` | Executes code against sample and hidden test cases in sandbox | `FR-CODE-001..014`, `NFR-SEC-008`, `Rule 8` |
-| **Microservice** | `POST /api/v1/execute-sql` | Executes candidate SQL against ephemeral SQLite database | `FR-SQL-001..005` |
-| **Admin UI** | `QuestionFormModal.tsx` | Coding sandbox configuration & test cases authoring tab | `FR-CODE-001..010`, `FR-QB-001` |
-| **Admin UI** | `QuestionFormModal.tsx` | SQL sandbox DDL, seed, query, comparison mode authoring tab | `FR-SQL-001..005` |
-| **Admin UI** | `QuestionTable.tsx` | Language tags, test case badges, comparison mode chips | `FR-QB-007` |
-| **Admin Types** | `types/api.ts` | `SupportedLanguage`, `SqlComparisonMode`, `CodingQuestionConfig`, `SqlQuestionConfig` | Contract parity |
+| Layer            | Subsystem / Path           | Description                                                                           | Traceability                                |
+| :--------------- | :------------------------- | :------------------------------------------------------------------------------------ | :------------------------------------------ |
+| **Microservice** | `GET /api/v1/health`       | Code runner service health and version check                                          | `SRS 10.4`                                  |
+| **Microservice** | `POST /api/v1/execute`     | Executes code against sample and hidden test cases in sandbox                         | `FR-CODE-001..014`, `NFR-SEC-008`, `Rule 8` |
+| **Microservice** | `POST /api/v1/execute-sql` | Executes candidate SQL against ephemeral SQLite database                              | `FR-SQL-001..005`                           |
+| **Admin UI**     | `QuestionFormModal.tsx`    | Coding sandbox configuration & test cases authoring tab                               | `FR-CODE-001..010`, `FR-QB-001`             |
+| **Admin UI**     | `QuestionFormModal.tsx`    | SQL sandbox DDL, seed, query, comparison mode authoring tab                           | `FR-SQL-001..005`                           |
+| **Admin UI**     | `QuestionTable.tsx`        | Language tags, test case badges, comparison mode chips                                | `FR-QB-007`                                 |
+| **Admin Types**  | `types/api.ts`             | `SupportedLanguage`, `SqlComparisonMode`, `CodingQuestionConfig`, `SqlQuestionConfig` | Contract parity                             |
 
 ---
 
 ## 3. SRS Requirements Covered
 
-| SRS ID | Requirement Title | Implementation Details |
-| :--- | :--- | :--- |
-| `FR-CODE-001` | Pinned Language Versions | Dockerfiles for GCC 13.2, C++20, JDK 21, Python 3.11.8, Node 20.11.1 |
-| `FR-CODE-003` | Visible Sample Test Cases | Authoring UI & runner support for candidate-visible sample tests |
-| `FR-CODE-004` | Hidden Test Case Secrecy | Hidden inputs and expected outputs never returned in candidate results (`Rule 2`) |
-| `FR-CODE-005` | Dedicated Runner Service | Standalone `services/code-runner` microservice outside API process (`Rule 8`) |
-| `FR-CODE-006` | Execution Limits | Timeout (wall/CPU) and memory limits enforced per execution |
-| `FR-CODE-007` | Isolated Sandbox | `--network none`, unprivileged user, `--read-only`, tmpfs, `--pids-limit` |
-| `FR-CODE-008` | Status Classification | `ACCEPTED`, `WRONG_ANSWER`, `COMPILATION_ERROR`, `RUNTIME_ERROR`, `TIME_LIMIT_EXCEEDED`, `MEMORY_LIMIT_EXCEEDED`, `INTERNAL_EVALUATION_ERROR` |
-| `FR-CODE-009` | Response Sanitization | Path and stack trace scrubbing; zero disclosure of server paths or hidden inputs |
-| `FR-CODE-010` | Max Submissions Limit | Configurable submission attempt limits on coding questions |
-| `FR-CODE-011` | Weighted Scoring | Points-weighted calculation based on passed test cases |
-| `FR-CODE-012` | Infra vs. Code Error | Distinction between candidate code error and internal runner crash |
-| `FR-CODE-013` | No Secrets or DB Access | Runner has no database access or production secrets; protected by shared token |
-| `FR-SQL-001` | SQL Authoring | Schema DDL, seed data, reference query, and comparison mode authoring |
-| `FR-SQL-002` | Ephemeral DB Instance | In-memory isolated SQLite instance initialized per execution |
-| `FR-SQL-003` | Block Dangerous SQL | Blocks `DROP`, `ALTER`, `CREATE`, `TRUNCATE`, `ATTACH`, `PRAGMA` |
-| `FR-SQL-004` | SQL Limits | Statement timeout, row limits, memory bounds |
-| `FR-SQL-005` | SQL Comparison Modes | Exact match and unordered match evaluation |
-| `NFR-SEC-008` | Sandbox Security | Complete confinement flags and resource limits for containerized run |
-| `TC-10` | Test Case Confidentiality | Unit tests verifying hidden cases are never exposed |
-| `TC-11` | Sandbox Escape Suite | Security test suite covering sockets, env vars, fork bomb, huge output, infinite loop, file writes |
-| `TC-12` | Resource Limits | Wall time and memory limit enforcement tests |
+| SRS ID        | Requirement Title         | Implementation Details                                                                                                                        |
+| :------------ | :------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FR-CODE-001` | Pinned Language Versions  | Dockerfiles for GCC 13.2, C++20, JDK 21, Python 3.11.8, Node 20.11.1                                                                          |
+| `FR-CODE-003` | Visible Sample Test Cases | Authoring UI & runner support for candidate-visible sample tests                                                                              |
+| `FR-CODE-004` | Hidden Test Case Secrecy  | Hidden inputs and expected outputs never returned in candidate results (`Rule 2`)                                                             |
+| `FR-CODE-005` | Dedicated Runner Service  | Standalone `services/code-runner` microservice outside API process (`Rule 8`)                                                                 |
+| `FR-CODE-006` | Execution Limits          | Timeout (wall/CPU) and memory limits enforced per execution                                                                                   |
+| `FR-CODE-007` | Isolated Sandbox          | `--network none`, unprivileged user, `--read-only`, tmpfs, `--pids-limit`                                                                     |
+| `FR-CODE-008` | Status Classification     | `ACCEPTED`, `WRONG_ANSWER`, `COMPILATION_ERROR`, `RUNTIME_ERROR`, `TIME_LIMIT_EXCEEDED`, `MEMORY_LIMIT_EXCEEDED`, `INTERNAL_EVALUATION_ERROR` |
+| `FR-CODE-009` | Response Sanitization     | Path and stack trace scrubbing; zero disclosure of server paths or hidden inputs                                                              |
+| `FR-CODE-010` | Max Submissions Limit     | Configurable submission attempt limits on coding questions                                                                                    |
+| `FR-CODE-011` | Weighted Scoring          | Points-weighted calculation based on passed test cases                                                                                        |
+| `FR-CODE-012` | Infra vs. Code Error      | Distinction between candidate code error and internal runner crash                                                                            |
+| `FR-CODE-013` | No Secrets or DB Access   | Runner has no database access or production secrets; protected by shared token                                                                |
+| `FR-SQL-001`  | SQL Authoring             | Schema DDL, seed data, reference query, and comparison mode authoring                                                                         |
+| `FR-SQL-002`  | Ephemeral DB Instance     | In-memory isolated SQLite instance initialized per execution                                                                                  |
+| `FR-SQL-003`  | Block Dangerous SQL       | Blocks `DROP`, `ALTER`, `CREATE`, `TRUNCATE`, `ATTACH`, `PRAGMA`                                                                              |
+| `FR-SQL-004`  | SQL Limits                | Statement timeout, row limits, memory bounds                                                                                                  |
+| `FR-SQL-005`  | SQL Comparison Modes      | Exact match and unordered match evaluation                                                                                                    |
+| `NFR-SEC-008` | Sandbox Security          | Complete confinement flags and resource limits for containerized run                                                                          |
+| `TC-10`       | Test Case Confidentiality | Unit tests verifying hidden cases are never exposed                                                                                           |
+| `TC-11`       | Sandbox Escape Suite      | Security test suite covering sockets, env vars, fork bomb, huge output, infinite loop, file writes                                            |
+| `TC-12`       | Resource Limits           | Wall time and memory limit enforcement tests                                                                                                  |
 
 ---
 
@@ -182,6 +182,7 @@ Built a dedicated, container-ready evaluation microservice isolated from the pri
 ## 7. Exact Instructions to Run
 
 ### 7.1 Run Code Runner Test Suite & Build
+
 ```powershell
 # From workspace root
 pnpm --filter @verisync/code-runner test
@@ -191,6 +192,7 @@ pnpm --filter @verisync/code-runner build
 ```
 
 ### 7.2 Run Admin Web Test Suite & Build
+
 ```powershell
 # From workspace root
 pnpm --filter @verisync/admin-web test
@@ -200,6 +202,7 @@ pnpm --filter @verisync/admin-web build
 ```
 
 ### 7.3 Start Microservices Locally
+
 ```powershell
 # Start Code Runner HTTP daemon (port 5050)
 pnpm --filter @verisync/code-runner start

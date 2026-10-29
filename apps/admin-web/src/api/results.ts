@@ -20,7 +20,8 @@ export const resultsApi = {
     const searchParams = new URLSearchParams();
     if (params?.assessmentId) searchParams.set('assessmentId', params.assessmentId);
     if (params?.status && params.status !== 'ALL') searchParams.set('status', params.status);
-    if (params?.passFail && params.passFail !== 'ALL') searchParams.set('passFail', params.passFail);
+    if (params?.passFail && params.passFail !== 'ALL')
+      searchParams.set('passFail', params.passFail);
     if (params?.startDate) searchParams.set('startDate', params.startDate);
     if (params?.endDate) searchParams.set('endDate', params.endDate);
     if (params?.search) searchParams.set('search', params.search);
@@ -50,9 +51,12 @@ export const resultsApi = {
   },
 
   async submitEvaluation(payload: SubmitEvaluationPayload): Promise<SubmitEvaluationResponse> {
-    return apiFetch<SubmitEvaluationResponse>(`/admin/evaluation-queue/${payload.queueItemId}/evaluate`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return apiFetch<SubmitEvaluationResponse>(
+      `/admin/evaluation-queue/${payload.queueItemId}/evaluate`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    );
   },
 };

@@ -62,5 +62,37 @@ test.describe('Admin Web Portal Smoke Test', () => {
     await page.getByRole('button', { name: /Assessments/i }).click();
     await expect(page.getByText('Assessments Catalog')).toBeVisible();
     await expect(page.getByRole('button', { name: /Create Assessment/i })).toBeVisible();
+
+    // 10. Verify Sidebar Navigation to Live Sessions (FR-ADMIN-001, FR-ADMIN-002)
+    await page.getByRole('button', { name: /Live Sessions/i }).click();
+    await expect(page.getByText('Live Session Monitoring')).toBeVisible();
+    await expect(page.getByText('Rohan Mehta')).toBeVisible();
+    await expect(page.getByText('38m 00s')).toBeVisible();
+
+    // 11. Administrative Override with Mandatory Reason (BR-012, FR-ADMIN-004)
+    await page.getByTestId('btn-override-sess-1').click();
+    await expect(page.getByTestId('session-override-modal')).toBeVisible();
+    await expect(page.getByText('Administrative Override')).toBeVisible();
+
+    // Fill extension, mandatory reason, and confirmation
+    await page.getByTestId('input-extension-minutes').fill('25');
+    await page.getByTestId('input-override-reason').fill('Lab 3 switch reboot; 25min approved.');
+    await page.getByTestId('override-confirm-checkbox').check();
+    await page.getByTestId('btn-submit-override').click();
+
+    // Toast notification with correlation ID appears
+    await expect(page.getByText('Override Applied')).toBeVisible();
+
+    // 12. Audit Logs & Incident Oversight (FR-ADMIN-007, FR-ADMIN-008)
+    await page.getByRole('button', { name: /Audit Logs/i }).click();
+    await expect(page.getByText('Audit Trail & Incident Oversight')).toBeVisible();
+    await expect(page.getByText('SESSION_OVERRIDE')).toBeVisible();
+    await expect(page.getByText('Dr. Ashlin Siddharth')).toBeVisible();
+
+    // Switch to incidents tab
+    await page.getByTestId('subtab-incident-logs').click();
+    await expect(page.getByText('SRS 11.4 Incident Telemetry Notice')).toBeVisible();
+    await expect(page.getByText('Admin Override: PAUSE (Suresh Nair)')).toBeVisible();
   });
 });
+

@@ -12,6 +12,10 @@ import {
   QuestionRecord,
   AssessmentRecord,
   AssessmentStatus,
+  LiveSessionRecord,
+  SessionOverrideType,
+  AuditLogEntry,
+  IncidentRecord,
 } from '../types/api';
 
 export const handlers = [
@@ -928,9 +932,256 @@ export const handlers = [
 
     if (body.status) {
       asmt.status = body.status as AssessmentStatus;
+      mockAuditLogs.unshift({
+        id: `aud-${Date.now().toString(36)}`,
+        timestamp: new Date().toISOString(),
+        eventType: 'ASSESSMENT_STATUS',
+        actorId: 'usr-admin-01',
+        actorName: 'Dr. Ashlin Siddharth',
+        actorRole: 'SUPER_ADMIN',
+        entityType: 'assessment',
+        entityId: asmtId,
+        outcome: 'SUCCESS',
+        reason: (request.headers.get('x-reason') as string) || `Status updated to ${body.status}`,
+        correlationId: `cid-${Date.now().toString(36)}`,
+        ipAddress: '127.0.0.1',
+      });
     }
 
     return HttpResponse.json({ success: true, assessment: asmt });
+  }),
+
+  // ==========================================
+  // LIVE SESSIONS & OVERRIDES (FR-ADMIN-001, FR-ADMIN-002, FR-ADMIN-004, BR-012)
+  // ==========================================
+
+  // GET /api/v1/admin/sessions
+  http.get(/\/api\/v1\/admin\/sessions$/, ({ request }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status') || '';
+    const assessmentId = url.searchParams.get('assessmentId') || '';
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+
+    let filtered = [...mockLiveSessions];
+
+    if (status && status !== 'ALL') {
+      filtered = filtered.filter((s) => s.status === status);
+    }
+    if (assessmentId && assessmentId !== 'ALL') {
+      filtered = filtered.filter((s) => s.assessmentId === assessmentId);
+    }
+    if (search) {
+      filtered = filtered.filter(
+        (s) =>
+          s.candidateName.toLowerCase().includes(search) ||
+          s.candidateIdentifier.toLowerCase().includes(search) ||
+          s.candidateEmail.toLowerCase().includes(search) ||
+          s.assessmentTitle.toLowerCase().includes(search),
+      );
+    }
+
+    const activeCount = mockLiveSessions.filter((s) => s.status === 'ACTIVE').length;
+    const interruptedCount = mockLiveSessions.filter((s) => s.status === 'INTERRUPTED').length;
+    const submittedCount = mockLiveSessions.filter((s) => s.status === 'SUBMITTED').length;
+    const expiredCount = mockLiveSessions.filter((s) => s.status === 'EXPIRED').length;
+    const pausedCount = mockLiveSessions.filter((s) => s.status === 'PAUSED').length;
+
+    return HttpResponse.json({
+      sessions: filtered,
+      total: filtered.length,
+      activeCount,
+      interruptedCount,
+      submittedCount,
+      expiredCount,
+      pausedCount,
+    });
+  }),
+
+  // GET /api/v1/admin/sessions/:id
+  http.get(/\/api\/v1\/admin\/sessions\/([^/]+)$/, ({ params }) => {
+    const sessionId = params[0] as string;
+    const session = mockLiveSessions.find((s) => s.id === sessionId);
+
+    if (!session) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Live session ${sessionId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(session);
+  }),
+
+  // POST /api/v1/admin/sessions/:id/override (BR-012, FR-ADMIN-004, Rule 7)
+  http.post(/\/api\/v1\/admin\/sessions\/([^/]+)\/override$/, async ({ params, request }) => {
+    const sessionId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as {
+      overrideType?: SessionOverrideType;
+      reason?: string;
+      extensionMinutes?: number;
+      notes?: string;
+    };
+
+    const session = mockLiveSessions.find((s) => s.id === sessionId);
+    if (!session) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Session ${sessionId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    // BR-012 & Rule 7: Mandatory reason validation
+    if (!body.reason || body.reason.trim().length === 0) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'Mandatory justification reason is required for administrative session override (BR-012, Rule 7).',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const correlationId = `cid-ovr-${Date.now().toString(36)}`;
+    const extension = body.extensionMinutes || 15;
+
+    switch (body.overrideType) {
+      case 'EXTEND':
+        session.overallRemainingSeconds += extension * 60;
+        session.extensionMinutesApplied = (session.extensionMinutesApplied || 0) + extension;
+        if (session.status === 'EXPIRED') session.status = 'ACTIVE';
+        break;
+      case 'REOPEN':
+        session.status = 'ACTIVE';
+        session.overallRemainingSeconds = Math.max(session.overallRemainingSeconds, extension * 60);
+        break;
+      case 'PAUSE':
+        session.status = 'PAUSED';
+        break;
+      case 'RESUME':
+        session.status = 'ACTIVE';
+        break;
+      case 'CANCEL':
+        session.status = 'CANCELLED';
+        break;
+    }
+
+    session.overrideReason = body.reason;
+    session.notes = body.notes;
+
+    // Create Audit Log Entry (Rule 7, FR-ADMIN-007)
+    const auditEntry: AuditLogEntry = {
+      id: `aud-${Date.now().toString(36)}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'SESSION_OVERRIDE',
+      actorId: 'usr-admin-01',
+      actorName: 'Dr. Ashlin Siddharth',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'session',
+      entityId: session.id,
+      outcome: 'SUCCESS',
+      reason: body.reason,
+      correlationId,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        overrideType: body.overrideType,
+        extensionMinutes: body.extensionMinutes,
+        candidateIdentifier: session.candidateIdentifier,
+        candidateName: session.candidateName,
+      },
+    };
+    mockAuditLogs.unshift(auditEntry);
+
+    // Create Incident Record for SRS 11.4 Roles (FR-ADMIN-008)
+    const incident: IncidentRecord = {
+      id: `inc-${Date.now().toString(36)}`,
+      timestamp: new Date().toISOString(),
+      sessionId: session.id,
+      assessmentId: session.assessmentId,
+      assessmentTitle: session.assessmentTitle,
+      candidateId: session.candidateId,
+      candidateIdentifier: session.candidateIdentifier,
+      candidateName: session.candidateName,
+      title: `Admin Override: ${body.overrideType} (${session.candidateName})`,
+      description: body.reason,
+      severity: body.overrideType === 'CANCEL' ? 'HIGH' : 'MEDIUM',
+      overrideAction: body.overrideType,
+      actor: 'Dr. Ashlin Siddharth (Super Admin)',
+      resolutionNotes: body.notes || 'Resolved via Admin Console Override Workflow.',
+      correlationId,
+    };
+    mockIncidents.unshift(incident);
+
+    return HttpResponse.json({
+      success: true,
+      session,
+      auditLogId: auditEntry.id,
+      correlationId,
+      message: `Override ${body.overrideType} applied successfully.`,
+    });
+  }),
+
+  // ==========================================
+  // AUDIT LOGS & INCIDENTS (FR-ADMIN-007, FR-ADMIN-008, SRS 11.4)
+  // ==========================================
+
+  // GET /api/v1/admin/audit-logs
+  http.get(/\/api\/v1\/admin\/audit-logs$/, ({ request }) => {
+    const url = new URL(request.url);
+    const eventType = url.searchParams.get('eventType') || '';
+    const actor = url.searchParams.get('actor')?.toLowerCase() || '';
+    const entityType = url.searchParams.get('entityType') || '';
+    const outcome = url.searchParams.get('outcome') || '';
+    const correlationId = url.searchParams.get('correlationId')?.toLowerCase() || '';
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+
+    let filtered = [...mockAuditLogs];
+
+    if (eventType && eventType !== 'ALL') {
+      filtered = filtered.filter((a) => a.eventType === eventType);
+    }
+    if (actor) {
+      filtered = filtered.filter(
+        (a) => a.actorName.toLowerCase().includes(actor) || a.actorId.toLowerCase().includes(actor),
+      );
+    }
+    if (entityType && entityType !== 'ALL') {
+      filtered = filtered.filter((a) => a.entityType === entityType);
+    }
+    if (outcome && outcome !== 'ALL') {
+      filtered = filtered.filter((a) => a.outcome === outcome);
+    }
+    if (correlationId) {
+      filtered = filtered.filter((a) => a.correlationId.toLowerCase().includes(correlationId));
+    }
+
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const offset = (page - 1) * limit;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return HttpResponse.json({
+      entries: paginated,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
+  }),
+
+  // GET /api/v1/admin/incidents
+  http.get(/\/api\/v1\/admin\/incidents$/, () => {
+    return HttpResponse.json(mockIncidents);
   }),
 ];
 
@@ -1249,5 +1500,213 @@ const mockAssessments: AssessmentRecord[] = [
     questions: [],
     createdAt: '2026-10-20T12:00:00Z',
     updatedAt: '2026-10-20T12:00:00Z',
+  },
+];
+
+const mockLiveSessions: LiveSessionRecord[] = [
+  {
+    id: 'sess-1',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-1',
+    candidateIdentifier: 'CAN-2026-001',
+    candidateName: 'Rohan Mehta',
+    candidateEmail: 'rohan.mehta@nitk.edu.in',
+    status: 'ACTIVE',
+    currentQuestionIndex: 2,
+    totalQuestions: 4,
+    currentQuestionId: 'q-102',
+    startedAt: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
+    lastHeartbeatAt: new Date(Date.now() - 5 * 1000).toISOString(),
+    overallRemainingSeconds: 2280, // 38 mins
+    questionRemainingSeconds: 75,
+    clientIp: '192.168.1.105',
+    clientVersion: '1.2.0',
+  },
+  {
+    id: 'sess-2',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    candidateEmail: 'aisha.khan@iitb.ac.in',
+    status: 'INTERRUPTED',
+    currentQuestionIndex: 3,
+    totalQuestions: 4,
+    currentQuestionId: 'q-103',
+    startedAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+    lastHeartbeatAt: new Date(Date.now() - 120 * 1000).toISOString(), // 2 mins ago (interrupted)
+    overallRemainingSeconds: 1500, // 25 mins
+    questionRemainingSeconds: 30,
+    clientIp: '192.168.1.106',
+    clientVersion: '1.2.0',
+    notes: 'Lab terminal network cable disconnected; candidate seeking reconnection.',
+  },
+  {
+    id: 'sess-3',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-3',
+    candidateIdentifier: 'CAN-2026-003',
+    candidateName: 'Priya Sharma',
+    candidateEmail: 'priya.sharma@bits-pilani.ac.in',
+    status: 'SUBMITTED',
+    currentQuestionIndex: 4,
+    totalQuestions: 4,
+    startedAt: new Date(Date.now() - 55 * 60 * 1000).toISOString(),
+    lastHeartbeatAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    overallRemainingSeconds: 0,
+    questionRemainingSeconds: 0,
+    clientIp: '192.168.1.107',
+    clientVersion: '1.2.0',
+  },
+  {
+    id: 'sess-4',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-4',
+    candidateIdentifier: 'CAN-2026-004',
+    candidateName: 'Vikram Patel',
+    candidateEmail: 'vikram.patel@iiit.ac.in',
+    status: 'EXPIRED',
+    currentQuestionIndex: 2,
+    totalQuestions: 4,
+    startedAt: new Date(Date.now() - 70 * 60 * 1000).toISOString(),
+    lastHeartbeatAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    overallRemainingSeconds: 0,
+    questionRemainingSeconds: 0,
+    clientIp: '192.168.1.108',
+    clientVersion: '1.2.0',
+  },
+  {
+    id: 'sess-5',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-6',
+    candidateIdentifier: 'CAN-2026-006',
+    candidateName: 'Suresh Nair',
+    candidateEmail: 'suresh.nair@coep.ac.in',
+    status: 'PAUSED',
+    currentQuestionIndex: 1,
+    totalQuestions: 4,
+    startedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+    lastHeartbeatAt: new Date(Date.now() - 20 * 1000).toISOString(),
+    overallRemainingSeconds: 3120, // 52 mins
+    questionRemainingSeconds: 40,
+    clientIp: '192.168.1.109',
+    clientVersion: '1.2.0',
+    overrideReason: 'Lab 3 power interruption; timer held administratively.',
+  },
+];
+
+const mockAuditLogs: AuditLogEntry[] = [
+  {
+    id: 'aud-001',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    eventType: 'SESSION_OVERRIDE',
+    actorId: 'usr-admin-01',
+    actorName: 'Dr. Ashlin Siddharth',
+    actorRole: 'SUPER_ADMIN',
+    entityType: 'session',
+    entityId: 'sess-5',
+    outcome: 'SUCCESS',
+    reason: 'Lab 3 power interruption; timer held administratively (BR-012).',
+    correlationId: 'cid-init-ovr-01',
+    ipAddress: '127.0.0.1',
+    metadata: { overrideType: 'PAUSE', candidateIdentifier: 'CAN-2026-006' },
+  },
+  {
+    id: 'aud-002',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    eventType: 'ASSESSMENT_PUBLISH',
+    actorId: 'usr-admin-01',
+    actorName: 'Dr. Ashlin Siddharth',
+    actorRole: 'SUPER_ADMIN',
+    entityType: 'assessment',
+    entityId: 'asmt-01',
+    outcome: 'SUCCESS',
+    reason: 'Frozen immutable version snapshot for live candidate delivery.',
+    correlationId: 'cid-pub-asmt-01',
+    ipAddress: '127.0.0.1',
+  },
+  {
+    id: 'aud-003',
+    timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    eventType: 'SESSION_START',
+    actorId: 'can-1',
+    actorName: 'Rohan Mehta',
+    actorRole: 'CANDIDATE',
+    entityType: 'session',
+    entityId: 'sess-1',
+    outcome: 'SUCCESS',
+    reason: 'Candidate launched assessment from lab terminal LAB-B-14.',
+    correlationId: 'cid-start-sess-01',
+    ipAddress: '192.168.1.105',
+  },
+  {
+    id: 'aud-004',
+    timestamp: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+    eventType: 'PASSWORD_RESET',
+    actorId: 'usr-admin-01',
+    actorName: 'Dr. Ashlin Siddharth',
+    actorRole: 'SUPER_ADMIN',
+    entityType: 'candidate',
+    entityId: 'can-4',
+    outcome: 'SUCCESS',
+    reason: 'Candidate forgot credentials prior to campus recruitment window.',
+    correlationId: 'cid-reset-pw-can-04',
+    ipAddress: '127.0.0.1',
+  },
+  {
+    id: 'aud-005',
+    timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    eventType: 'SECURITY_ALERT',
+    actorId: 'sys-watcher',
+    actorName: 'VeriSync Security Engine',
+    actorRole: 'SYSTEM',
+    entityType: 'session',
+    entityId: 'sess-2',
+    outcome: 'BLOCKED',
+    reason: 'Simultaneous duplicate session attempt rejected from IP 192.168.1.199 (TC-15).',
+    correlationId: 'cid-sec-alert-dup-01',
+    ipAddress: '192.168.1.199',
+  },
+];
+
+const mockIncidents: IncidentRecord[] = [
+  {
+    id: 'inc-001',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    sessionId: 'sess-5',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-6',
+    candidateIdentifier: 'CAN-2026-006',
+    candidateName: 'Suresh Nair',
+    title: 'Admin Override: PAUSE (Suresh Nair)',
+    description: 'Lab 3 power interruption; timer held administratively.',
+    severity: 'MEDIUM',
+    overrideAction: 'PAUSE',
+    actor: 'Dr. Ashlin Siddharth (Super Admin)',
+    resolutionNotes: 'Timer held. Waiting for lab electrical engineer confirmation.',
+    correlationId: 'cid-init-ovr-01',
+  },
+  {
+    id: 'inc-002',
+    timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+    sessionId: 'sess-2',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    title: 'Session Interruption: Missed Heartbeats (Aisha Khan)',
+    description: 'Candidate terminal lost network connectivity at 192.168.1.106.',
+    severity: 'HIGH',
+    actor: 'VeriSync Expiry Worker',
+    resolutionNotes:
+      'Terminal network cable re-plugged. Candidate awaiting REOPEN or RESUME override.',
+    correlationId: 'cid-heartbeat-timeout-02',
   },
 ];

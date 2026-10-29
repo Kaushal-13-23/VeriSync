@@ -15,12 +15,14 @@ import {
   BarChart3,
   History,
   Settings,
+  Radio,
 } from 'lucide-react';
 import { useAuth } from '../../store/authContext';
 import { UserRole } from '../../types/api';
 
 export type NavigationTab =
   | 'dashboard'
+  | 'live-sessions'
   | 'candidates'
   | 'question-bank'
   | 'assessments'
@@ -46,6 +48,12 @@ const NAV_ITEMS: NavItem[] = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
+    allowedRoles: ['SUPER_ADMIN', 'TECHNICAL_EVALUATOR'],
+  },
+  {
+    id: 'live-sessions',
+    label: 'Live Sessions',
+    icon: Radio,
     allowedRoles: ['SUPER_ADMIN', 'TECHNICAL_EVALUATOR'],
   },
   {

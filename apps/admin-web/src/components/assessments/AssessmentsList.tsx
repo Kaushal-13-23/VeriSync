@@ -14,6 +14,8 @@ import {
   Search,
   UserPlus,
   PlayCircle,
+  PauseCircle,
+  Archive,
   X,
 } from 'lucide-react';
 import { AssessmentRecord, AssessmentStatus } from '../../types/api';
@@ -28,6 +30,7 @@ interface AssessmentsListProps {
   onOpenCreateWizard: () => void;
   onOpenAssignModal: (assessment: AssessmentRecord) => void;
   onPublishAssessment: (assessmentId: string) => void;
+  onRequestStatusChange?: (assessment: AssessmentRecord, targetStatus: AssessmentStatus) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -76,6 +79,7 @@ export const AssessmentsList: React.FC<AssessmentsListProps> = ({
   onOpenCreateWizard,
   onOpenAssignModal,
   onPublishAssessment,
+  onRequestStatusChange,
 }) => {
   if (isLoading) {
     return (
@@ -247,20 +251,61 @@ export const AssessmentsList: React.FC<AssessmentsListProps> = ({
                 </div>
 
                 {/* Footer Action buttons */}
-                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                  {asmt.status === 'DRAFT' ? (
-                    <button
-                      type="button"
-                      onClick={() => onPublishAssessment(asmt.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
-                      data-testid={`btn-publish-${asmt.id}`}
-                    >
-                      <PlayCircle className="w-3.5 h-3.5" />
-                      <span>Publish Test</span>
-                    </button>
-                  ) : (
-                    <span className="text-[11px] font-mono text-slate-400">ID: {asmt.id}</span>
-                  )}
+                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    {asmt.status === 'DRAFT' && (
+                      <button
+                        type="button"
+                        onClick={() => onPublishAssessment(asmt.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
+                        data-testid={`btn-publish-${asmt.id}`}
+                      >
+                        <PlayCircle className="w-3.5 h-3.5" />
+                        <span>Publish Test</span>
+                      </button>
+                    )}
+
+                    {(asmt.status === 'ACTIVE' || asmt.status === 'SCHEDULED') &&
+                      onRequestStatusChange && (
+                        <button
+                          type="button"
+                          onClick={() => onRequestStatusChange(asmt, 'SUSPENDED')}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors"
+                          data-testid={`btn-suspend-${asmt.id}`}
+                          title="Suspend assessment access"
+                        >
+                          <PauseCircle className="w-3.5 h-3.5" />
+                          <span>Suspend</span>
+                        </button>
+                      )}
+
+                    {asmt.status === 'SUSPENDED' && onRequestStatusChange && (
+                      <button
+                        type="button"
+                        onClick={() => onRequestStatusChange(asmt, 'ACTIVE')}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
+                        data-testid={`btn-resume-${asmt.id}`}
+                        title="Resume assessment access"
+                      >
+                        <PlayCircle className="w-3.5 h-3.5" />
+                        <span>Resume</span>
+                      </button>
+                    )}
+
+                    {(asmt.status === 'COMPLETED' || asmt.status === 'SUSPENDED') &&
+                      onRequestStatusChange && (
+                        <button
+                          type="button"
+                          onClick={() => onRequestStatusChange(asmt, 'ARCHIVED')}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 transition-colors"
+                          data-testid={`btn-archive-${asmt.id}`}
+                          title="Archive assessment permanently"
+                        >
+                          <Archive className="w-3.5 h-3.5" />
+                          <span>Archive</span>
+                        </button>
+                      )}
+                  </div>
 
                   <button
                     type="button"

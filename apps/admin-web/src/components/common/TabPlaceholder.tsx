@@ -22,6 +22,13 @@ const TAB_DETAILS: Record<
     srsIds: 'FR-ADMIN-001, FR-ADMIN-002, FR-ADMIN-003',
     description: 'Platform overview metrics, recent activity, and completion rate.',
   },
+  'live-sessions': {
+    title: 'Live Session Monitoring',
+    phase: 'Phase 3 (Sessions & Oversight)',
+    srsIds: 'FR-ADMIN-001, FR-ADMIN-002, FR-ADMIN-004, BR-012',
+    description:
+      'Real-time candidate telemetry, exam timing countdowns, and authoritative admin overrides.',
+  },
   candidates: {
     title: 'Candidate Management',
     phase: 'Phase 2 (Candidate & Lab)',

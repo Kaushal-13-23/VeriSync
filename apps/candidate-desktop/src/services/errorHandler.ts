@@ -85,6 +85,24 @@ export const ERROR_MAPPINGS: Record<
   },
 };
 
+export function containsInternalDetails(text: string): boolean {
+  const internalPatterns = [
+    /\bat\s+[A-Za-z0-9_$.<>]+\s+\(/i, // Stack trace frame (at Method (file:...))
+    /(\/|\\)[A-Za-z0-9_.-]+(\/|\\)[A-Za-z0-9_.-]+/i, // File system path
+    /\b(prisma|pg_|postgres|sqlite|foreign key|syntax error)\b/i, // Database internals
+    /\b(econnrefused|etimedout|enotfound|econnreset)\b/i, // Network internals
+    /\b(127\.0\.0\.1|localhost|::1|\.internal)\b/i, // Internal network hosts
+  ];
+  return internalPatterns.some((pattern) => pattern.test(text));
+}
+
+export function sanitizeUserFacingMessage(rawMessage: string, defaultMessage: string): string {
+  if (!rawMessage || containsInternalDetails(rawMessage)) {
+    return defaultMessage;
+  }
+  return rawMessage;
+}
+
 export function handleApiError(error: unknown): UserFacingError {
   let apiError: ApiErrorResponse | null = null;
 
@@ -95,21 +113,23 @@ export function handleApiError(error: unknown): UserFacingError {
   const code: ApiErrorCode = apiError?.code || ApiErrorCode.INTERNAL_ERROR;
   const mapping = ERROR_MAPPINGS[code] || ERROR_MAPPINGS[ApiErrorCode.INTERNAL_ERROR];
   const correlationId = apiError?.correlationId || (error as { correlationId?: string })?.correlationId;
-  const message = apiError?.message || (error as Error)?.message || mapping.defaultMessage;
+  const rawMessage = apiError?.message || (error as Error)?.message || mapping.defaultMessage;
+  const userSafeMessage = sanitizeUserFacingMessage(rawMessage, mapping.defaultMessage);
 
   const result: UserFacingError = {
     code,
     title: mapping.title,
-    message,
+    message: userSafeMessage,
     actionHint: mapping.actionHint,
     correlationId,
     isFatal: mapping.isFatal ?? false,
   };
 
-  // Structured logging with secret scrubbing
-  void logger.error(`API Error [${code}]: ${message}`, correlationId, {
+  // Structured logging with correlation ID and secret scrubbing (NFR-REL-005, Rule 5, Rule 9)
+  void logger.error(`API Error [${code}]: ${rawMessage}`, correlationId, {
     code,
     title: mapping.title,
+    rawMessage,
     isFatal: result.isFatal,
   });
 

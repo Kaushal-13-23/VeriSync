@@ -60,5 +60,35 @@ describe('Central Error Handler (SRS 8.3.3, NFR-USE-003, Rule 9)', () => {
     expect(result.code).toBe(ApiErrorCode.INTERNAL_ERROR);
     expect(result.message).toBe('Unexpected crash');
   });
+
+  // NFR-REL-005: User-facing messages never expose internals
+  it('strips internal stack traces and technical paths from user-facing error message (NFR-REL-005)', () => {
+    const internalErr = new Error(
+      'TypeError: Cannot read property "id" of null\n    at SessionsController.submit (C:\\VeriSync\\apps\\api\\src\\sessions.ts:42:12)'
+    );
+    Object.assign(internalErr, { correlationId: 'c-stack-trace-001' });
+
+    const result = handleApiError(internalErr);
+
+    expect(result.code).toBe(ApiErrorCode.INTERNAL_ERROR);
+    // User message must NOT contain stack trace or internal paths
+    expect(result.message).not.toContain('at SessionsController');
+    expect(result.message).not.toContain('C:\\VeriSync');
+    expect(result.message).toBe(ERROR_MAPPINGS[ApiErrorCode.INTERNAL_ERROR].defaultMessage);
+    expect(result.correlationId).toBe('c-stack-trace-001');
+  });
+
+  it('strips database internals and network hostnames from user-facing error message (NFR-REL-005)', () => {
+    const dbErr = new Error('PrismaClientKnownRequestError: connect ECONNREFUSED 127.0.0.1:5432');
+    Object.assign(dbErr, { correlationId: 'c-db-refused-002' });
+
+    const result = handleApiError(dbErr);
+
+    expect(result.code).toBe(ApiErrorCode.INTERNAL_ERROR);
+    expect(result.message).not.toContain('ECONNREFUSED');
+    expect(result.message).not.toContain('127.0.0.1');
+    expect(result.message).toBe(ERROR_MAPPINGS[ApiErrorCode.INTERNAL_ERROR].defaultMessage);
+    expect(result.correlationId).toBe('c-db-refused-002');
+  });
 });
 

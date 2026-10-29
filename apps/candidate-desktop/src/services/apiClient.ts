@@ -2,7 +2,6 @@ import {
   ApiErrorCode,
   ApiErrorResponse,
   CandidateQuestionDto,
-  FinalSubmitResponseDto,
   HealthStatusResponse,
   SaveDraftDto,
   SessionHeartbeatResponseDto,
@@ -16,7 +15,7 @@ import {
 import { tokenStorage } from './tokenStorage';
 import { timeSync } from './timeSync';
 import { mockApi, MockAssessmentSession, MockUser } from './mockApi';
-import { CandidateAssignedAssessment } from '../types/assessment';
+import { CandidateAssignedAssessment, CandidateFinalSubmitResponse } from '../types/assessment';
 
 /**
  * Unified API Client for VeriSync Candidate Desktop
@@ -448,10 +447,10 @@ class ApiClient {
   }
 
   /**
-   * Phase 3: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
-   * FR-ANS-008, UC-13, Decision 4
+   * Phase 3 & 4: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
+   * FR-ANS-008, UC-13, Decision 4, FR-SCORE-008
    */
-  public async finalSubmitSession(sessionId: string): Promise<FinalSubmitResponseDto> {
+  public async finalSubmitSession(sessionId: string): Promise<CandidateFinalSubmitResponse> {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
       try {
@@ -461,7 +460,7 @@ class ApiClient {
         });
         const endMs = Date.now();
         if (response.ok) {
-          const data = (await response.json()) as FinalSubmitResponseDto;
+          const data = (await response.json()) as CandidateFinalSubmitResponse;
           timeSync.recordServerTime(data.serverTime, startMs, endMs);
           return data;
         }

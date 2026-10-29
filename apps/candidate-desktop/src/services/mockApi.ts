@@ -3,7 +3,6 @@ import {
   ApiErrorResponse,
   AssessmentStatus,
   CandidateQuestionDto,
-  FinalSubmitResponseDto,
   HealthStatusResponse,
   PaletteItemDto,
   QuestionType,
@@ -18,7 +17,12 @@ import {
   SubmitAnswerResponse,
   UserRole,
 } from '@verisync/shared';
-import { CandidateAssignedAssessment } from '../types/assessment';
+import {
+  CandidateAssignedAssessment,
+  CandidateFinalSubmitResponse,
+  CandidateResultSummary,
+  ResultVisibility,
+} from '../types/assessment';
 
 /**
  * Local Mock Server strictly matching packages/shared/openapi.yaml & SRS 8.3.3
@@ -69,6 +73,8 @@ export interface MockAssessmentSession {
   answeredAttemptIds: Set<string>;
   markedForReviewIds: Set<string>;
   isFinalSubmitted: boolean;
+  resultVisibility?: ResultVisibility;
+  result?: CandidateResultSummary | null;
 }
 
 // In-memory stores
@@ -512,15 +518,35 @@ export const mockApi = {
   },
 
   /**
-   * Phase 3: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
+   * Phase 3 & 4: Final Assessment Submission (POST /candidate/sessions/:id/final-submit)
+   * Honors result-visibility policy (FR-ASMT-002, FR-SCORE-008, FR-UI-009)
    */
-  async finalSubmitSession(_sessionId: string): Promise<FinalSubmitResponseDto> {
+  async finalSubmitSession(_sessionId: string): Promise<CandidateFinalSubmitResponse> {
     if (!activeMockSession) {
       this.initMockSession('CAN-2026-081');
     }
     const session = activeMockSession!;
     mockSessionStatus = SessionState.SUBMITTED;
     session.isFinalSubmitted = true;
+
+    const resultVisibility = session.resultVisibility ?? 'ADMIN_RELEASE';
+    let result: CandidateResultSummary | null = null;
+
+    if (resultVisibility === 'IMMEDIATE') {
+      const answeredCount = session.answeredAttemptIds.size;
+      const maxScore = session.totalQuestions * 5;
+      const score = answeredCount * 4;
+      const pct = Math.round((score / maxScore) * 100);
+      result = session.result ?? {
+        totalScore: score,
+        maximumScore: maxScore,
+        percentage: pct,
+        passed: pct >= 60,
+        benchmarkScore: 60,
+        resultStatus: 'FINAL',
+        evaluatedAt: new Date().toISOString(),
+      };
+    }
 
     return {
       status: 'submitted',
@@ -531,7 +557,18 @@ export const mockApi = {
       answeredCount: session.answeredAttemptIds.size,
       submittedAt: new Date().toISOString(),
       serverTime: new Date().toISOString(),
+      resultVisibility,
+      result,
     };
+  },
+
+  setResultVisibility(visibility: ResultVisibility, customResult?: CandidateResultSummary | null): void {
+    if (activeMockSession) {
+      activeMockSession.resultVisibility = visibility;
+      if (customResult !== undefined) {
+        activeMockSession.result = customResult;
+      }
+    }
   },
 
   /**

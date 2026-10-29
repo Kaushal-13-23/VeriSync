@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.verisync.candidate",
+  "productName": "VeriSync Candidate Client",
+  "copyright": "Copyright © 2026 VeriSync Systems. All rights reserved.",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**",
+    "dist-electron/**",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "version": "1.1.0",
+    "main": "dist-electron/main.js"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "signingHashAlgorithms": ["sha256"],
+    "certificateFile": "build/code-signing-placeholder.pfx",
+    "certificatePassword": "",
+    "signAndEditExecutable": false,
+    "requestedExecutionLevel": "requireAdministrator"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowElevation": true,
+    "allowToChangeInstallationDirectory": false,
+    "runAfterFinish": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "VeriSync Candidate Client",
+    "deleteAppDataOnUninstall": false,
+    "differentialPackage": false
+  }
+}

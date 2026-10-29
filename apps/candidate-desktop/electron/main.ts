@@ -188,6 +188,68 @@ function appendLocalLog(
   }
 }
 
+// App Bundle Integrity & Tamper Check at Startup (NFR-SEC-005, FR-LAB-002, FR-LAB-005)
+export interface TamperCheckResult {
+  isTampered: boolean;
+  reason?: string;
+  checkedFiles: string[];
+}
+
+export function verifyBundleIntegrity(baseDir?: string): TamperCheckResult {
+  const root = baseDir || path.join(__dirname, '..');
+  const checkedFiles: string[] = [];
+
+  const criticalRelativePaths = [
+    path.join('dist-electron', 'preload.js'),
+    path.join('dist', 'index.html'),
+  ];
+
+  for (const relPath of criticalRelativePaths) {
+    const fullPath = path.join(root, relPath);
+    if (!fs.existsSync(fullPath)) {
+      if (process.env.VITE_DEV_SERVER_URL || process.env.NODE_ENV === 'test') {
+        continue;
+      }
+      return {
+        isTampered: true,
+        reason: `Critical application asset missing: ${relPath}`,
+        checkedFiles,
+      };
+    }
+
+    checkedFiles.push(relPath);
+
+    try {
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      const forbiddenSignatures = [
+        /<script[^>]*src=["']https?:\/\//i,
+        /\bdebugger\b/i,
+      ];
+
+      for (const sig of forbiddenSignatures) {
+        if (sig.test(content)) {
+          return {
+            isTampered: true,
+            reason: `Disallowed code signature detected in ${relPath}`,
+            checkedFiles,
+          };
+        }
+      }
+    } catch (err) {
+      return {
+        isTampered: true,
+        reason: `Failed to inspect asset ${relPath}: ${(err as Error).message}`,
+        checkedFiles,
+      };
+    }
+  }
+
+  return {
+    isTampered: false,
+    checkedFiles,
+  };
+}
+
 // Register IPC handlers before window creation
 function setupIpcHandlers() {
   ipcMain.handle('verisync:getAppVersion', () => '1.1.0');
@@ -209,6 +271,7 @@ function setupIpcHandlers() {
       entry: { level: string; message: string; correlationId?: string; metadata?: Record<string, unknown> }
     ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata)
   );
+  ipcMain.handle('verisync:verifyIntegrity', () => verifyBundleIntegrity());
   ipcMain.handle('verisync:closeApp', () => {
     app.quit();
   });
@@ -267,32 +330,44 @@ function createWindow() {
 }
 
 // Single-instance lock enforcement (FR-LAB-005)
-const gotTheLock = app.requestSingleInstanceLock();
+if (app && typeof app.requestSingleInstanceLock === 'function') {
+  const gotTheLock = app.requestSingleInstanceLock();
 
-if (!gotTheLock) {
-  app.quit();
-} else {
-  app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
+  if (!gotTheLock) {
+    app.quit();
+  } else {
+    app.on('second-instance', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+      }
+    });
 
-  app.whenReady().then(() => {
-    setupIpcHandlers();
-    createWindow();
-  });
+    app.whenReady().then(() => {
+      // Startup Bundle Integrity Verification (NFR-SEC-005, FR-LAB-002)
+      const integrity = verifyBundleIntegrity();
+      if (integrity.isTampered) {
+        appendLocalLog('error', `SECURITY ALERT: App bundle tampering detected: ${integrity.reason}`);
+        if (process.env.NODE_ENV === 'production') {
+          app.quit();
+          return;
+        }
+      }
 
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      app.quit();
-    }
-  });
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+      setupIpcHandlers();
       createWindow();
-    }
-  });
+    });
+
+    app.on('window-all-closed', () => {
+      if (process.platform !== 'darwin') {
+        app.quit();
+      }
+    });
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  }
 }

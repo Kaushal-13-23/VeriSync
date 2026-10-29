@@ -129,10 +129,10 @@ Status Legend:
 - [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
 - [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
-- [/] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
+- [x] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
 - [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
 - [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
-- [/] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
+- [x] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
@@ -208,7 +208,7 @@ Status Legend:
 - [x] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
 - [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
 - [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
-- [ ] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
+- [x] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
 - [ ] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
 
 ### 6.4 Scalability Requirements (NFR-SCALE)
@@ -219,17 +219,17 @@ Status Legend:
 
 ### 6.5 Usability Requirements (NFR-USE)
 
-- [ ] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
-- [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
-- [ ] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
-- [ ] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
-- [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
+- [x] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
+- [x] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
+- [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
+- [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
+- [x] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
-- [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
+- [x] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
 - [ ] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
-- [ ] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
+- [x] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
 
@@ -237,11 +237,11 @@ Status Legend:
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
 - [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [/] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [x] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 
 - [ ] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must)
 - [ ] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
 - [ ] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
-- [ ] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
+- [x] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)

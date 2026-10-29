@@ -8,6 +8,7 @@ import {
   RotateCcw,
   RefreshCw,
   Clock,
+  Eye,
 } from 'lucide-react';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { apiClient } from '../services/apiClient';
@@ -22,10 +23,10 @@ import { SubmitNextButton, SubmissionButtonState } from '../components/exam/Subm
 import { handleApiError } from '../services/errorHandler';
 import {
   CandidateQuestionDto,
-  FinalSubmitResponseDto,
   QuestionType,
   SessionState,
 } from '@verisync/shared';
+import { CandidateFinalSubmitResponse } from '../types/assessment';
 
 /**
  * Exam Interface Screen
@@ -44,7 +45,7 @@ import {
 
 interface ExamScreenProps {
   session: MockAssessmentSession;
-  onFinishExam: (finalResult?: FinalSubmitResponseDto) => void;
+  onFinishExam: (finalResult?: CandidateFinalSubmitResponse) => void;
 }
 
 export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam }) => {
@@ -59,6 +60,10 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
   const [codeOutput, setCodeOutput] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeQuestionDto, setActiveQuestionDto] = useState<CandidateQuestionDto | null>(null);
+
+  // NFR-USE-005: Accessibility Controls (Font Scaling & High Contrast Mode)
+  const [fontScale, setFontScale] = useState<'normal' | 'large' | 'xlarge'>('normal');
+  const [isHighContrast, setIsHighContrast] = useState(false);
 
   // Prevent duplicate final submissions
   const hasFinishedRef = useRef(false);
@@ -155,6 +160,69 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       return copy;
     });
   };
+
+  // NFR-USE-005: Keyboard Operation & Hotkeys within Lockdown Environment
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const targetTag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      const isInput = targetTag === 'input' || targetTag === 'textarea';
+
+      // Alt+S or Ctrl+Enter: Submit and Next
+      if ((e.altKey && (e.key === 's' || e.key === 'S')) || (e.ctrlKey && e.key === 'Enter')) {
+        e.preventDefault();
+        if (submissionState !== 'in-flight') {
+          void handleSubmitAnswer();
+        }
+        return;
+      }
+
+      // Alt+M: Toggle Mark for Review
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault();
+        handleToggleMarkReview();
+        return;
+      }
+
+      // Alt+C: Clear Response
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        handleClearResponse();
+        return;
+      }
+
+      // 1-9 or A-D option selection on MCQ questions
+      if (!isInput && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (currentQuestion.options && currentQuestion.options.length > 0) {
+          let chosenIdx = -1;
+          const kLower = e.key.toLowerCase();
+          if (e.key >= '1' && e.key <= '9') {
+            chosenIdx = parseInt(e.key, 10) - 1;
+          } else if (kLower >= 'a' && kLower <= 'd') {
+            chosenIdx = kLower.charCodeAt(0) - 'a'.charCodeAt(0);
+          }
+
+          if (chosenIdx >= 0 && chosenIdx < currentQuestion.options.length) {
+            e.preventDefault();
+            const optionId = currentQuestion.options[chosenIdx].id;
+            if (currentQuestion.type === 'multiple_select' || currentQuestion.type === QuestionType.MCQ_MULTIPLE) {
+              const currentArr = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
+              const updated = currentArr.includes(optionId)
+                ? currentArr.filter((id) => id !== optionId)
+                : [...currentArr, optionId];
+              setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: updated }));
+            } else {
+              setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optionId }));
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [submissionState, currentQuestion, currentAnswer, qAttemptId]);
 
   const handleRunCode = () => {
     if (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING) {
@@ -346,13 +414,18 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
         {/* Right: Active Question Presentation & Submission Area */}
         <main
+          role="region"
+          aria-label="Active Question Workspace"
           style={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: '#0b1120',
+            backgroundColor: isHighContrast ? '#000000' : '#0b1120',
+            color: isHighContrast ? '#ffffff' : '#f8fafc',
             overflowY: 'auto',
             padding: '24px 32px',
+            fontSize: fontScale === 'xlarge' ? '17px' : fontScale === 'large' ? '15px' : '14px',
+            lineHeight: 1.6,
           }}
         >
           {/* Header Info: Section, Authoritative Timer, Actions */}
@@ -363,19 +436,111 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               alignItems: 'center',
               marginBottom: 20,
               paddingBottom: 16,
-              borderBottom: '1px solid #1f2937',
+              borderBottom: isHighContrast ? '2px solid #facc15' : '1px solid #1f2937',
             }}
           >
             <div>
-              <div style={{ fontSize: 13, color: '#93c5fd', fontWeight: 600, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 13, color: isHighContrast ? '#facc15' : '#93c5fd', fontWeight: 600, textTransform: 'uppercase' }}>
                 {currentQuestion.section} &bull; Question {currentIdx + 1} of {totalQuestions}
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0 0', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0 0', color: isHighContrast ? '#ffffff' : '#f8fafc' }}>
                 {currentQuestion.title}
               </h2>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* NFR-USE-005: Font Size Controls */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: isHighContrast ? '#18181b' : '#1e293b',
+                  borderRadius: 6,
+                  border: isHighContrast ? '1px solid #facc15' : '1px solid #334155',
+                  padding: '2px 4px',
+                  gap: 2,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setFontScale('normal')}
+                  aria-label="Normal Font Size"
+                  aria-pressed={fontScale === 'normal'}
+                  style={{
+                    padding: '4px 7px',
+                    borderRadius: 4,
+                    border: 'none',
+                    backgroundColor: fontScale === 'normal' ? '#2563eb' : 'transparent',
+                    color: fontScale === 'normal' ? '#ffffff' : '#94a3b8',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  A
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFontScale('large')}
+                  aria-label="Large Font Size"
+                  aria-pressed={fontScale === 'large'}
+                  style={{
+                    padding: '4px 7px',
+                    borderRadius: 4,
+                    border: 'none',
+                    backgroundColor: fontScale === 'large' ? '#2563eb' : 'transparent',
+                    color: fontScale === 'large' ? '#ffffff' : '#94a3b8',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  A+
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFontScale('xlarge')}
+                  aria-label="Extra Large Font Size"
+                  aria-pressed={fontScale === 'xlarge'}
+                  style={{
+                    padding: '4px 7px',
+                    borderRadius: 4,
+                    border: 'none',
+                    backgroundColor: fontScale === 'xlarge' ? '#2563eb' : 'transparent',
+                    color: fontScale === 'xlarge' ? '#ffffff' : '#94a3b8',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  A++
+                </button>
+              </div>
+
+              {/* High Contrast Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsHighContrast((prev) => !prev)}
+                aria-label="Toggle High Contrast Mode"
+                aria-pressed={isHighContrast}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  backgroundColor: isHighContrast ? '#facc15' : '#1e293b',
+                  color: isHighContrast ? '#000000' : '#cbd5e1',
+                  border: isHighContrast ? '1px solid #ca8a04' : '1px solid #334155',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Eye size={13} />
+                <span>{isHighContrast ? 'Standard' : 'Contrast'}</span>
+              </button>
+
               {/* Sync Status Button (FR-TIME-010, TC-07) */}
               <button
                 type="button"

@@ -204,3 +204,4 @@ pnpm --filter @verisync/candidate-desktop dev
 # 4. Generate Windows NSIS installer package (per-machine)
 pnpm --filter @verisync/candidate-desktop package:win
 ```
+

@@ -11,6 +11,9 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { NavigationTab } from './components/layout/Sidebar';
 import { DashboardOverview } from './components/dashboard/DashboardOverview';
+import { CandidatesView } from './components/candidates/CandidatesView';
+import { QuestionBankView } from './components/questions/QuestionBankView';
+import { AssessmentsView } from './components/assessments/AssessmentsView';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ToastContainer } from './components/ui/ToastContainer';
 
@@ -26,14 +29,27 @@ const queryClient = new QueryClient({
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardOverview onNavigateTab={(tab) => setActiveTab(tab as NavigationTab)} />;
+      case 'candidates':
+        return <CandidatesView />;
+      case 'question-bank':
+        return <QuestionBankView />;
+      case 'assessments':
+        return <AssessmentsView />;
+      default:
+        return (
+          <TabPlaceholder tab={activeTab} onReturnToDashboard={() => setActiveTab('dashboard')} />
+        );
+    }
+  };
+
   return (
     <ProtectedRoute>
       <AppLayout activeTab={activeTab} onSelectTab={setActiveTab}>
-        {activeTab === 'dashboard' ? (
-          <DashboardOverview onNavigateTab={(tab) => setActiveTab(tab as NavigationTab)} />
-        ) : (
-          <TabPlaceholder tab={activeTab} onReturnToDashboard={() => setActiveTab('dashboard')} />
-        )}
+        {renderContent()}
       </AppLayout>
     </ProtectedRoute>
   );

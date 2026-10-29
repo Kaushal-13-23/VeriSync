@@ -375,7 +375,8 @@ export type AuditEventType =
   | 'CANDIDATE_UPDATE'
   | 'CANDIDATE_STATUS'
   | 'PASSWORD_RESET'
-  | 'SECURITY_ALERT';
+  | 'SECURITY_ALERT'
+  | 'SCORE_CORRECTION';
 
 export type AuditOutcome = 'SUCCESS' | 'FAILED' | 'BLOCKED';
 
@@ -434,3 +435,201 @@ export interface IncidentRecord {
   resolutionNotes?: string;
   correlationId: string;
 }
+
+// ==========================================
+// Results & Scoring Domain Types (FR-SCORE-001..010, UC-14, UC-15, UI_Sample.jpeg)
+// ==========================================
+
+export type ResultStatus = 'FINAL' | 'PROVISIONAL';
+export type PassFailStatus = 'PASS' | 'FAIL';
+export type QuestionEvaluationStatus = 'AUTOMATED' | 'PENDING_EVALUATION' | 'EVALUATED' | 'CORRECTED';
+
+export interface RubricCriterionScore {
+  id: string;
+  name: string;
+  maxMarks: number;
+  awardedMarks: number;
+}
+
+export interface QuestionResultItem {
+  questionId: string;
+  questionTitle: string;
+  questionType: QuestionType;
+  maxMarks: number;
+  marksAwarded: number;
+  evaluationStatus: QuestionEvaluationStatus;
+  candidateAnswer: string | string[];
+  correctAnswerText?: string;
+  evaluatorComments?: string;
+  evaluatorName?: string;
+  evaluatedAt?: string;
+  rubricCriteria?: RubricCriterionScore[];
+  testCasesPassed?: number;
+  totalTestCases?: number;
+}
+
+export interface ScoreCorrectionHistoryItem {
+  id: string;
+  timestamp: string; // UTC ISO-8601 (Rule 9)
+  questionId?: string | null; // null if overall correction
+  questionTitle?: string;
+  originalScore: number;
+  revisedScore: number;
+  reason: string; // Mandatory (BR-012, Rule 7)
+  adminId: string;
+  adminName: string;
+  correlationId: string;
+}
+
+export interface AssessmentResultRecord {
+  id: string;
+  sessionId: string;
+  candidateId: string;
+  candidateIdentifier: string; // e.g. CAN-2026-001
+  candidateName: string;
+  candidateEmail: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  totalScore: number;
+  maxScore: number;
+  scorePercentage: number;
+  passingScorePercentage: number;
+  status: ResultStatus; // FINAL | PROVISIONAL (FR-SCORE-008)
+  passFailStatus: PassFailStatus; // PASS | FAIL
+  completedOn: string; // UTC ISO-8601 (Rule 9)
+  timeTakenMinutes: number;
+  pendingManualCount: number;
+  questions: QuestionResultItem[];
+  corrections: ScoreCorrectionHistoryItem[];
+}
+
+export interface ResultFilterParams {
+  assessmentId?: string;
+  status?: 'ALL' | 'FINAL' | 'PROVISIONAL';
+  passFail?: 'ALL' | 'PASS' | 'FAIL';
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetResultsResponse {
+  results: AssessmentResultRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ScoreCorrectionPayload {
+  resultId: string;
+  questionId?: string | null; // null for total score correction
+  newScore: number;
+  reason: string; // Mandatory (BR-012, Rule 7)
+}
+
+export interface ScoreCorrectionResponse {
+  success: boolean;
+  result: AssessmentResultRecord;
+  correction: ScoreCorrectionHistoryItem;
+  correlationId: string;
+  message: string;
+}
+
+// ==========================================
+// Manual Evaluation Queue Types (UC-14, FR-SCORE-004, FR-SCORE-005)
+// ==========================================
+
+export interface EvaluationRubricItem {
+  id: string;
+  name: string;
+  description: string;
+  maxMarks: number;
+}
+
+export interface EvaluationQueueItem {
+  id: string;
+  resultId: string;
+  sessionId: string;
+  candidateId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  questionId: string;
+  questionTitle: string;
+  questionPrompt: string;
+  questionType: QuestionType;
+  candidateAnswer: string;
+  submittedAt: string;
+  maxMarks: number;
+  rubricCriteria: EvaluationRubricItem[];
+  referenceAnswer?: string;
+}
+
+export interface SubmitEvaluationPayload {
+  queueItemId: string;
+  awardedMarks: number;
+  rubricScores?: Record<string, number>;
+  comments: string;
+}
+
+export interface SubmitEvaluationResponse {
+  success: boolean;
+  resultId: string;
+  resultStatus: ResultStatus;
+  updatedMarks: number;
+  correlationId: string;
+  message: string;
+}
+
+// ==========================================
+// Reports & Analytics Domain Types (FR-ADMIN-005, FR-ADMIN-006, FR-SCORE-009)
+// ==========================================
+
+export interface AssessmentSummaryReport {
+  assessmentId: string;
+  assessmentTitle: string;
+  totalCompleted: number;
+  averageScorePercentage: number;
+  passRatePercentage: number;
+  highestScorePercentage: number;
+  lowestScorePercentage: number;
+  averageTimeTakenMinutes: number;
+  passingThresholdPercentage: number;
+}
+
+export interface CandidateRankingItem {
+  rank: number;
+  candidateId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  scorePercentage: number;
+  totalScore: number;
+  maxScore: number;
+  passFailStatus: PassFailStatus;
+  timeTakenMinutes: number;
+  completedOn: string;
+}
+
+export interface McqOptionDistribution {
+  optionKey: string;
+  optionLabel: string;
+  count: number;
+  percentage: number;
+  isCorrect: boolean;
+}
+
+export interface QuestionPerformanceStats {
+  questionId: string;
+  title: string;
+  type: QuestionType;
+  correctAnswerRate: number; // 0 - 100
+  averageScore: number;
+  maxScore: number;
+  difficultyIndex: 'EASY' | 'MEDIUM' | 'HARD';
+  discriminationIndex: number;
+  responseDistribution?: McqOptionDistribution[];
+}
+

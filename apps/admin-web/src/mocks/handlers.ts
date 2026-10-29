@@ -16,6 +16,12 @@ import {
   SessionOverrideType,
   AuditLogEntry,
   IncidentRecord,
+  AssessmentResultRecord,
+  ScoreCorrectionPayload,
+  EvaluationQueueItem,
+  AssessmentSummaryReport,
+  CandidateRankingItem,
+  QuestionPerformanceStats,
 } from '../types/api';
 
 export const handlers = [
@@ -170,13 +176,20 @@ export const handlers = [
     });
   }),
 
-  // GET /api/v1/admin/dashboard-stats (FR-ADMIN-001, FR-ADMIN-002, UI_Sample.jpeg)
+  // GET /api/v1/admin/dashboard-stats (FR-ADMIN-001, FR-ADMIN-002, FR-ADMIN-003, UI_Sample.jpeg)
   http.get(/\/api\/v1\/admin\/dashboard-stats$/, () => {
+    const totalCandidatesCount = 1248 + (mockCandidates.length - 7);
+    const totalAssessmentsCount = 24 + (mockAssessments.length - 3);
+    const completedCount = 892 + (mockResults.length - 8);
+    const activeCandidatesCount = 356 + (mockLiveSessions.filter((s) => s.status === 'ACTIVE').length - 1);
+    const inProgressCount = 214;
+    const notStartedCount = 142;
+
     const stats: DashboardStats = {
-      totalCandidates: { value: 1248, trend: '+ 12%' },
-      totalAssessments: { value: 24, trend: '+ 3' },
-      completedTests: { value: 892, trend: '+ 10%' },
-      activeCandidates: { value: 356, trend: '+ 6%' },
+      totalCandidates: { value: totalCandidatesCount, trend: '+ 12%' },
+      totalAssessments: { value: totalAssessmentsCount, trend: '+ 3' },
+      completedTests: { value: completedCount, trend: '+ 10%' },
+      activeCandidates: { value: activeCandidatesCount, trend: '+ 6%' },
       recentActivity: [
         {
           id: 'act-1',
@@ -213,9 +226,9 @@ export const handlers = [
       ],
       completionRate: {
         percentage: 72,
-        completed: 892,
-        inProgress: 214,
-        notStarted: 142,
+        completed: completedCount,
+        inProgress: inProgressCount,
+        notStarted: notStartedCount,
       },
       upcomingAssessments: [
         {
@@ -1183,6 +1196,400 @@ export const handlers = [
   http.get(/\/api\/v1\/admin\/incidents$/, () => {
     return HttpResponse.json(mockIncidents);
   }),
+
+  // ==========================================
+  // RESULTS & SCORING API (FR-SCORE-001..010, FR-ADMIN-005, FR-ADMIN-006, UC-14, UC-15)
+  // ==========================================
+
+  // GET /api/v1/admin/results
+  http.get(/\/api\/v1\/admin\/results$/, ({ request }) => {
+    const url = new URL(request.url);
+    const assessmentId = url.searchParams.get('assessmentId') || '';
+    const status = url.searchParams.get('status') || '';
+    const passFail = url.searchParams.get('passFail') || '';
+    const search = url.searchParams.get('search')?.toLowerCase() || '';
+    const startDate = url.searchParams.get('startDate') || '';
+    const endDate = url.searchParams.get('endDate') || '';
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '5', 10);
+
+    let filtered = [...mockResults];
+
+    if (assessmentId && assessmentId !== 'ALL') {
+      filtered = filtered.filter((r) => r.assessmentId === assessmentId);
+    }
+    if (status && status !== 'ALL') {
+      filtered = filtered.filter((r) => r.status === status);
+    }
+    if (passFail && passFail !== 'ALL') {
+      filtered = filtered.filter((r) => r.passFailStatus === passFail);
+    }
+    if (search) {
+      filtered = filtered.filter(
+        (r) =>
+          r.candidateName.toLowerCase().includes(search) ||
+          r.candidateIdentifier.toLowerCase().includes(search) ||
+          r.candidateEmail.toLowerCase().includes(search) ||
+          r.assessmentTitle.toLowerCase().includes(search),
+      );
+    }
+    if (startDate) {
+      filtered = filtered.filter((r) => new Date(r.completedOn) >= new Date(startDate));
+    }
+    if (endDate) {
+      filtered = filtered.filter((r) => new Date(r.completedOn) <= new Date(endDate));
+    }
+
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const offset = (page - 1) * limit;
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return HttpResponse.json({
+      results: paginated,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
+  }),
+
+  // GET /api/v1/admin/results/:id
+  http.get(/\/api\/v1\/admin\/results\/([^/]+)$/, ({ params }) => {
+    const resultId = params[0] as string;
+    const result = mockResults.find((r) => r.id === resultId);
+
+    if (!result) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Result ${resultId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(result);
+  }),
+
+  // POST /api/v1/admin/results/:id/correct (FR-SCORE-010, BR-012, Rule 7, UC-15)
+  http.post(/\/api\/v1\/admin\/results\/([^/]+)\/correct$/, async ({ params, request }) => {
+    const resultId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as ScoreCorrectionPayload;
+
+    const result = mockResults.find((r) => r.id === resultId);
+    if (!result) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Result ${resultId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    // BR-012 & Rule 7: Mandatory reason validation
+    if (!body.reason || body.reason.trim().length === 0) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'Mandatory justification reason is required for administrative score correction (BR-012, Rule 7, UC-15).',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const correlationId = `cid-corr-${Date.now().toString(36)}`;
+    let originalScore = result.totalScore;
+    let questionTitle: string | undefined = undefined;
+
+    if (body.questionId) {
+      const question = result.questions.find((q) => q.questionId === body.questionId);
+      if (question) {
+        originalScore = question.marksAwarded;
+        questionTitle = question.questionTitle;
+        question.marksAwarded = body.newScore;
+        question.evaluationStatus = 'CORRECTED';
+        // Recalculate total score
+        result.totalScore = result.questions.reduce((sum, q) => sum + q.marksAwarded, 0);
+      } else {
+        result.totalScore = body.newScore;
+      }
+    } else {
+      result.totalScore = body.newScore;
+    }
+
+    result.scorePercentage = Math.round((result.totalScore / result.maxScore) * 100);
+    result.passFailStatus =
+      result.scorePercentage >= result.passingScorePercentage ? 'PASS' : 'FAIL';
+
+    const correctionEntry = {
+      id: `corr-${Date.now().toString(36)}`,
+      timestamp: new Date().toISOString(),
+      questionId: body.questionId || null,
+      questionTitle,
+      originalScore,
+      revisedScore: body.newScore,
+      reason: body.reason,
+      adminId: 'usr-admin-01',
+      adminName: 'Dr. Ashlin Siddharth (Super Admin)',
+      correlationId,
+    };
+
+    result.corrections.unshift(correctionEntry);
+
+    // Create Audit Log Entry (Rule 7, FR-SCORE-010)
+    mockAuditLogs.unshift({
+      id: `aud-${Date.now().toString(36)}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'SCORE_CORRECTION',
+      actorId: 'usr-admin-01',
+      actorName: 'Dr. Ashlin Siddharth',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'result',
+      entityId: result.id,
+      outcome: 'SUCCESS',
+      reason: body.reason,
+      correlationId,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        candidateIdentifier: result.candidateIdentifier,
+        originalScore,
+        revisedScore: body.newScore,
+        newTotal: result.totalScore,
+      },
+    });
+
+    return HttpResponse.json({
+      success: true,
+      result,
+      correction: correctionEntry,
+      correlationId,
+      message: 'Score corrected successfully with durable audit entry.',
+    });
+  }),
+
+  // ==========================================
+  // MANUAL EVALUATION QUEUE API (UC-14, FR-SCORE-004, FR-SCORE-005)
+  // ==========================================
+
+  // GET /api/v1/admin/evaluation-queue
+  http.get(/\/api\/v1\/admin\/evaluation-queue$/, ({ request }) => {
+    const url = new URL(request.url);
+    const assessmentId = url.searchParams.get('assessmentId') || '';
+
+    let queue = [...mockEvaluationQueue];
+    if (assessmentId && assessmentId !== 'ALL') {
+      queue = queue.filter((item) => item.assessmentId === assessmentId);
+    }
+
+    return HttpResponse.json(queue);
+  }),
+
+  // POST /api/v1/admin/evaluation-queue/:id/evaluate (UC-14, FR-SCORE-004, FR-SCORE-005, FR-SCORE-008)
+  http.post(/\/api\/v1\/admin\/evaluation-queue\/([^/]+)\/evaluate$/, async ({ params, request }) => {
+    const queueItemId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as {
+      awardedMarks?: number;
+      rubricScores?: Record<string, number>;
+      comments?: string;
+    };
+
+    const queueIndex = mockEvaluationQueue.findIndex((item) => item.id === queueItemId);
+    if (queueIndex === -1) {
+      return HttpResponse.json(
+        {
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Evaluation queue item ${queueItemId} not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    const queueItem = mockEvaluationQueue[queueIndex];
+    const awardedMarks = typeof body.awardedMarks === 'number' ? body.awardedMarks : 0;
+    const correlationId = `cid-eval-${Date.now().toString(36)}`;
+
+    // Update corresponding result
+    const result = mockResults.find((r) => r.id === queueItem.resultId);
+    if (result) {
+      const question = result.questions.find((q) => q.questionId === queueItem.questionId);
+      if (question) {
+        question.marksAwarded = awardedMarks;
+        question.evaluationStatus = 'EVALUATED';
+        question.evaluatorComments = body.comments || '';
+        question.evaluatorName = 'Technical Evaluator';
+        question.evaluatedAt = new Date().toISOString();
+      }
+
+      // Recalculate total score
+      result.totalScore = result.questions.reduce((sum, q) => sum + q.marksAwarded, 0);
+      result.scorePercentage = Math.round((result.totalScore / result.maxScore) * 100);
+      result.passFailStatus =
+        result.scorePercentage >= result.passingScorePercentage ? 'PASS' : 'FAIL';
+      result.pendingManualCount = Math.max(0, result.pendingManualCount - 1);
+
+      // FR-SCORE-008: Once all manual questions are evaluated, status becomes FINAL
+      if (result.pendingManualCount === 0) {
+        result.status = 'FINAL';
+      }
+    }
+
+    // Remove from queue
+    mockEvaluationQueue.splice(queueIndex, 1);
+
+    return HttpResponse.json({
+      success: true,
+      resultId: queueItem.resultId,
+      resultStatus: result?.status || 'FINAL',
+      updatedMarks: result?.totalScore || awardedMarks,
+      correlationId,
+      message: 'Evaluation submitted successfully and result updated.',
+    });
+  }),
+
+  // ==========================================
+  // REPORTS & ANALYTICS API (FR-ADMIN-005, FR-ADMIN-006, FR-SCORE-009)
+  // ==========================================
+
+  // GET /api/v1/admin/reports/:assessmentId/summary
+  http.get(/\/api\/v1\/admin\/reports\/([^/]+)\/summary$/, ({ params }) => {
+    const assessmentId = params[0] as string;
+    const assessment = mockAssessments.find((a) => a.id === assessmentId) || mockAssessments[0];
+    const results = mockResults.filter((r) => r.assessmentId === assessment.id);
+    const effectiveResults = results.length > 0 ? results : mockResults.slice(0, 5);
+
+    const totalCompleted = effectiveResults.length;
+    const avgScore =
+      totalCompleted > 0
+        ? Math.round(effectiveResults.reduce((s, r) => s + r.scorePercentage, 0) / totalCompleted)
+        : 72;
+    const passCount = effectiveResults.filter((r) => r.passFailStatus === 'PASS').length;
+    const passRate = totalCompleted > 0 ? Math.round((passCount / totalCompleted) * 100) : 75;
+    const highest =
+      totalCompleted > 0 ? Math.max(...effectiveResults.map((r) => r.scorePercentage)) : 92;
+    const lowest =
+      totalCompleted > 0 ? Math.min(...effectiveResults.map((r) => r.scorePercentage)) : 48;
+    const avgTime =
+      totalCompleted > 0
+        ? Math.round(effectiveResults.reduce((s, r) => s + r.timeTakenMinutes, 0) / totalCompleted)
+        : 48;
+
+    const report: AssessmentSummaryReport = {
+      assessmentId: assessment.id,
+      assessmentTitle: assessment.title,
+      totalCompleted,
+      averageScorePercentage: avgScore,
+      passRatePercentage: passRate,
+      highestScorePercentage: highest,
+      lowestScorePercentage: lowest,
+      averageTimeTakenMinutes: avgTime,
+      passingThresholdPercentage: 60,
+    };
+
+    return HttpResponse.json(report);
+  }),
+
+  // GET /api/v1/admin/reports/:assessmentId/rankings (FR-SCORE-009)
+  http.get(/\/api\/v1\/admin\/reports\/([^/]+)\/rankings$/, ({ params }) => {
+    const assessmentId = params[0] as string;
+    const results = mockResults.filter((r) => r.assessmentId === assessmentId);
+    const effective = results.length > 0 ? results : mockResults;
+
+    // FR-SCORE-009: Deterministic tie-breaking rules:
+    // 1. Score percentage descending
+    // 2. Time taken ascending (faster completion ranks higher)
+    // 3. Alphanumeric candidate identifier ascending
+    const sorted = [...effective].sort((a, b) => {
+      if (b.scorePercentage !== a.scorePercentage) {
+        return b.scorePercentage - a.scorePercentage;
+      }
+      if (a.timeTakenMinutes !== b.timeTakenMinutes) {
+        return a.timeTakenMinutes - b.timeTakenMinutes;
+      }
+      return a.candidateIdentifier.localeCompare(b.candidateIdentifier);
+    });
+
+    const rankings: CandidateRankingItem[] = sorted.map((r, index) => ({
+      rank: index + 1,
+      candidateId: r.candidateId,
+      candidateIdentifier: r.candidateIdentifier,
+      candidateName: r.candidateName,
+      scorePercentage: r.scorePercentage,
+      totalScore: r.totalScore,
+      maxScore: r.maxScore,
+      passFailStatus: r.passFailStatus,
+      timeTakenMinutes: r.timeTakenMinutes,
+      completedOn: r.completedOn,
+    }));
+
+    return HttpResponse.json(rankings);
+  }),
+
+  // GET /api/v1/admin/reports/:assessmentId/question-stats (FR-ADMIN-006)
+  http.get(/\/api\/v1\/admin\/reports\/([^/]+)\/question-stats$/, () => {
+    const stats: QuestionPerformanceStats[] = [
+      {
+        questionId: 'q-101',
+        title: 'AVL Tree Search Time Complexity',
+        type: 'MCQ_SINGLE',
+        correctAnswerRate: 85,
+        averageScore: 1.7,
+        maxScore: 2,
+        difficultyIndex: 'EASY',
+        discriminationIndex: 0.42,
+        responseDistribution: [
+          { optionKey: 'A', optionLabel: 'O(1)', count: 4, percentage: 5, isCorrect: false },
+          { optionKey: 'B', optionLabel: 'O(log N)', count: 68, percentage: 85, isCorrect: true },
+          { optionKey: 'C', optionLabel: 'O(N)', count: 6, percentage: 7.5, isCorrect: false },
+          { optionKey: 'D', optionLabel: 'O(N log N)', count: 2, percentage: 2.5, isCorrect: false },
+        ],
+      },
+      {
+        questionId: 'q-102',
+        title: 'O(N log N) Sorting Algorithms Multi-Select',
+        type: 'MCQ_MULTIPLE',
+        correctAnswerRate: 64,
+        averageScore: 2.56,
+        maxScore: 4,
+        difficultyIndex: 'MEDIUM',
+        discriminationIndex: 0.58,
+        responseDistribution: [
+          { optionKey: 'A', optionLabel: 'Merge Sort', count: 72, percentage: 90, isCorrect: true },
+          { optionKey: 'B', optionLabel: 'Quick Sort', count: 65, percentage: 81, isCorrect: true },
+          { optionKey: 'C', optionLabel: 'Bubble Sort', count: 8, percentage: 10, isCorrect: false },
+          { optionKey: 'D', optionLabel: 'Insertion Sort', count: 12, percentage: 15, isCorrect: false },
+        ],
+      },
+      {
+        questionId: 'q-104',
+        title: 'Two Sum Problem (Coding Challenge)',
+        type: 'CODING',
+        correctAnswerRate: 72,
+        averageScore: 17.2,
+        maxScore: 24,
+        difficultyIndex: 'MEDIUM',
+        discriminationIndex: 0.65,
+      },
+      {
+        questionId: 'q-106',
+        title: 'Optimistic vs Pessimistic Concurrency',
+        type: 'DESCRIPTIVE',
+        correctAnswerRate: 58,
+        averageScore: 2.9,
+        maxScore: 5,
+        difficultyIndex: 'HARD',
+        discriminationIndex: 0.71,
+      },
+    ];
+
+    return HttpResponse.json(stats);
+  }),
 ];
 
 // ==========================================
@@ -1710,3 +2117,570 @@ const mockIncidents: IncidentRecord[] = [
     correlationId: 'cid-heartbeat-timeout-02',
   },
 ];
+
+const mockEvaluationQueue: EvaluationQueueItem[] = [
+  {
+    id: 'eval-1',
+    resultId: 'res-6',
+    sessionId: 'sess-6',
+    candidateId: 'can-5',
+    candidateIdentifier: 'CAN-2026-005',
+    candidateName: 'Ananya Reddy',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    questionId: 'q-106',
+    questionTitle: 'Optimistic vs Pessimistic Concurrency',
+    questionPrompt:
+      'Explain the difference between optimistic concurrency control and pessimistic concurrency control in database transactions and describe a production scenario where optimistic locking is preferred.',
+    questionType: 'DESCRIPTIVE',
+    candidateAnswer:
+      'Optimistic Concurrency Control (OCC) assumes conflicts are rare. Read and write operations proceed without acquiring exclusive database locks. Before committing, the transaction verifies whether another transaction has modified the data (typically via a version number or timestamp column). If a conflict is detected, the transaction rolls back or retries.\n\nPessimistic Concurrency Control acquires locks upfront (e.g., SELECT FOR UPDATE), blocking any concurrent transactions from modifying the record until the holding transaction completes.\n\nA classic scenario where OCC is preferred is a high-traffic e-commerce shopping cart or hotel room reservation browsing interface where read throughput dominates and contention on specific records is low.',
+    submittedAt: '2026-10-25T11:00:00Z',
+    maxMarks: 5,
+    rubricCriteria: [
+      {
+        id: 'rub-1',
+        name: 'Core Concept Definition',
+        description: 'Accurately defines locking vs version checking principles',
+        maxMarks: 2,
+      },
+      {
+        id: 'rub-2',
+        name: 'Conflict Detection Mechanism',
+        description: 'Details version/timestamp checking and rollback/retry behaviour',
+        maxMarks: 2,
+      },
+      {
+        id: 'rub-3',
+        name: 'Production Scenario Justification',
+        description: 'Realistic high-read/low-contention example explained clearly',
+        maxMarks: 1,
+      },
+    ],
+    referenceAnswer:
+      'OCC executes without locks and checks version on commit; preferred for read-heavy workloads where conflict rate is low.',
+  },
+  {
+    id: 'eval-2',
+    resultId: 'res-2',
+    sessionId: 'sess-2',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    assessmentId: 'asmt-02',
+    assessmentTitle: 'Data Analyst Assessment',
+    questionId: 'q-205',
+    questionTitle: 'Idempotent Batch ETL Design',
+    questionPrompt:
+      'Describe how you would design an idempotent batch ETL ingestion pipeline to handle network timeouts without duplicating target database records.',
+    questionType: 'DESCRIPTIVE',
+    candidateAnswer:
+      'I would implement idempotency keys based on hash of batch source metadata + timestamp window, use staging tables with MERGE/UPSERT into target analytical tables, and record batch checkpoint status in a durable ledger before sending task completion acknowledgement.',
+    submittedAt: '2026-10-23T16:30:00Z',
+    maxMarks: 10,
+    rubricCriteria: [
+      {
+        id: 'rub-4',
+        name: 'Idempotency Key Strategy',
+        description: 'Use of unique source batch keys, hashes or dedup tokens',
+        maxMarks: 4,
+      },
+      {
+        id: 'rub-5',
+        name: 'Staging & Atomicity',
+        description: 'Staging tables and atomic transactions or upserts',
+        maxMarks: 4,
+      },
+      {
+        id: 'rub-6',
+        name: 'Checkpointing & Recovery',
+        description: 'Ledger checkpointing and recovery without duplicates',
+        maxMarks: 2,
+      },
+    ],
+    referenceAnswer:
+      'Use staging tables, deterministic checksum/idempotency keys, MERGE statements, and durable checkpoint tracking.',
+  },
+];
+
+const mockResults: AssessmentResultRecord[] = [
+  {
+    id: 'res-1',
+    sessionId: 'sess-1',
+    candidateId: 'can-1',
+    candidateIdentifier: 'CAN-2026-001',
+    candidateName: 'Rohan Mehta',
+    candidateEmail: 'rohan.mehta@nitk.edu.in',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    totalScore: 39,
+    maxScore: 50,
+    scorePercentage: 78,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-24T11:45:00Z',
+    timeTakenMinutes: 45,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(log N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-102',
+        questionTitle: 'O(N log N) Sorting Algorithms Multi-Select',
+        questionType: 'MCQ_MULTIPLE',
+        maxMarks: 4,
+        marksAwarded: 4,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: ['Merge Sort', 'Quick Sort'],
+        correctAnswerText: 'Merge Sort, Quick Sort',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem (Coding Challenge)',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 20,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer:
+          'function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const comp = target - nums[i];\n    if (map.has(comp)) return [map.get(comp), i];\n    map.set(nums[i], i);\n  }\n}',
+        testCasesPassed: 5,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Optimistic vs Pessimistic Concurrency',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 20,
+        marksAwarded: 13,
+        evaluationStatus: 'EVALUATED',
+        candidateAnswer: 'Candidate explained locking vs versioning with realistic examples.',
+        evaluatorComments: 'Good explanation of OCC versioning and shopping cart flow.',
+        evaluatorName: 'Technical Evaluator',
+        evaluatedAt: '2026-10-24T12:30:00Z',
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-2',
+    sessionId: 'sess-2',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    candidateEmail: 'aisha.khan@iitb.ac.in',
+    assessmentId: 'asmt-02',
+    assessmentTitle: 'Data Analyst Assessment',
+    totalScore: 46.5,
+    maxScore: 75,
+    scorePercentage: 62,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-23T16:30:00Z',
+    timeTakenMinutes: 72,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-201',
+        questionTitle: 'SQL Window Functions (Dense Rank)',
+        questionType: 'SQL',
+        maxMarks: 25,
+        marksAwarded: 20,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'SELECT dept_id, emp_id, DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) as rnk FROM employees;',
+        testCasesPassed: 4,
+        totalTestCases: 5,
+      },
+      {
+        questionId: 'q-202',
+        questionTitle: 'Data Normalization (3NF vs BCNF)',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 10,
+        marksAwarded: 10,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Every determinant is a candidate key in BCNF',
+        correctAnswerText: 'Every determinant is a candidate key in BCNF',
+      },
+      {
+        questionId: 'q-203',
+        questionTitle: 'Indexing Strategy for Range Queries',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 15,
+        marksAwarded: 7.5,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'B-Tree Index',
+        correctAnswerText: 'B-Tree Index',
+      },
+      {
+        questionId: 'q-204',
+        questionTitle: 'Time-Series Aggregation Query',
+        questionType: 'SQL',
+        maxMarks: 25,
+        marksAwarded: 9,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'SELECT date_trunc(\'day\', event_time), count(*) FROM events GROUP BY 1;',
+        testCasesPassed: 2,
+        totalTestCases: 5,
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-3',
+    sessionId: 'sess-3',
+    candidateId: 'can-8',
+    candidateIdentifier: 'CAN-2026-008',
+    candidateName: 'Karan Singh',
+    candidateEmail: 'karan.singh@thapar.edu',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Backend Developer Test',
+    totalScore: 24,
+    maxScore: 50,
+    scorePercentage: 48,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'FAIL',
+    completedOn: '2026-10-23T14:15:00Z',
+    timeTakenMinutes: 58,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 0,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 14,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Brute force O(N^2) solution.',
+        testCasesPassed: 3,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Concurrency Control',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 24,
+        marksAwarded: 10,
+        evaluationStatus: 'EVALUATED',
+        candidateAnswer: 'Brief overview with missing rollback explanation.',
+        evaluatorComments: 'Incomplete explanation of lock escalation.',
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-4',
+    sessionId: 'sess-4',
+    candidateId: 'can-3',
+    candidateIdentifier: 'CAN-2026-003',
+    candidateName: 'Priya Sharma',
+    candidateEmail: 'priya.sharma@bits-pilani.ac.in',
+    assessmentId: 'asmt-03',
+    assessmentTitle: 'Full Stack Assessment',
+    totalScore: 42.5,
+    maxScore: 50,
+    scorePercentage: 85,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-22T12:00:00Z',
+    timeTakenMinutes: 50,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(log N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-102',
+        questionTitle: 'O(N log N) Sorting Algorithms Multi-Select',
+        questionType: 'MCQ_MULTIPLE',
+        maxMarks: 4,
+        marksAwarded: 4,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: ['Merge Sort', 'Quick Sort'],
+        correctAnswerText: 'Merge Sort, Quick Sort',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 24,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Optimal O(N) hash map implementation.',
+        testCasesPassed: 6,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Concurrency Control',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 20,
+        marksAwarded: 12.5,
+        evaluationStatus: 'EVALUATED',
+        candidateAnswer: 'Thorough discussion of MVCC and timestamp ordering.',
+        evaluatorComments: 'Strong understanding of transaction isolation levels.',
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-5',
+    sessionId: 'sess-5',
+    candidateId: 'can-9',
+    candidateIdentifier: 'CAN-2026-009',
+    candidateName: 'Arjun Nair',
+    candidateEmail: 'arjun.nair@manipal.edu',
+    assessmentId: 'asmt-02',
+    assessmentTitle: 'SQL Assessment',
+    totalScore: 35,
+    maxScore: 50,
+    scorePercentage: 70,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-22T10:15:00Z',
+    timeTakenMinutes: 40,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-201',
+        questionTitle: 'SQL Window Functions',
+        questionType: 'SQL',
+        maxMarks: 25,
+        marksAwarded: 20,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'SELECT dept_id, emp_id, RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC) FROM employees;',
+        testCasesPassed: 4,
+        totalTestCases: 5,
+      },
+      {
+        questionId: 'q-204',
+        questionTitle: 'Time-Series Aggregation Query',
+        questionType: 'SQL',
+        maxMarks: 25,
+        marksAwarded: 15,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'SELECT date, sum(amount) FROM sales GROUP BY date;',
+        testCasesPassed: 3,
+        totalTestCases: 5,
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-6',
+    sessionId: 'sess-6',
+    candidateId: 'can-5',
+    candidateIdentifier: 'CAN-2026-005',
+    candidateName: 'Ananya Reddy',
+    candidateEmail: 'ananya.reddy@dtu.ac.in',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    totalScore: 30,
+    maxScore: 50,
+    scorePercentage: 60,
+    passingScorePercentage: 60,
+    status: 'PROVISIONAL', // FR-SCORE-008: Pending manual evaluation in queue
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-25T11:00:00Z',
+    timeTakenMinutes: 55,
+    pendingManualCount: 1,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(log N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-102',
+        questionTitle: 'O(N log N) Sorting Algorithms Multi-Select',
+        questionType: 'MCQ_MULTIPLE',
+        maxMarks: 4,
+        marksAwarded: 4,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: ['Merge Sort', 'Quick Sort'],
+        correctAnswerText: 'Merge Sort, Quick Sort',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 24,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Optimal Map approach.',
+        testCasesPassed: 6,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Optimistic vs Pessimistic Concurrency',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 20,
+        marksAwarded: 0,
+        evaluationStatus: 'PENDING_EVALUATION',
+        candidateAnswer:
+          'Optimistic Concurrency Control (OCC) assumes conflicts are rare. Read and write operations proceed without acquiring exclusive database locks...',
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-7',
+    sessionId: 'sess-7',
+    candidateId: 'can-7',
+    candidateIdentifier: 'CAN-2026-007',
+    candidateName: 'Divya Iyer',
+    candidateEmail: 'divya.iyer@annauniv.edu',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    totalScore: 46,
+    maxScore: 50,
+    scorePercentage: 92,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'PASS',
+    completedOn: '2026-10-21T15:00:00Z',
+    timeTakenMinutes: 38,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(log N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-102',
+        questionTitle: 'O(N log N) Sorting Algorithms Multi-Select',
+        questionType: 'MCQ_MULTIPLE',
+        maxMarks: 4,
+        marksAwarded: 4,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: ['Merge Sort', 'Quick Sort'],
+        correctAnswerText: 'Merge Sort, Quick Sort',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 24,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Optimal solution with full test coverage.',
+        testCasesPassed: 6,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Concurrency Control',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 20,
+        marksAwarded: 16,
+        evaluationStatus: 'EVALUATED',
+        candidateAnswer: 'Detailed analysis of locking protocols vs version store.',
+        evaluatorComments: 'Excellent answer with precise examples.',
+      },
+    ],
+    corrections: [],
+  },
+  {
+    id: 'res-8',
+    sessionId: 'sess-8',
+    candidateId: 'can-4',
+    candidateIdentifier: 'CAN-2026-004',
+    candidateName: 'Vikram Patel',
+    candidateEmail: 'vikram.patel@iiit.ac.in',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    totalScore: 27,
+    maxScore: 50,
+    scorePercentage: 54,
+    passingScorePercentage: 60,
+    status: 'FINAL',
+    passFailStatus: 'FAIL',
+    completedOn: '2026-10-20T17:30:00Z',
+    timeTakenMinutes: 60,
+    pendingManualCount: 0,
+    questions: [
+      {
+        questionId: 'q-101',
+        questionTitle: 'AVL Tree Search Time Complexity',
+        questionType: 'MCQ_SINGLE',
+        maxMarks: 2,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'O(log N)',
+        correctAnswerText: 'O(log N)',
+      },
+      {
+        questionId: 'q-102',
+        questionTitle: 'O(N log N) Sorting Algorithms Multi-Select',
+        questionType: 'MCQ_MULTIPLE',
+        maxMarks: 4,
+        marksAwarded: 2,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: ['Merge Sort'],
+        correctAnswerText: 'Merge Sort, Quick Sort',
+      },
+      {
+        questionId: 'q-104',
+        questionTitle: 'Two Sum Problem',
+        questionType: 'CODING',
+        maxMarks: 24,
+        marksAwarded: 15,
+        evaluationStatus: 'AUTOMATED',
+        candidateAnswer: 'Partial solution, edge cases failed.',
+        testCasesPassed: 3,
+        totalTestCases: 6,
+      },
+      {
+        questionId: 'q-106',
+        questionTitle: 'Concurrency Control',
+        questionType: 'DESCRIPTIVE',
+        maxMarks: 20,
+        marksAwarded: 8,
+        evaluationStatus: 'EVALUATED',
+        candidateAnswer: 'Basic definitions only.',
+      },
+    ],
+    corrections: [],
+  },
+];
+

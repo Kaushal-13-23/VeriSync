@@ -129,3 +129,22 @@ export function showApiErrorToast(error: {
     durationMs: 7000,
   });
 }
+
+export function showSuccessToast(title: string, message: string, correlationId?: string) {
+  toastManager.show({
+    type: 'success',
+    title,
+    message,
+    correlationId,
+  });
+}
+
+export function showErrorToast(title: string, message: string, correlationId?: string) {
+  toastManager.show({
+    type: 'error',
+    title,
+    message,
+    correlationId,
+  });
+}
+

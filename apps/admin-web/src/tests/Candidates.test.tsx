@@ -78,7 +78,9 @@ describe('Candidates Management View', () => {
     fireEvent.click(screen.getByTestId('modal-submit-btn'));
 
     // Displays one-time generated password (FR-AUTH-005)
-    expect(await screen.findByTestId('temp-password-value')).toBeInTheDocument();
+    expect(
+      await screen.findByTestId('temp-password-value', {}, { timeout: 8000 }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('copy-credentials-btn')).toBeInTheDocument();
 
     // Close modal

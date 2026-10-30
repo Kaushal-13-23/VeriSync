@@ -1,10 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Play,
   AlertCircle,
   Bookmark,
-  Code2,
-  Database,
   RotateCcw,
   RefreshCw,
   Clock,
@@ -18,6 +15,9 @@ import { SingleChoiceRenderer } from '../components/exam/renderers/SingleChoiceR
 import { MultipleSelectRenderer } from '../components/exam/renderers/MultipleSelectRenderer';
 import { TrueFalseRenderer } from '../components/exam/renderers/TrueFalseRenderer';
 import { ShortAnswerRenderer } from '../components/exam/renderers/ShortAnswerRenderer';
+import { CodingRenderer } from '../components/exam/renderers/CodingRenderer';
+import { SqlRenderer } from '../components/exam/renderers/SqlRenderer';
+import { DraftAutosaveManager } from '../services/draftAutosave';
 import { TimerComponent } from '../components/exam/TimerComponent';
 import { SubmitNextButton, SubmissionButtonState } from '../components/exam/SubmitNextButton';
 import { handleApiError } from '../services/errorHandler';
@@ -57,7 +57,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
   const [showEndTestModal, setShowEndTestModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [timeoutNotice, setTimeoutNotice] = useState<string | null>(null);
-  const [codeOutput, setCodeOutput] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeQuestionDto, setActiveQuestionDto] = useState<CandidateQuestionDto | null>(null);
 
@@ -78,6 +77,35 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
   // Local answer state for current question
   const currentAnswer = selectedAnswers[qAttemptId];
+
+  // FR-ANS-005: Draft Autosave State & Manager
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const autosaveManagerRef = useRef<DraftAutosaveManager | null>(null);
+
+  useEffect(() => {
+    // Instantiate autosave manager for active question (FR-ANS-005)
+    const manager = new DraftAutosaveManager({
+      sessionId: session.sessionId,
+      questionAttemptId: qAttemptId,
+      intervalMs: 10000,
+      onStateChange: (state) => {
+        setDraftSavedAt(state.lastSavedAt);
+        setIsSavingDraft(state.isSaving);
+      },
+    });
+
+    const initialCode = typeof selectedAnswers[qAttemptId] === 'string'
+      ? (selectedAnswers[qAttemptId] as string)
+      : currentQuestion.codeSnippet || '';
+    manager.updateContent(initialCode);
+    manager.start();
+    autosaveManagerRef.current = manager;
+
+    return () => {
+      manager.stop();
+    };
+  }, [session.sessionId, qAttemptId]);
 
   // Map questions to QuestionStatusItem for read-only palette
   const statusItems: QuestionStatusItem[] = session.questions.map((q, idx) => ({
@@ -224,14 +252,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
     };
   }, [submissionState, currentQuestion, currentAnswer, qAttemptId]);
 
-  const handleRunCode = () => {
-    if (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING) {
-      setCodeOutput('Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.');
-    } else if (currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL) {
-      setCodeOutput('Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).');
-    }
-  };
-
   /**
    * Submit and Next with Idempotency-Key & Double-Click Protection
    * (FR-ANS-001..009, Rule 3, Rule 4, TC-04, TC-05)
@@ -278,7 +298,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           } else {
             setCurrentIdx((prev) => prev + 1);
           }
-          setCodeOutput(null);
           setSubmissionState('idle');
         } else {
           setSubmissionState('idle');
@@ -296,7 +315,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           setTimeoutNotice(null);
           if (!isLastQuestion) {
             setCurrentIdx((prev) => prev + 1);
-            setCodeOutput(null);
           } else {
             setShowEndTestModal(true);
           }
@@ -319,7 +337,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       setTimeoutNotice(null);
       if (!isLastQuestion) {
         setCurrentIdx((prev) => prev + 1);
-        setCodeOutput(null);
       } else {
         setShowEndTestModal(true);
       }
@@ -604,38 +621,43 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             </div>
           </div>
 
-          {/* Question Statement */}
-          <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: '#f1f5f9', margin: '0 0 16px 0' }}>
-              {currentQuestion.statement}
-            </p>
+          {/* Question Statement for Objective / Short Answer Questions */}
+          {currentQuestion.type !== 'coding' &&
+            currentQuestion.type !== QuestionType.CODING &&
+            currentQuestion.type !== 'sql' &&
+            currentQuestion.type !== QuestionType.SQL && (
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 15, lineHeight: 1.6, color: '#f1f5f9', margin: '0 0 16px 0' }}>
+                  {currentQuestion.statement}
+                </p>
 
-            {/* Explanation or Sample Input/Output if present */}
-            {(currentQuestion.sampleInput || currentQuestion.sampleOutput) && (
-              <div
-                style={{
-                  backgroundColor: '#111827',
-                  border: '1px solid #1f2937',
-                  borderRadius: 8,
-                  padding: '12px 16px',
-                  fontSize: 13,
-                  fontFamily: 'monospace',
-                  color: '#94a3b8',
-                  marginBottom: 16,
-                }}
-              >
-                {currentQuestion.sampleInput && <div>Input: {currentQuestion.sampleInput}</div>}
-                {currentQuestion.sampleOutput && <div>Output: {currentQuestion.sampleOutput}</div>}
-                {currentQuestion.explanation && (
-                  <div style={{ marginTop: 4, color: '#64748b' }}>
-                    Explanation: {currentQuestion.explanation}
+                {/* Explanation or Sample Input/Output if present */}
+                {(currentQuestion.sampleInput || currentQuestion.sampleOutput) && (
+                  <div
+                    style={{
+                      backgroundColor: '#111827',
+                      border: '1px solid #1f2937',
+                      borderRadius: 8,
+                      padding: '12px 16px',
+                      fontSize: 13,
+                      fontFamily: 'monospace',
+                      color: '#94a3b8',
+                      marginBottom: 16,
+                    }}
+                  >
+                    {currentQuestion.sampleInput && <div>Input: {currentQuestion.sampleInput}</div>}
+                    {currentQuestion.sampleOutput && <div>Output: {currentQuestion.sampleOutput}</div>}
+                    {currentQuestion.explanation && (
+                      <div style={{ marginTop: 4, color: '#64748b' }}>
+                        Explanation: {currentQuestion.explanation}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )}
-          </div>
 
-          {/* Renderers per Question Type (FR-QB-003) */}
+          {/* Renderers per Question Type (FR-QB-003, FR-CODE-002, FR-SQL-001) */}
           <div style={{ marginBottom: 32 }}>
             {(currentQuestion.type === 'single_choice' || currentQuestion.type === QuestionType.MCQ_SINGLE) &&
               currentQuestion.options && (
@@ -674,100 +696,77 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               />
             )}
 
-            {/* Technical Question / Code Editor Area */}
-            {(currentQuestion.type === 'coding' ||
-              currentQuestion.type === QuestionType.CODING ||
-              currentQuestion.type === 'sql' ||
-              currentQuestion.type === QuestionType.SQL) && (
-              <div>
-                <div
-                  style={{
-                    backgroundColor: '#111827',
-                    borderRadius: '8px 8px 0 0',
-                    border: '1px solid #1f2937',
-                    borderBottom: 'none',
-                    padding: '8px 16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#93c5fd' }}>
-                    {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING ? (
-                      <Code2 size={16} />
-                    ) : (
-                      <Database size={16} />
-                    )}
-                    <span>
-                      {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING
-                        ? 'Python 3.10'
-                        : 'SQLite Ephemeral'}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRunCode}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '5px 12px',
-                      backgroundColor: '#1e293b',
-                      border: '1px solid #334155',
-                      borderRadius: 6,
-                      color: '#60a5fa',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Play size={12} fill="#60a5fa" />
-                    <span>Run Sample Cases</span>
-                  </button>
-                </div>
-
-                <textarea
-                  value={
-                    typeof currentAnswer === 'string'
-                      ? (currentAnswer as string)
-                      : currentQuestion.codeSnippet || ''
+            {/* Phase 5: Coding Assessment Renderer with Monaco Editor & Samples Console */}
+            {(currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING) && (
+              <CodingRenderer
+                questionId={qAttemptId}
+                details={
+                  currentQuestion.codingDetails || {
+                    statement: currentQuestion.statement,
+                    inputFormat: currentQuestion.sampleInput,
+                    outputFormat: currentQuestion.sampleOutput,
+                    constraints: ['Time limit: 3000ms', 'Memory limit: 256MB'],
+                    defaultLanguage: 'python',
+                    allowedLanguages: ['python', 'javascript', 'java', 'c', 'cpp'],
+                    maxSubmissions: 5,
+                    sampleCases: [
+                      {
+                        id: 'sc-1',
+                        input: currentQuestion.sampleInput || 'n = 10',
+                        expectedOutput: currentQuestion.sampleOutput || '17',
+                        explanation: currentQuestion.explanation,
+                      },
+                    ],
                   }
-                  onChange={(e) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: e.target.value }))}
-                  rows={8}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#030712',
-                    border: '1px solid #1f2937',
-                    borderRadius: '0 0 8px 8px',
-                    color: '#e2e8f0',
-                    fontFamily: 'Consolas, Monaco, monospace',
-                    fontSize: 14,
-                    padding: 16,
-                    lineHeight: 1.5,
-                    resize: 'vertical',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
+                }
+                value={
+                  typeof currentAnswer === 'string'
+                    ? (currentAnswer as string)
+                    : currentQuestion.codeSnippet || ''
+                }
+                onChange={(code) => {
+                  setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: code }));
+                  if (autosaveManagerRef.current) {
+                    autosaveManagerRef.current.updateContent(code);
+                  }
+                }}
+                draftSavedAt={draftSavedAt}
+                isSavingDraft={isSavingDraft}
+                fontScale={fontScale}
+              />
+            )}
 
-                {codeOutput && (
-                  <pre
-                    style={{
-                      marginTop: 12,
-                      backgroundColor: '#030712',
-                      border: '1px solid #1f2937',
-                      borderRadius: 6,
-                      padding: 12,
-                      fontSize: 12,
-                      fontFamily: 'Consolas, Monaco, monospace',
-                      color: '#34d399',
-                      overflowX: 'auto',
-                    }}
-                  >
-                    {codeOutput}
-                  </pre>
-                )}
-              </div>
+            {/* Phase 5: SQL Assessment Renderer with Results Grid Console */}
+            {(currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL) && (
+              <SqlRenderer
+                questionId={qAttemptId}
+                details={
+                  currentQuestion.sqlDetails || {
+                    statement: currentQuestion.statement,
+                    schemaDdl:
+                      'CREATE TABLE Employee (\n    id INT PRIMARY KEY,\n    name VARCHAR(100),\n    department VARCHAR(50),\n    salary INT\n);',
+                    seedDataSql:
+                      "INSERT INTO Employee VALUES (1, 'Alice', 'Engineering', 95000);\nINSERT INTO Employee VALUES (2, 'Bob', 'HR', 75000);",
+                    sampleExpectedRows: [{ SecondHighestSalary: 95000 }],
+                    maxSubmissions: 5,
+                    comparisonMode: 'EXACT_MATCH',
+                  }
+                }
+                value={
+                  typeof currentAnswer === 'string'
+                    ? (currentAnswer as string)
+                    : currentQuestion.codeSnippet || ''
+                }
+                onChange={(sql) => {
+                  setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: sql }));
+                  if (autosaveManagerRef.current) {
+                    autosaveManagerRef.current.updateContent(sql);
+                  }
+                }}
+                draftSavedAt={draftSavedAt}
+                isSavingDraft={isSavingDraft}
+                fontScale={fontScale}
+              />
             )}
           </div>
 

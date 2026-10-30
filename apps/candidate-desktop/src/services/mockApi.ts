@@ -23,6 +23,7 @@ import {
   CandidateResultSummary,
   ResultVisibility,
 } from '../types/assessment';
+import { CodingQuestionDetails, SqlQuestionDetails } from '../types/codeRunner';
 
 /**
  * Local Mock Server strictly matching packages/shared/openapi.yaml & SRS 8.3.3
@@ -57,6 +58,8 @@ export interface MockQuestion {
   codeSnippet?: string;
   language?: string;
   durationMinutes: number;
+  codingDetails?: CodingQuestionDetails;
+  sqlDetails?: SqlQuestionDetails;
 }
 
 export interface MockAssessmentSession {
@@ -151,14 +154,34 @@ const sampleQuestions: MockQuestion[] = [
     totalQuestions: 6,
     section: 'Coding',
     title: 'Question 5 (Coding)',
-    statement: 'Write a function to find the sum of all prime numbers up to a given number n.',
+    statement: 'Write a function sum_primes(n) that calculates the sum of all prime numbers less than or equal to n.',
     sampleInput: 'n = 10',
     sampleOutput: '17',
     explanation: 'Prime numbers up to 10 are 2, 3, 5, 7. Sum = 17.',
     type: 'coding',
     language: 'python',
-    codeSnippet: 'def sum_primes(n):\n    # Write your code here\n    pass\n',
+    codeSnippet: 'def sum_primes(n):\n    # Write your solution here\n    pass\n',
     durationMinutes: 15,
+    codingDetails: {
+      statement: 'Write a function sum_primes(n) that takes an integer n and returns the sum of all prime numbers less than or equal to n.',
+      inputFormat: 'A single positive integer n (1 <= n <= 1000).',
+      outputFormat: 'Return the integer sum of prime numbers.',
+      constraints: ['1 <= n <= 1000', 'Time limit: 3000ms', 'Memory limit: 256MB'],
+      allowedLanguages: ['python', 'javascript', 'java', 'c', 'cpp'],
+      defaultLanguage: 'python',
+      maxSubmissions: 5,
+      sampleCases: [
+        { id: 'sc-1', input: 'n = 10', expectedOutput: '17', explanation: 'Prime numbers up to 10 are 2, 3, 5, 7. Their sum is 17.' },
+        { id: 'sc-2', input: 'n = 20', expectedOutput: '77', explanation: 'Prime numbers up to 20 are 2, 3, 5, 7, 11, 13, 17, 19. Sum is 77.' },
+      ],
+      starterTemplates: {
+        python: 'def sum_primes(n):\n    # Write your solution here\n    pass\n',
+        javascript: 'function sumPrimes(n) {\n    // Write your solution here\n    return 0;\n}\n',
+        java: 'public class Solution {\n    public static int sumPrimes(int n) {\n        // Write your solution here\n        return 0;\n    }\n}\n',
+        c: '#include <stdio.h>\n\nint sum_primes(int n) {\n    /* Write your solution here */\n    return 0;\n}\n',
+        cpp: '#include <iostream>\n\nint sumPrimes(int n) {\n    // Write your solution here\n    return 0;\n}\n',
+      },
+    },
   },
   {
     id: 'q_06',
@@ -169,10 +192,20 @@ const sampleQuestions: MockQuestion[] = [
     title: 'Question 6 (SQL)',
     statement: 'Write an SQL query to find the second highest salary from the Employee table.',
     sampleInput: 'Employee(id INT, salary INT)',
-    sampleOutput: 'SecondHighestSalary: 200',
+    sampleOutput: 'SecondHighestSalary: 95000',
     type: 'sql',
     codeSnippet: 'SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);',
     durationMinutes: 8,
+    sqlDetails: {
+      statement: 'Write an SQL query to report the second highest salary from the Employee table. If there is no second highest salary, the query should report NULL.',
+      schemaDdl: 'CREATE TABLE Employee (\n    id INT PRIMARY KEY,\n    name VARCHAR(100),\n    department VARCHAR(50),\n    salary INT\n);',
+      seedDataSql: "INSERT INTO Employee VALUES (1, 'Alice', 'Engineering', 95000);\nINSERT INTO Employee VALUES (2, 'Bob', 'HR', 75000);\nINSERT INTO Employee VALUES (3, 'Charlie', 'Engineering', 120000);\nINSERT INTO Employee VALUES (4, 'David', 'Marketing', 90000);",
+      sampleExpectedRows: [
+        { SecondHighestSalary: 95000 },
+      ],
+      maxSubmissions: 5,
+      comparisonMode: 'EXACT_MATCH',
+    },
   },
 ];
 
@@ -510,11 +543,20 @@ export const mockApi = {
   },
 
   /**
-   * Phase 3: Autosave Draft (PUT /candidate/sessions/:id/draft)
+   * Phase 3 & 5: Autosave Draft (PUT /candidate/sessions/:id/draft)
+   * FR-ANS-005
    */
   async saveDraft(_sessionId: string, dto: SaveDraftDto): Promise<{ success: boolean }> {
     sessionDraftsStore.set(dto.questionAttemptId, dto.draftPayload);
     return { success: true };
+  },
+
+  getSavedDraft(questionAttemptId: string): unknown {
+    return sessionDraftsStore.get(questionAttemptId);
+  },
+
+  clearSavedDrafts(): void {
+    sessionDraftsStore.clear();
   },
 
   /**

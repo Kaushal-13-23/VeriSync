@@ -101,15 +101,15 @@ Status Legend:
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
 - [ ] `FR-CODE-001`: Support for C, C++, Java, Python, JavaScript with pinned versions in execution images (Must)
-- [ ] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
-- [ ] `FR-CODE-003`: Support for visible sample test cases and execution testing (Must)
+- [x] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
+- [x] `FR-CODE-003`: Support for visible sample test cases and execution testing (Must)
 - [ ] `FR-CODE-004`: Hidden test case configuration; hidden inputs and expected outputs never sent to client (Must)
 - [ ] `FR-CODE-005`: Code evaluation delegated to dedicated, isolated coding execution service (Must)
 - [ ] `FR-CODE-006`: Enforcement of execution time and memory limits per language (Must)
 - [ ] `FR-CODE-007`: Code execution in isolated sandbox (no network, unprivileged user, read-only root, tmpfs) (Must)
 - [ ] `FR-CODE-008`: Execution status classification (Accepted, WA, CE, RE, TLE, MLE, Internal Error) (Must)
-- [ ] `FR-CODE-009`: Candidate response sanitization; zero disclosure of internal paths, env vars, or test data (Must)
-- [ ] `FR-CODE-010`: Configurable maximum code submission count per question (Should)
+- [x] `FR-CODE-009`: Candidate response sanitization; zero disclosure of internal paths, env vars, or test data (Must)
+- [x] `FR-CODE-010`: Configurable maximum code submission count per question (Should)
 - [ ] `FR-CODE-011`: Weighted test-case scoring calculation (Must)
 - [ ] `FR-CODE-012`: Distinction between infrastructure failure and candidate code error; infra errors re-queued (Must)
 - [ ] `FR-CODE-013`: Coding execution service denied unrestricted access to DB or production secrets (Must)
@@ -121,7 +121,7 @@ Status Legend:
 - [ ] `FR-SQL-002`: SQL execution against isolated ephemeral database instances with read-only roles (Must)
 - [ ] `FR-SQL-003`: Blocking of dangerous SQL commands (DROP, ALTER, CREATE, TRUNCATE, admin functions) (Must)
 - [ ] `FR-SQL-004`: Execution limits: statement timeout, maximum returned rows, memory bounds (Must)
-- [ ] `FR-SQL-005`: Result set comparison against expected output (exact match or unordered match) (Must)
+- [x] `FR-SQL-005`: Result set comparison against expected output (exact match or unordered match) (Must)
 
 ### 5.10 Lab Device Registry and Lockdown (FR-LAB)
 

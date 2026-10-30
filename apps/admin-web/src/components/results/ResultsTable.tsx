@@ -91,8 +91,12 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                 <td colSpan={7} className="py-12 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <Clock className="w-8 h-8 text-slate-300" />
-                    <p className="font-medium text-slate-600">No assessment results match your criteria.</p>
-                    <p className="text-xs text-slate-400">Try adjusting your filters or search keywords.</p>
+                    <p className="font-medium text-slate-600">
+                      No assessment results match your criteria.
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Try adjusting your filters or search keywords.
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -103,10 +107,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                 const isProvisional = result.status === 'PROVISIONAL';
 
                 return (
-                  <tr
-                    key={result.id}
-                    className="hover:bg-slate-50/80 transition-colors group"
-                  >
+                  <tr key={result.id} className="hover:bg-slate-50/80 transition-colors group">
                     {/* # Index */}
                     <td className="py-3.5 px-4 text-center font-medium text-slate-400 text-xs">
                       {rowNumber}
@@ -225,8 +226,11 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
       {/* Pagination Footer matching UI Sample ("Showing 1-5 of 892" with buttons) */}
       <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Showing <span className="font-semibold text-slate-700">{startRecord}-{endRecord}</span> of{' '}
-          <span className="font-semibold text-slate-700">{total}</span>
+          Showing{' '}
+          <span className="font-semibold text-slate-700">
+            {startRecord}-{endRecord}
+          </span>{' '}
+          of <span className="font-semibold text-slate-700">{total}</span>
         </div>
 
         <div className="flex items-center gap-1">

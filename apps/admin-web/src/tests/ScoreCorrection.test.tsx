@@ -47,7 +47,9 @@ describe('Score Correction Workflow (BR-012, FR-SCORE-010, Rule 7, UC-15)', () =
 
     // Modal opens
     expect(await screen.findByText('Score Correction Workflow')).toBeInTheDocument();
-    expect(screen.getByText(/Mandatory justification logged to immutable audit trail/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Mandatory justification logged to immutable audit trail/i),
+    ).toBeInTheDocument();
 
     // Attempt submission without entering reason or confirming
     const submitButton = screen.getByRole('button', { name: /Confirm Score Correction/i });
@@ -55,7 +57,9 @@ describe('Score Correction Workflow (BR-012, FR-SCORE-010, Rule 7, UC-15)', () =
 
     // Form displays mandatory validation error banner
     expect(
-      await screen.findByText(/Mandatory justification reason is required for administrative score correction/i),
+      await screen.findByText(
+        /Mandatory justification reason is required for administrative score correction/i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -79,7 +83,8 @@ describe('Score Correction Workflow (BR-012, FR-SCORE-010, Rule 7, UC-15)', () =
     const reasonInput = screen.getByLabelText(/Mandatory Justification Reason/i);
     fireEvent.change(reasonInput, {
       target: {
-        value: 'Re-evaluated coding solution with alternative optimal approach. Awarded +11 points per updated rubric.',
+        value:
+          'Re-evaluated coding solution with alternative optimal approach. Awarded +11 points per updated rubric.',
       },
     });
 

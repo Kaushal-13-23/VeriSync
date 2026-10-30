@@ -116,11 +116,10 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
               <Award className="w-3.5 h-3.5 text-sky-500" />
               <span>Score Achieved</span>
             </div>
-            <div className="mt-1 text-xl font-bold text-slate-900">
-              {result.scorePercentage}%
-            </div>
+            <div className="mt-1 text-xl font-bold text-slate-900">{result.scorePercentage}%</div>
             <div className="text-[11px] text-slate-500">
-              {result.totalScore} / {result.maxScore} points (Pass: {result.passingScorePercentage}%)
+              {result.totalScore} / {result.maxScore} points (Pass: {result.passingScorePercentage}
+              %)
             </div>
           </div>
 
@@ -129,9 +128,7 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
               <Clock className="w-3.5 h-3.5 text-amber-500" />
               <span>Time Taken</span>
             </div>
-            <div className="mt-1 text-xl font-bold text-slate-900">
-              {result.timeTakenMinutes}m
-            </div>
+            <div className="mt-1 text-xl font-bold text-slate-900">{result.timeTakenMinutes}m</div>
             <div className="text-[11px] text-slate-500">Sequential exam session</div>
           </div>
 
@@ -192,8 +189,8 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
                             isFullMarks
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : isZero
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                           }`}
                         >
                           {q.marksAwarded} / {q.maxMarks} pts
@@ -225,7 +222,9 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
                       {q.correctAnswerText && (
                         <div className="text-slate-500 pt-1 text-[11px]">
                           <span className="font-semibold text-slate-700">Answer Key: </span>
-                          <span className="text-emerald-700 font-medium">{q.correctAnswerText}</span>
+                          <span className="text-emerald-700 font-medium">
+                            {q.correctAnswerText}
+                          </span>
                         </div>
                       )}
 
@@ -249,7 +248,9 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
                       {q.evaluatorComments && (
                         <div className="bg-sky-50/60 p-2.5 rounded-md border border-sky-100 text-sky-900 text-[11px] mt-2 space-y-0.5">
                           <div className="font-semibold flex items-center justify-between text-sky-800">
-                            <span>Evaluator Comments ({q.evaluatorName || 'Technical Evaluator'})</span>
+                            <span>
+                              Evaluator Comments ({q.evaluatorName || 'Technical Evaluator'})
+                            </span>
                             {q.evaluatedAt && (
                               <span className="text-[10px] text-sky-600 font-normal">
                                 {new Date(q.evaluatedAt).toLocaleDateString()}
@@ -281,9 +282,7 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
                     className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-1.5 text-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-indigo-900">
-                        {corr.adminName}
-                      </span>
+                      <span className="font-semibold text-indigo-900">{corr.adminName}</span>
                       <span className="text-[11px] text-indigo-600 font-mono">
                         {new Date(corr.timestamp).toLocaleString()}
                       </span>
@@ -306,7 +305,9 @@ export const ResultDetailDrawer: React.FC<ResultDetailDrawerProps> = ({
                     </div>
 
                     <div className="bg-white p-2 rounded border border-indigo-100 text-slate-800 text-[11px]">
-                      <span className="font-semibold text-indigo-800">Mandatory Justification: </span>
+                      <span className="font-semibold text-indigo-800">
+                        Mandatory Justification:{' '}
+                      </span>
                       {corr.reason}
                     </div>
 

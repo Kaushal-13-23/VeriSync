@@ -442,7 +442,8 @@ export interface IncidentRecord {
 
 export type ResultStatus = 'FINAL' | 'PROVISIONAL';
 export type PassFailStatus = 'PASS' | 'FAIL';
-export type QuestionEvaluationStatus = 'AUTOMATED' | 'PENDING_EVALUATION' | 'EVALUATED' | 'CORRECTED';
+export type QuestionEvaluationStatus =
+  'AUTOMATED' | 'PENDING_EVALUATION' | 'EVALUATED' | 'CORRECTED';
 
 export interface RubricCriterionScore {
   id: string;
@@ -632,4 +633,3 @@ export interface QuestionPerformanceStats {
   discriminationIndex: number;
   responseDistribution?: McqOptionDistribution[];
 }
-

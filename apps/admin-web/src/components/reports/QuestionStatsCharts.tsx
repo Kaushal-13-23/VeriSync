@@ -5,14 +5,7 @@
  */
 
 import React from 'react';
-import {
-  CheckCircle2,
-  HelpCircle,
-  FileCode,
-  Database,
-  FileText,
-  Activity,
-} from 'lucide-react';
+import { CheckCircle2, HelpCircle, FileCode, Database, FileText, Activity } from 'lucide-react';
 import { QuestionPerformanceStats } from '../../types/api';
 
 interface QuestionStatsChartsProps {
@@ -81,7 +74,9 @@ export const QuestionStatsCharts: React.FC<QuestionStatsChartsProps> = ({
             Response distribution, accuracy rates, and item discrimination indices
           </p>
         </div>
-        <span className="text-xs text-slate-400 font-medium">{stats.length} Questions Evaluated</span>
+        <span className="text-xs text-slate-400 font-medium">
+          {stats.length} Questions Evaluated
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,8 +120,8 @@ export const QuestionStatsCharts: React.FC<QuestionStatsChartsProps> = ({
                       isHighAccuracy
                         ? 'text-emerald-600'
                         : isLowAccuracy
-                        ? 'text-rose-600'
-                        : 'text-amber-600'
+                          ? 'text-rose-600'
+                          : 'text-amber-600'
                     }`}
                   >
                     {q.correctAnswerRate}%
@@ -138,8 +133,8 @@ export const QuestionStatsCharts: React.FC<QuestionStatsChartsProps> = ({
                       isHighAccuracy
                         ? 'bg-emerald-500'
                         : isLowAccuracy
-                        ? 'bg-rose-500'
-                        : 'bg-amber-500'
+                          ? 'bg-rose-500'
+                          : 'bg-amber-500'
                     }`}
                     style={{ width: `${q.correctAnswerRate}%` }}
                   />

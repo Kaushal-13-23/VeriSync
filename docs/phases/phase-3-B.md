@@ -104,6 +104,7 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
 ## 2. Endpoints / Screens / Modules Added
 
 ### UI Screens & Components
+
 - `src/components/sessions/LiveSessionsView.tsx`: Main monitoring container with polling.
 - `src/components/sessions/LiveSessionFilters.tsx`: Search, status counters, and auto-refresh selector.
 - `src/components/sessions/LiveSessionsTable.tsx`: Telemetry table with remaining time countdowns.
@@ -116,6 +117,7 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
 - `src/components/audit/IncidentLogView.tsx`: SRS 11.4 incident disruption cards.
 
 ### API Clients (`src/api/`)
+
 - `src/api/sessions.ts`:
   - `getLiveSessions(params)` -> `GET /api/v1/admin/sessions`
   - `getSessionById(id)` -> `GET /api/v1/admin/sessions/:id`
@@ -127,6 +129,7 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
   - `exportAuditLogsCsv(params)` -> Formats entries into downloadable CSV file string.
 
 ### MSW v3 Mock Endpoints (`src/mocks/handlers.ts`)
+
 - `GET /api/v1/admin/sessions`: Returns live session records with active/interrupted/paused/submitted/expired status counts.
 - `GET /api/v1/admin/sessions/:id`: Returns single session telemetry.
 - `POST /api/v1/admin/sessions/:id/override`: Enforces mandatory `reason` validation per BR-012 (returns 422 `VALIDATION_FAILED` if missing); mutates remaining seconds/status; logs `AuditLogEntry` and `IncidentRecord` with correlation ID.
@@ -138,28 +141,29 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
 
 ## 3. SRS Requirements Covered
 
-| SRS Requirement ID | Description | Implementation Status |
-| :--- | :--- | :--- |
-| **FR-ADMIN-001** | Administrative dashboard with key platform metrics and operational status | **Done** |
-| **FR-ADMIN-002** | Real-time active assessment monitoring (sessions in progress, submissions, active candidates) | **Done** |
-| **FR-ADMIN-004** | Assessment operational controls (pause, resume, archive) with confirmation | **Done** |
-| **FR-ADMIN-005** | Assessment lifecycle status state transitions (`SUSPENDED`, `ACTIVE`, `ARCHIVED`) with confirmation | **Done** |
-| **FR-ADMIN-007** | Operational audit logs search and multi-parameter filtering | **Done** |
-| **FR-ADMIN-008** | Incident log view for technical evaluators and lab supervisors (SRS 11.4) | **Done** |
-| **FR-TIME-001** | Server-authoritative timer countdown with visual low-time warning when < 5 mins | **Done** |
-| **FR-TIME-002** | Real-time session state telemetry tracking (`ACTIVE`, `INTERRUPTED`, `PAUSED`, etc.) | **Done** |
-| **FR-TIME-011** | Administrative session overrides (`EXTEND`, `REOPEN`, `PAUSE`, `RESUME`, `CANCEL`) | **Done** |
-| **BR-012** | Mandatory justification reason required for every administrative override | **Done** |
-| **FR-CAN-006** | Candidate attempt and submission telemetry tracking in detail view | **Done** |
-| **Rule 1** | Untrusted client clocks; server-authoritative time source | **Done** |
-| **Rule 7** | All overrides, publishes, and status transitions audited with reason and actor | **Done** |
-| **Rule 9** | UTC ISO-8601 timestamps and correlation ID traceability on all responses | **Done** |
+| SRS Requirement ID | Description                                                                                         | Implementation Status |
+| :----------------- | :-------------------------------------------------------------------------------------------------- | :-------------------- |
+| **FR-ADMIN-001**   | Administrative dashboard with key platform metrics and operational status                           | **Done**              |
+| **FR-ADMIN-002**   | Real-time active assessment monitoring (sessions in progress, submissions, active candidates)       | **Done**              |
+| **FR-ADMIN-004**   | Assessment operational controls (pause, resume, archive) with confirmation                          | **Done**              |
+| **FR-ADMIN-005**   | Assessment lifecycle status state transitions (`SUSPENDED`, `ACTIVE`, `ARCHIVED`) with confirmation | **Done**              |
+| **FR-ADMIN-007**   | Operational audit logs search and multi-parameter filtering                                         | **Done**              |
+| **FR-ADMIN-008**   | Incident log view for technical evaluators and lab supervisors (SRS 11.4)                           | **Done**              |
+| **FR-TIME-001**    | Server-authoritative timer countdown with visual low-time warning when < 5 mins                     | **Done**              |
+| **FR-TIME-002**    | Real-time session state telemetry tracking (`ACTIVE`, `INTERRUPTED`, `PAUSED`, etc.)                | **Done**              |
+| **FR-TIME-011**    | Administrative session overrides (`EXTEND`, `REOPEN`, `PAUSE`, `RESUME`, `CANCEL`)                  | **Done**              |
+| **BR-012**         | Mandatory justification reason required for every administrative override                           | **Done**              |
+| **FR-CAN-006**     | Candidate attempt and submission telemetry tracking in detail view                                  | **Done**              |
+| **Rule 1**         | Untrusted client clocks; server-authoritative time source                                           | **Done**              |
+| **Rule 7**         | All overrides, publishes, and status transitions audited with reason and actor                      | **Done**              |
+| **Rule 9**         | UTC ISO-8601 timestamps and correlation ID traceability on all responses                            | **Done**              |
 
 ---
 
 ## 4. Tests Added
 
 ### 4.1 Vitest Unit Tests (19 new tests added; 49 total passing across 12 files)
+
 1. **`src/tests/LiveSessions.test.tsx` (6 tests)**:
    - `renders live sessions table with telemetry and status chips` (FR-ADMIN-001, FR-ADMIN-002)
    - `filters candidate sessions by status pill` (FR-ADMIN-001)
@@ -185,6 +189,7 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
    - `exports filtered audit logs as CSV` (FR-ADMIN-007)
 
 ### 4.2 Playwright E2E Smoke Tests (`apps/admin-web/e2e/smoke.spec.ts`)
+
 - Added end-to-end flows:
   - Step 10: Navigating to `Live Sessions` and verifying telemetry countdown.
   - Step 11: Triggering `Override` on active session, filling extension minutes, mandatory reason, checking confirmation, submitting, and asserting success toast with correlation ID.
@@ -208,23 +213,28 @@ In Phase 3, Developer B implemented real-time live candidate session oversight, 
 ## 7. Exact Instructions to Run It
 
 ### Running the Vitest Unit Test Suite
+
 ```powershell
 pnpm --filter @verisync/admin-web test
 ```
 
 ### Running Typecheck and Lint
+
 ```powershell
 pnpm --filter @verisync/admin-web typecheck
 pnpm --filter @verisync/admin-web lint
 ```
 
 ### Running the Production Build
+
 ```powershell
 pnpm --filter @verisync/admin-web build
 ```
 
 ### Launching the Development Server
+
 ```powershell
 pnpm --filter @verisync/admin-web dev
 ```
+
 Navigate to `http://localhost:5173/` in your browser. Log in with `admin@verisync.internal` / `Password123!` and MFA code `123456`, then click **Live Sessions** or **Audit Logs** in the navy sidebar.

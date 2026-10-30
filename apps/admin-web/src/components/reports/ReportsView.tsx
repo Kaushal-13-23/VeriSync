@@ -70,7 +70,8 @@ export const ReportsView: React.FC = () => {
             Assessment Reports & Analytics
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Aggregated cohort statistics, deterministic rankings, and question-level analytics (FR-ADMIN-005)
+            Aggregated cohort statistics, deterministic rankings, and question-level analytics
+            (FR-ADMIN-005)
           </p>
         </div>
 

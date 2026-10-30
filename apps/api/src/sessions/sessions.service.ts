@@ -28,6 +28,7 @@ import {
   AuditOutcome,
 } from '@verisync/shared';
 import { Prisma } from '@prisma/client';
+import { EvaluationService } from '../evaluation/evaluation.service';
 
 @Injectable()
 export class SessionsService {
@@ -39,6 +40,7 @@ export class SessionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly evaluationService: EvaluationService,
   ) {}
 
   /**
@@ -1032,6 +1034,9 @@ export class SessionsService {
       },
     });
 
+    // Evaluate session against snapshot and configuration (FR-SCORE-001..008, UC-14)
+    await this.evaluationService.evaluateSession(session.id);
+
     const answeredCount = session.questionAttempts.filter(
       (qa) => qa.attemptStatus === AttemptState.SUBMITTED,
     ).length;
@@ -1244,6 +1249,9 @@ export class SessionsService {
           data: { assignmentStatus: AssignmentStatus.COMPLETED },
         });
       });
+
+      // Evaluate expired session (FR-SCORE-006, FR-SCORE-008)
+      await this.evaluationService.evaluateSession(session.id);
       return;
     }
 

@@ -332,6 +332,9 @@ model QuestionAttempt {
   attemptStatus        AttemptState       @default(PENDING) @map("attempt_status")
   awardedMarks         Decimal?           @map("awarded_marks") @db.Decimal(5, 2)
   draftPayload         Json?              @map("draft_payload")
+  evaluatorFeedback    String?            @map("evaluator_feedback")
+  evaluatedAt          DateTime?          @map("evaluated_at")
+  evaluatedBy          String?            @map("evaluated_by")
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
 
@@ -414,14 +417,18 @@ model Result {
   sessionId        String            @unique @map("session_id")
   totalScore       Decimal           @map("total_score") @db.Decimal(6, 2)
   maximumScore     Decimal           @map("maximum_score") @db.Decimal(6, 2)
+  percentage       Decimal?          @map("percentage") @db.Decimal(5, 2)
+  passed           Boolean?          @map("passed")
+  rank             Int?              @map("rank")
   resultStatus     ResultStatus      @default(PROVISIONAL) @map("result_status")
-  finalizedAt      DateTime          @default(now()) @map("finalized_at")
+  finalizedAt      DateTime?         @map("finalized_at")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
   session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   scoreCorrections ScoreCorrection[]
 
+  @@index([resultStatus])
   @@map("results")
 }
 
@@ -468,16 +475,17 @@ model LabDevice {
 // 16. score_corrections: History of authorized score changes (SRS 9.1, FR-SCORE-010)
 // -----------------------------------------------------------------------------
 model ScoreCorrection {
-  id            String   @id @default(uuid()) @map("correction_id")
-  resultId      String   @map("result_id")
-  originalValue Decimal  @map("original_value") @db.Decimal(6, 2)
-  revisedValue  Decimal  @map("revised_value") @db.Decimal(6, 2)
-  reason        String
-  correctedBy   String   @map("corrected_by")
-  correctedAt   DateTime @default(now()) @map("corrected_at")
+  id                String   @id @default(uuid()) @map("correction_id")
+  resultId          String   @map("result_id")
+  questionAttemptId String?  @map("question_attempt_id")
+  originalValue     Decimal  @map("original_value") @db.Decimal(6, 2)
+  revisedValue      Decimal  @map("revised_value") @db.Decimal(6, 2)
+  reason            String
+  correctedBy       String   @map("corrected_by")
+  correctedAt       DateTime @default(now()) @map("corrected_at")
 
-  result        Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  corrector     User     @relation("ScoreCorrector", fields: [correctedBy], references: [id])
+  result            Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  corrector         User     @relation("ScoreCorrector", fields: [correctedBy], references: [id])
 
   @@index([resultId])
   @@map("score_corrections")

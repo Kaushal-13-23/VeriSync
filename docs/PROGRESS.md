@@ -87,16 +87,16 @@ Status Legend:
 
 ### 5.7 Scoring and Evaluation (FR-SCORE)
 
-- [ ] `FR-SCORE-001`: Automated scoring of objective questions against the published assessment snapshot key (Must)
-- [ ] `FR-SCORE-002`: Configurable negative marking deduction for incorrect objective responses (Must)
-- [ ] `FR-SCORE-003`: Configurable partial credit for multi-select questions (Should)
-- [ ] `FR-SCORE-004`: Evaluation queue and scoring rubric for subjective/descriptive questions (Must)
-- [ ] `FR-SCORE-005`: Manual score entry and evaluator feedback comments (Must)
-- [ ] `FR-SCORE-006`: Configured scoring policy for timed-out or unanswered questions (Must)
-- [ ] `FR-SCORE-007`: Candidate and assessment-level aggregate score calculations (Must)
-- [ ] `FR-SCORE-008`: Provisional vs. Final result status handling (Must)
-- [ ] `FR-SCORE-009`: Result ranking calculation with deterministic tie-break criteria (Must)
-- [ ] `FR-SCORE-010`: Audited score correction workflow requiring original value, new value, reason, and actor (Must)
+- [x] `FR-SCORE-001`: Automated scoring of objective questions against the published assessment snapshot key (Must)
+- [x] `FR-SCORE-002`: Configurable negative marking deduction for incorrect objective responses (Must)
+- [x] `FR-SCORE-003`: Configurable partial credit for multi-select questions (Should)
+- [x] `FR-SCORE-004`: Evaluation queue and scoring rubric for subjective/descriptive questions (Must)
+- [x] `FR-SCORE-005`: Manual score entry and evaluator feedback comments (Must)
+- [x] `FR-SCORE-006`: Configured scoring policy for timed-out or unanswered questions (Must)
+- [x] `FR-SCORE-007`: Candidate and assessment-level aggregate score calculations (Must)
+- [x] `FR-SCORE-008`: Provisional vs. Final result status handling (Must)
+- [x] `FR-SCORE-009`: Result ranking calculation with deterministic tie-break criteria (Must)
+- [x] `FR-SCORE-010`: Audited score correction workflow requiring original value, new value, reason, and actor (Must)
 
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
@@ -148,13 +148,13 @@ Status Legend:
 
 - [ ] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must)
 - [ ] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
-- [ ] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
+- [x] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
 - [ ] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must)
-- [ ] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
-- [ ] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
-- [ ] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
+- [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
+- [x] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
+- [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
 - [ ] `FR-ADMIN-008`: Assessment configuration cloning and templating (Should)
-- [ ] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
+- [x] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
 
 ### 5.13 Candidate User Interface (FR-UI)
 

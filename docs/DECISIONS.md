@@ -58,3 +58,15 @@ This document records architectural, functional, and design decisions, specifica
   - Step 3 (**Settings**) is expanded to rigorously capture per-question time limits, negative marking configuration, question/option randomization flags, passing criteria, and navigation mode (`sequential` vs `free`) per `FR-ASMT-002`.
   - Client-side validation prevents creating any question limit that exceeds the overall assessment duration.
 - **Traceability**: `FR-ASMT-001`, `FR-ASMT-002`, `FR-ASMT-004`, `FR-ASMT-008`.
+
+---
+
+### Decision 6: Scoring Engine Snapshot Resolution, Partial Credit, and Audited Corrections
+
+- **Context & Reconciliation**: SRS `FR-SCORE-001` through `FR-SCORE-010`, `BR-011`, `UC-14`, and `UC-15` define evaluation rules, negative marking, partial credit, and administrative corrections.
+- **Decision (SRS Wins)**:
+  - **Config-Version Consistency (`BR-011`, `FR-SCORE-001`)**: Objective answers are strictly evaluated against the assessment's frozen `publishedSnapshot`. Modifications to the question bank made after an assessment has been published do not alter candidate scoring.
+  - **Multi-Select Partial Credit (`FR-SCORE-003`)**: For `MCQ_MULTIPLE`, candidate selecting a non-empty subset of correct options without any incorrect options receives proportional marks `(correctCount / totalCorrectCount) * maxMarks`. Selecting any incorrect option awards 0 marks (or applies negative marking if configured).
+  - **Provisional vs. Final Results (`FR-SCORE-008`, `UC-14`)**: Sessions containing subjective items (`SHORT_ANSWER`, `DESCRIPTIVE`, `SCENARIO`) are marked `PROVISIONAL` until Technical Evaluators award rubric marks via `/api/v1/admin/evaluation/evaluate`. Once all attempts are evaluated, the result becomes `FINAL` and cohort ranking is calculated.
+  - **Score Corrections (`FR-SCORE-010`, `UC-15`, `TC-14`)**: Every score modification requires a non-empty reason, is recorded in `score_corrections` and the immutable audit log, and immediately recalculates dependent totals and deterministic rankings.
+- **Traceability**: `FR-SCORE-001`..`010`, `FR-ADMIN-003`..`009`, `BR-011`, `BR-012`, `TC-13`, `TC-14`.

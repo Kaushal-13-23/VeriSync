@@ -3,6 +3,7 @@ import { SessionsService } from './sessions.service';
 import { SessionExpiryWorker } from './session-expiry.worker';
 import { PrismaService } from '../common/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { EvaluationService } from '../evaluation/evaluation.service';
 import {
   AccountStatus,
   AssessmentStatus,
@@ -237,12 +238,18 @@ describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC
       sanitizeMetadata: jest.fn().mockImplementation((meta) => meta),
     };
 
+    const mockEvaluationService = {
+      evaluateSession: jest.fn().mockResolvedValue({ id: 'res_1' }),
+      recalculateAssessmentRankings: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SessionsService,
         SessionExpiryWorker,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: EvaluationService, useValue: mockEvaluationService },
       ],
     }).compile();
 

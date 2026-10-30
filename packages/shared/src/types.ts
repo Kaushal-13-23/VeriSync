@@ -409,3 +409,163 @@ export interface SessionHeartbeatResponseDto {
   sessionStatus: SessionState;
   serverTime: string;
 }
+
+/**
+ * Results and Evaluation Types (SRS 5.10, 5.11, FR-SCORE, FR-ADMIN, UC-14, UC-15)
+ */
+
+export enum ResultStatus {
+  PROVISIONAL = 'PROVISIONAL',
+  FINAL = 'FINAL',
+}
+
+export interface ManualEvaluationQueueItemDto {
+  questionAttemptId: string;
+  sessionId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  maximumMarks: number;
+  candidateAnswer: unknown;
+  submittedAt: string;
+}
+
+export interface EvaluateQuestionDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+}
+
+export interface EvaluateQuestionResponseDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+  evaluatedBy: string;
+  evaluatedAt: string;
+  sessionResultStatus: ResultStatus;
+}
+
+export interface ScoreCorrectionDto {
+  sessionId: string;
+  questionAttemptId?: string;
+  revisedScore: number;
+  reason: string;
+}
+
+export interface ScoreCorrectionRecordDto {
+  id: string;
+  resultId: string;
+  questionAttemptId?: string | null;
+  originalValue: number;
+  revisedValue: number;
+  reason: string;
+  correctedBy: string;
+  correctedAt: string;
+}
+
+export interface ScoreCorrectionResponseDto {
+  correction: ScoreCorrectionRecordDto;
+  newTotalScore: number;
+  newPercentage: number;
+  newRank?: number | null;
+  resultStatus: ResultStatus;
+}
+
+export interface ResultFilterDto {
+  assessmentId?: string;
+  candidateIdentifier?: string;
+  status?: 'PASS' | 'FAIL' | 'ALL';
+  resultStatus?: ResultStatus;
+  institution?: string;
+  minScore?: number;
+  maxScore?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AssessmentResultDto {
+  id: string;
+  sessionId: string;
+  assignmentId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  totalScore: number;
+  maximumScore: number;
+  percentage: number;
+  resultStatus: ResultStatus;
+  passed?: boolean | null;
+  rank?: number | null;
+  submittedAt: string;
+  finalizedAt?: string | null;
+}
+
+export interface QuestionAttemptResultDto {
+  questionAttemptId: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  negativeMarks: number;
+  marksAwarded: number;
+  candidateResponse: unknown;
+  attemptStatus: AttemptState;
+  evaluatorFeedback?: string | null;
+  evaluatedBy?: string | null;
+  evaluatedAt?: string | null;
+}
+
+export interface DetailedResultResponseDto {
+  result: AssessmentResultDto;
+  breakdown: QuestionAttemptResultDto[];
+  corrections: ScoreCorrectionRecordDto[];
+}
+
+export interface QuestionStatisticsDto {
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  totalAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+  unansweredAttempts: number;
+  averageScore: number;
+  difficultyIndex: number; // 0.0 - 1.0 (proportion of correct answers)
+  discriminationIndex?: number;
+}
+
+export interface AssessmentStatisticsDto {
+  assessmentId: string;
+  assessmentTitle: string;
+  totalCandidates: number;
+  completedSessions: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+  passingPercentage: number;
+  questions: QuestionStatisticsDto[];
+}
+
+export interface CandidateResultViewDto {
+  assessmentTitle: string;
+  resultStatus: ResultStatus;
+  canViewScore: boolean;
+  visibilityNotice?: string;
+  totalScore?: number;
+  maximumScore?: number;
+  percentage?: number;
+  passed?: boolean | null;
+  rank?: number | null;
+}

@@ -176,3 +176,4 @@ pnpm --filter @verisync/code-runner start
 # 3. Launch candidate desktop in development mode
 pnpm --filter @verisync/candidate-desktop dev
 ```
+

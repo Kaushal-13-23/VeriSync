@@ -196,3 +196,4 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
     </div>
   );
 };
+

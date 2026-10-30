@@ -232,3 +232,4 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
     </div>
   );
 };
+

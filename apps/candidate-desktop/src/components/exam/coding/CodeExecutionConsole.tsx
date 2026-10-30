@@ -286,3 +286,4 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
     </div>
   );
 };
+

@@ -90,3 +90,4 @@ export interface SqlQuestionDetails {
   maxSubmissions?: number;
   comparisonMode?: 'EXACT_MATCH' | 'UNORDERED_MATCH';
 }
+

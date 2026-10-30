@@ -88,3 +88,4 @@ describe('DraftAutosaveManager (FR-ANS-005, UC-12)', () => {
     expect(apiClient.saveDraft).toHaveBeenCalledTimes(1);
   });
 });
+

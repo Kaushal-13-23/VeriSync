@@ -61,4 +61,3 @@ describe('Central Error Handler (SRS 8.3.3, NFR-USE-003, Rule 9)', () => {
     expect(result.message).toBe('Unexpected crash');
   });
 });
-

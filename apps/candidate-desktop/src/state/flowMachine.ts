@@ -14,12 +14,7 @@ import { CandidateAssignedAssessment } from '../types/assessment';
 import { FinalSubmitResponseDto } from '@verisync/shared';
 
 export type ScreenState =
-  | 'LOGIN'
-  | 'SYSTEM_CHECK'
-  | 'ASSIGNED_ASSESSMENTS'
-  | 'INSTRUCTIONS'
-  | 'EXAM'
-  | 'SUBMITTED';
+  'LOGIN' | 'SYSTEM_CHECK' | 'ASSIGNED_ASSESSMENTS' | 'INSTRUCTIONS' | 'EXAM' | 'SUBMITTED';
 
 export interface FlowState {
   currentScreen: ScreenState;

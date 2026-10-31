@@ -33,7 +33,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
   };
 
   const candidateId = finalResult?.candidateIdentifier || user.candidateId || 'CAN-2026-081';
-  const testTitle = finalResult?.assessmentTitle || session.title || 'Frontend Developer Assessment';
+  const testTitle =
+    finalResult?.assessmentTitle || session.title || 'Frontend Developer Assessment';
   const totalQuestions = finalResult?.totalQuestions ?? session.totalQuestions ?? 6;
   const answeredCount = finalResult?.answeredCount ?? session.answeredAttemptIds?.size ?? 0;
   const submittedTimestamp = finalResult?.submittedAt
@@ -86,8 +87,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
           Test Submitted Successfully!
         </h2>
         <p style={{ margin: '0 0 28px 0', fontSize: 14, color: '#9ca3af', lineHeight: 1.5 }}>
-          Your responses have been durably committed to the authoritative system of record.
-          The evaluation will be processed per institutional policy. You can now close the application.
+          Your responses have been durably committed to the authoritative system of record. The
+          evaluation will be processed per institutional policy. You can now close the application.
         </p>
 
         {/* Summary Details Card per UI Sample */}
@@ -141,7 +142,9 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
             <span style={{ color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Clock size={14} /> Submitted On:
             </span>
-            <span style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}>
+            <span
+              style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}
+            >
               {submittedTimestamp}
             </span>
           </div>

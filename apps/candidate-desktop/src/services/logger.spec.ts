@@ -38,4 +38,3 @@ describe('Local Logger & Sensitive Data Redaction (Rule 5, FR-AUD-007, NFR-MNT-0
     expect(nested.status).toBe('active');
   });
 });
-

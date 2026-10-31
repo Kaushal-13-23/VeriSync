@@ -56,9 +56,7 @@ export const App: React.FC = () => {
         color: '#f8fafc',
       }}
     >
-      {state.currentScreen === 'LOGIN' && (
-        <LoginScreen onLoginSuccess={handleLoginSuccess} />
-      )}
+      {state.currentScreen === 'LOGIN' && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
 
       {state.currentScreen === 'SYSTEM_CHECK' && (
         <SystemCheckScreen
@@ -85,10 +83,7 @@ export const App: React.FC = () => {
       )}
 
       {state.currentScreen === 'EXAM' && state.session && (
-        <ExamScreen
-          session={state.session}
-          onFinishExam={handleFinishExam}
-        />
+        <ExamScreen session={state.session} onFinishExam={handleFinishExam} />
       )}
 
       {state.currentScreen === 'SUBMITTED' && state.user && state.session && (

@@ -51,7 +51,7 @@ export const TimerComponent: React.FC<TimerComponentProps> = ({
   label,
 }) => {
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() =>
-    computeRemainingSeconds(serverDeadline, timeSync.getClockOffsetMs())
+    computeRemainingSeconds(serverDeadline, timeSync.getClockOffsetMs()),
   );
 
   useEffect(() => {
@@ -75,7 +75,8 @@ export const TimerComponent: React.FC<TimerComponentProps> = ({
     return () => clearInterval(interval);
   }, [serverDeadline, onExpire]);
 
-  const isLowTime = secondsRemaining <= lowTimeThresholdSeconds && secondsRemaining > criticalThresholdSeconds;
+  const isLowTime =
+    secondsRemaining <= lowTimeThresholdSeconds && secondsRemaining > criticalThresholdSeconds;
   const isCritical = secondsRemaining <= criticalThresholdSeconds;
   const isExpired = secondsRemaining === 0;
 
@@ -161,4 +162,3 @@ export const TimerComponent: React.FC<TimerComponentProps> = ({
     </div>
   );
 };
-

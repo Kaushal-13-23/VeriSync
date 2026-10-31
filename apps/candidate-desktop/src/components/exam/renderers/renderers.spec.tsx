@@ -16,12 +16,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
     it('renders all options with A, B, C lettering and radio roles', () => {
       const onChange = vi.fn();
       render(
-        <SingleChoiceRenderer
-          questionId="q1"
-          options={options}
-          value={null}
-          onChange={onChange}
-        />
+        <SingleChoiceRenderer questionId="q1" options={options} value={null} onChange={onChange} />,
       );
 
       expect(screen.getByText('First Option')).toBeDefined();
@@ -40,7 +35,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           options={options}
           value="opt_1"
           onChange={onChange}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText('Second Option'));
@@ -56,7 +51,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           value={null}
           onChange={onChange}
           disabled={true}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText('First Option'));
@@ -79,7 +74,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           options={options}
           value={['opt_a']}
           onChange={onChange}
-        />
+        />,
       );
 
       expect(screen.getByText('(Select all options that apply)')).toBeDefined();
@@ -95,7 +90,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           options={options}
           value={['opt_a']}
           onChange={onChange}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText('Option Beta'));
@@ -110,7 +105,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           options={options}
           value={['opt_a', 'opt_b']}
           onChange={onChange}
-        />
+        />,
       );
 
       fireEvent.click(screen.getByText('Option Alpha'));
@@ -121,13 +116,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
   describe('TrueFalseRenderer', () => {
     it('renders True and False selection buttons', () => {
       const onChange = vi.fn();
-      render(
-        <TrueFalseRenderer
-          questionId="q3"
-          value={null}
-          onChange={onChange}
-        />
-      );
+      render(<TrueFalseRenderer questionId="q3" value={null} onChange={onChange} />);
 
       expect(screen.getByText('TRUE')).toBeDefined();
       expect(screen.getByText('FALSE')).toBeDefined();
@@ -135,13 +124,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
 
     it('calls onChange with true or false strings', () => {
       const onChange = vi.fn();
-      render(
-        <TrueFalseRenderer
-          questionId="q3"
-          value="false"
-          onChange={onChange}
-        />
-      );
+      render(<TrueFalseRenderer questionId="q3" value="false" onChange={onChange} />);
 
       fireEvent.click(screen.getByText('TRUE'));
       expect(onChange).toHaveBeenCalledWith('true');
@@ -160,7 +143,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
           value="Test answer"
           onChange={onChange}
           maxLength={100}
-        />
+        />,
       );
 
       expect(screen.getByDisplayValue('Test answer')).toBeDefined();
@@ -169,14 +152,7 @@ describe('Question Renderers (FR-QB-003, FR-UI-003)', () => {
 
     it('fires onChange on input and respects maxLength', () => {
       const onChange = vi.fn();
-      render(
-        <ShortAnswerRenderer
-          questionId="q4"
-          value=""
-          onChange={onChange}
-          maxLength={10}
-        />
-      );
+      render(<ShortAnswerRenderer questionId="q4" value="" onChange={onChange} maxLength={10} />);
 
       const textarea = screen.getByRole('textbox');
       fireEvent.change(textarea, { target: { value: 'Short' } });

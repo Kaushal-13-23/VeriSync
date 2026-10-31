@@ -6,12 +6,29 @@ describe('QuestionStatusPanel (Decision 1, FR-UI-004, FR-UI-005)', () => {
   const sampleItems: QuestionStatusItem[] = [
     { id: 'q1', index: 0, displayNumber: 1, section: 'MCQ', isAnswered: true, isCurrent: false },
     { id: 'q2', index: 1, displayNumber: 2, section: 'MCQ', isAnswered: false, isCurrent: true },
-    { id: 'q3', index: 2, displayNumber: 3, section: 'MCQ', isAnswered: false, isCurrent: false, isMarkedForReview: true },
-    { id: 'q4', index: 3, displayNumber: 4, section: 'Coding', isAnswered: false, isCurrent: false },
+    {
+      id: 'q3',
+      index: 2,
+      displayNumber: 3,
+      section: 'MCQ',
+      isAnswered: false,
+      isCurrent: false,
+      isMarkedForReview: true,
+    },
+    {
+      id: 'q4',
+      index: 3,
+      displayNumber: 4,
+      section: 'Coding',
+      isAnswered: false,
+      isCurrent: false,
+    },
   ];
 
   it('renders question palette items and section headers', () => {
-    render(<QuestionStatusPanel questions={sampleItems} currentIndex={1} isSequentialMode={true} />);
+    render(
+      <QuestionStatusPanel questions={sampleItems} currentIndex={1} isSequentialMode={true} />,
+    );
 
     expect(screen.getByText('MCQ')).toBeDefined();
     expect(screen.getByText('Coding')).toBeDefined();
@@ -29,7 +46,7 @@ describe('QuestionStatusPanel (Decision 1, FR-UI-004, FR-UI-005)', () => {
         currentIndex={1}
         isSequentialMode={true}
         onSelectQuestion={onSelect}
-      />
+      />,
     );
 
     const button1 = screen.getByLabelText(/Question 1 - Answered/i);
@@ -48,7 +65,7 @@ describe('QuestionStatusPanel (Decision 1, FR-UI-004, FR-UI-005)', () => {
         currentIndex={1}
         isSequentialMode={false}
         onSelectQuestion={onSelect}
-      />
+      />,
     );
 
     const button3 = screen.getByLabelText(/Question 3/i);
@@ -58,7 +75,9 @@ describe('QuestionStatusPanel (Decision 1, FR-UI-004, FR-UI-005)', () => {
   });
 
   it('renders status legend tokens (Answered, Current, Not Answered, Mark for Review)', () => {
-    render(<QuestionStatusPanel questions={sampleItems} currentIndex={1} isSequentialMode={true} />);
+    render(
+      <QuestionStatusPanel questions={sampleItems} currentIndex={1} isSequentialMode={true} />,
+    );
 
     expect(screen.getByText('Answered')).toBeDefined();
     expect(screen.getByText('Current Question')).toBeDefined();

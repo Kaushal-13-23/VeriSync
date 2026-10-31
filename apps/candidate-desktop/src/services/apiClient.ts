@@ -36,7 +36,9 @@ export interface ApiClientConfig {
 
 class ApiClient {
   private config: ApiClientConfig = {
-    baseUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://localhost:4000/api/v1',
+    baseUrl:
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+      'http://localhost:4000/api/v1',
     forceMock: false,
   };
   private cachedDeviceId: string | null = null;
@@ -189,7 +191,8 @@ class ApiClient {
               ok: false,
               latencyMs,
               isUnsupportedClient: true,
-              errorMessage: errData.message || 'Unsupported client version. Please contact lab staff.',
+              errorMessage:
+                errData.message || 'Unsupported client version. Please contact lab staff.',
             };
           }
         } catch {
@@ -231,7 +234,7 @@ class ApiClient {
    */
   public async login(
     identifier: string,
-    password: string
+    password: string,
   ): Promise<{ accessToken: string; refreshToken: string; user: MockUser }> {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
@@ -305,15 +308,18 @@ class ApiClient {
 
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/assessments/${assessmentId}/start`, {
-          method: 'POST',
-          headers: await this.buildHeaders(),
-          body: JSON.stringify({
-            clientVersion,
-            deviceId,
-            acknowledgedInstructions: true,
-          }),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/assessments/${assessmentId}/start`,
+          {
+            method: 'POST',
+            headers: await this.buildHeaders(),
+            body: JSON.stringify({
+              clientVersion,
+              deviceId,
+              acknowledgedInstructions: true,
+            }),
+          },
+        );
         const endMs = Date.now();
         if (response.ok) {
           const data = (await response.json()) as StartSessionResponseDto;
@@ -338,10 +344,13 @@ class ApiClient {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/current-question`, {
-          method: 'GET',
-          headers: await this.buildHeaders(),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/current-question`,
+          {
+            method: 'GET',
+            headers: await this.buildHeaders(),
+          },
+        );
         const endMs = Date.now();
         if (response.ok) {
           const data = (await response.json()) as CandidateQuestionDto;
@@ -368,10 +377,13 @@ class ApiClient {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/status`, {
-          method: 'GET',
-          headers: await this.buildHeaders(),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/status`,
+          {
+            method: 'GET',
+            headers: await this.buildHeaders(),
+          },
+        );
         const endMs = Date.now();
         if (response.ok) {
           const data = (await response.json()) as SessionStatusDto;
@@ -395,18 +407,21 @@ class ApiClient {
   public async submitSessionAnswer(
     sessionId: string,
     dto: SubmitAnswerDto,
-    idempotencyKey?: string
+    idempotencyKey?: string,
   ): Promise<SubmitAnswerAckDto> {
     const key = idempotencyKey || crypto.randomUUID();
     const startMs = Date.now();
 
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/answers`, {
-          method: 'POST',
-          headers: await this.buildHeaders(key),
-          body: JSON.stringify(dto),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/answers`,
+          {
+            method: 'POST',
+            headers: await this.buildHeaders(key),
+            body: JSON.stringify(dto),
+          },
+        );
         const endMs = Date.now();
         if (response.ok) {
           const data = (await response.json()) as SubmitAnswerAckDto;
@@ -430,11 +445,14 @@ class ApiClient {
   public async saveDraft(sessionId: string, dto: SaveDraftDto): Promise<{ success: boolean }> {
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/draft`, {
-          method: 'PUT',
-          headers: await this.buildHeaders(),
-          body: JSON.stringify(dto),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/draft`,
+          {
+            method: 'PUT',
+            headers: await this.buildHeaders(),
+            body: JSON.stringify(dto),
+          },
+        );
         if (response.ok) {
           return { success: true };
         }
@@ -455,10 +473,13 @@ class ApiClient {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/final-submit`, {
-          method: 'POST',
-          headers: await this.buildHeaders(),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/final-submit`,
+          {
+            method: 'POST',
+            headers: await this.buildHeaders(),
+          },
+        );
         const endMs = Date.now();
         if (response.ok) {
           const data = (await response.json()) as FinalSubmitResponseDto;
@@ -484,11 +505,14 @@ class ApiClient {
     const clientVersion = await this.getClientVersion();
     if (!this.config.forceMock && this.isServerReachable) {
       try {
-        const response = await fetch(`${this.config.baseUrl}/candidate/sessions/${sessionId}/heartbeat`, {
-          method: 'POST',
-          headers: await this.buildHeaders(),
-          body: JSON.stringify({ deviceId, clientVersion }),
-        });
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${sessionId}/heartbeat`,
+          {
+            method: 'POST',
+            headers: await this.buildHeaders(),
+            body: JSON.stringify({ deviceId, clientVersion }),
+          },
+        );
         if (response.ok) {
           return (await response.json()) as SessionHeartbeatResponseDto;
         }
@@ -502,7 +526,10 @@ class ApiClient {
   /**
    * Legacy method for backwards compatibility with earlier phase screens/tests
    */
-  public async startAssessment(assessmentId: string, candidateId: string): Promise<MockAssessmentSession> {
+  public async startAssessment(
+    assessmentId: string,
+    candidateId: string,
+  ): Promise<MockAssessmentSession> {
     return mockApi.initMockSession(candidateId, assessmentId);
   }
 
@@ -511,7 +538,7 @@ class ApiClient {
    */
   public async submitAnswer(
     payload: SubmitAnswerPayload,
-    idempotencyKey?: string
+    idempotencyKey?: string,
   ): Promise<SubmitAnswerResponse> {
     const key = idempotencyKey || crypto.randomUUID();
     const startMs = Date.now();
@@ -548,7 +575,9 @@ class ApiClient {
   /**
    * Legacy final submit for backwards compatibility
    */
-  public async finalSubmit(sessionId: string): Promise<{ status: 'accepted'; submittedAt: string }> {
+  public async finalSubmit(
+    sessionId: string,
+  ): Promise<{ status: 'accepted'; submittedAt: string }> {
     const key = crypto.randomUUID();
     return mockApi.finalSubmit(sessionId, key);
   }

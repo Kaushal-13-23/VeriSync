@@ -35,7 +35,7 @@ function getOrCreateDeviceId(): string {
     fs.writeFileSync(
       deviceIdFile,
       JSON.stringify({ deviceId: newDeviceId, createdAt: new Date().toISOString() }),
-      'utf-8'
+      'utf-8',
     );
     return newDeviceId;
   } catch {
@@ -129,7 +129,10 @@ const MAX_LOG_FILES = 3;
 
 function scrubSensitiveData(text: string): string {
   return text
-    .replace(/(password|token|secret|key|authorization|bearer)\s*[:=]\s*["']?[^"',\s]+["']?/gi, '$1=[REDACTED]')
+    .replace(
+      /(password|token|secret|key|authorization|bearer)\s*[:=]\s*["']?[^"',\s]+["']?/gi,
+      '$1=[REDACTED]',
+    )
     .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
     .replace(/[A-Za-z0-9]{32,}/g, (match) => match.slice(0, 4) + '...[REDACTED]');
 }
@@ -138,7 +141,7 @@ function appendLocalLog(
   level: string,
   message: string,
   correlationId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): boolean {
   try {
     const userDataPath = app.getPath('userData');
@@ -206,8 +209,13 @@ function setupIpcHandlers() {
     'verisync:writeLog',
     (
       _event,
-      entry: { level: string; message: string; correlationId?: string; metadata?: Record<string, unknown> }
-    ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata)
+      entry: {
+        level: string;
+        message: string;
+        correlationId?: string;
+        metadata?: Record<string, unknown>;
+      },
+    ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata),
   );
   ipcMain.handle('verisync:closeApp', () => {
     app.quit();

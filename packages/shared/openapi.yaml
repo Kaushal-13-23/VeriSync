@@ -14,7 +14,7 @@ paths:
   /health:
     get:
       summary: System Health Check
-      description: Returns server operational status and authoritative UTC timestamp.
+      description: Returns server operational status and authoritative UTC timestamp (Rule 9, FR-TIME-001).
       operationId: getHealthStatus
       responses:
         '200':
@@ -29,8 +29,8 @@ paths:
       summary: Candidate & Administrator Authentication
       description: >
         Authenticates credentials against Argon2id hashed passwords.
-        Candidates may authenticate using either Candidate ID or Username (FR-CAN-007).
-        Admins require MFA in production (FR-AUTH-008).
+        Candidates may authenticate using either Candidate ID (e.g. CAN-2026-081) or Username (Decision 3, FR-AUTH-002).
+        Admins with MFA enabled receive an MFA challenge token (FR-AUTH-008).
       operationId: login
       requestBody:
         required: true
@@ -40,7 +40,7 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Authentication successful; returns access token and refresh token.
+          description: Authentication successful (returns JWT tokens or MFA challenge).
           content:
             application/json:
               schema:
@@ -52,54 +52,770 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
         '429':
-          description: Rate limited due to repeated failed attempts.
+          description: Rate limited due to repeated failed attempts (TC17).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiErrorResponse'
 
-  /assessments/active/submit-answer:
+  /auth/mfa/verify:
+    post:
+      summary: Verify Administrator MFA Code
+      description: Verifies 6-digit RFC 6238 TOTP code using MFA challenge token (FR-AUTH-008).
+      operationId: verifyMfa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyMfaRequest'
+      responses:
+        '200':
+          description: MFA verification successful; returns access and refresh tokens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPairResponse'
+        '401':
+          description: Invalid or expired MFA verification code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /auth/refresh:
+    post:
+      summary: Refresh Access Token
+      description: Rotates refresh token and issues a new access token pair (FR-AUTH-007).
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token rotated and new access token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPairResponse'
+        '401':
+          description: Refresh token invalid or revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: End User Session
+      description: Revokes user refresh token and terminates session server-side (FR-AUTH-006, FR-AUTH-007).
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session revoked successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /admin/candidates/{id}/password-reset:
+    post:
+      summary: Admin Candidate Password Reset
+      description: SuperAdmin initiated password reset without exposing old password (FR-AUTH-005, Rule 7).
+      operationId: adminResetPassword
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Candidate ID or User ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminPasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset successfully and active sessions revoked.
+        '403':
+          description: Insufficient privileges (Requires SuperAdmin).
+
+  /admin/candidates/{id}/deactivate:
+    patch:
+      summary: Deactivate Candidate Account
+      description: SuperAdmin initiated deactivation; revokes all candidate sessions immediately (FR-AUTH-006, Rule 7).
+      operationId: deactivateAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeactivateAccountRequest'
+      responses:
+        '200':
+          description: Account deactivated and sessions terminated.
+        '403':
+          description: Insufficient privileges.
+
+  /admin/candidates:
+    post:
+      summary: Create Candidate Profile
+      description: SuperAdmin creates candidate profile with complete fields and provisions temporary credentials (FR-CAN-001, FR-CAN-007, FR-AUTH-009, UC-02).
+      operationId: createCandidate
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCandidateRequest'
+      responses:
+        '201':
+          description: Candidate created with temporary password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCandidateResponse'
+        '409':
+          description: Duplicate candidate ID or username (FR-CAN-007).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+    get:
+      summary: Search and Filter Candidates
+      description: Search candidates by candidateId, name, email, institution, drive, or status (FR-CAN-004).
+      operationId: listCandidates
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: recruitmentReference
+          in: query
+          schema:
+            type: string
+        - name: accountStatus
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of candidates.
+
+  /admin/candidates/bulk-import:
+    post:
+      summary: Bulk Import Candidates via CSV
+      description: Validates CSV rows against template and provides per-row error reporting (FR-CAN-003, UC-03).
+      operationId: bulkImportCandidates
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkImportCandidatesRequest'
+      responses:
+        '200':
+          description: Import summary with success counts and per-row errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateCsvImportResult'
+
+  /admin/candidates/{id}:
+    get:
+      summary: Get Candidate Profile
+      operationId: getCandidateById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidate profile details.
+    put:
+      summary: Edit Candidate Profile
+      description: Edit permitted candidate details with audit logging (FR-CAN-002).
+      operationId: updateCandidate
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCandidateRequest'
+      responses:
+        '200':
+          description: Candidate profile updated.
+
+  /admin/candidates/{id}/login-history:
+    get:
+      summary: Candidate Login History
+      description: Returns login attempts and authentication history for candidate (FR-CAN-006).
+      operationId: getCandidateLoginHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Login and session history events.
+
+  /admin/candidates/assign:
+    post:
+      summary: Assign Assessment to Candidates
+      description: Assign assessment to individual candidate IDs or by cohort/group (FR-CAN-004, FR-ASMT-005, UC-06).
+      operationId: assignAssessment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignAssessmentRequest'
+      responses:
+        '200':
+          description: Assignment completed.
+
+  /admin/candidates/unassign:
+    post:
+      summary: Revoke Candidate Assessment Assignment
+      description: Revokes assignment prior to start (FR-CAN-005).
+      operationId: unassignAssessment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnassignAssessmentRequest'
+      responses:
+        '200':
+          description: Assignment revoked.
+
+  /admin/questions:
+    post:
+      summary: Create Question Bank Question
+      description: Create question with options or test cases; correct answers protected (FR-QB-001..006).
+      operationId: createQuestion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuestionRequest'
+      responses:
+        '201':
+          description: Question created.
+    get:
+      summary: Search and Filter Questions
+      description: Search by keyword, topic, difficulty, or questionType (FR-QB-007).
+      operationId: listQuestions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: topic
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+        - name: questionType
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of question bank items.
+
+  /admin/questions/{id}:
+    get:
+      summary: Get Question Bank Question
+      operationId: getQuestionById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Question details with options and test cases.
+    put:
+      summary: Edit Question Bank Question
+      description: Preserves immutable versioning; increments questionVersion (FR-QB-008).
+      operationId: updateQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuestionRequest'
+      responses:
+        '200':
+          description: Updated question version.
+
+  /admin/assessments:
+    post:
+      summary: Create Assessment
+      description: Create assessment configuration (FR-ASMT-001..002).
+      operationId: createAssessment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+      responses:
+        '201':
+          description: Assessment created in DRAFT status.
+    get:
+      summary: List Assessments
+      operationId: listAssessments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: roleCategory
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of assessments.
+
+  /admin/assessments/{id}:
+    get:
+      summary: Get Assessment Details
+      operationId: getAssessmentById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assessment configuration and question mappings.
+    put:
+      summary: Update Assessment Configuration
+      description: Editable before candidate commencement (FR-ASMT-003).
+      operationId: updateAssessment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+      responses:
+        '200':
+          description: Assessment updated.
+
+  /admin/assessments/{id}/questions:
+    post:
+      summary: Map Questions to Assessment
+      description: Assign ordered questions with time limits; validates question limit <= overall duration (FR-ASMT-002, FR-ASMT-004).
+      operationId: mapAssessmentQuestions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MapAssessmentQuestionsRequest'
+      responses:
+        '200':
+          description: Questions mapped successfully.
+
+  /admin/assessments/{id}/publish:
+    post:
+      summary: Publish Assessment
+      description: Validates requirements, freezes immutable snapshot of config & questions, and transitions status (FR-ASMT-003, UC-05).
+      operationId: publishAssessment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assessment published and version snapshot frozen.
+
+  /admin/assessments/{id}/status:
+    patch:
+      summary: Transition Assessment Status
+      description: Update status machine (Draft, Scheduled, Active, Completed, Suspended, Archived) (FR-ASMT-005).
+      operationId: updateAssessmentStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentStatusRequest'
+      responses:
+        '200':
+          description: Status updated.
+
+  /candidate/assessments:
+    get:
+      summary: Get Candidate Assigned Assessments
+      description: Returns candidate's assigned assessments with eligibility, status, start/end windows, and attempt counts. Zero answer keys or hidden test cases returned (FR-UI-001, TC09).
+      operationId: getCandidateAssessments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of assigned assessments for logged-in candidate.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CandidateAssignedAssessment'
+
+  /candidate/assessments/{id}/start:
+    post:
+      summary: Start Assessment Session
+      description: Candidate starts assigned assessment after reading and acknowledging instructions (UC-08, FR-UI-002, BR-007, TC-15, TC-16). Validates eligibility, attempt count, approved client version, and device registration.
+      operationId: startAssessmentSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - clientVersion
+                - acknowledgedInstructions
+              properties:
+                clientVersion:
+                  type: string
+                  example: '1.0.0'
+                deviceId:
+                  type: string
+                  example: 'DEV-LAB-01'
+                acknowledgedInstructions:
+                  type: boolean
+                  example: true
+      responses:
+        '201':
+          description: Session started; first question attempt activated with authoritative deadline.
+        '403':
+          description: Not eligible (outside window, attempts used, or assignment revoked).
+        '409':
+          description: An active session already exists for this assignment (BR-007, TC-15).
+        '426':
+          description: Unsupported client version (FR-LAB-003, TC-16).
+
+  /candidate/sessions/{id}/current-question:
+    get:
+      summary: Get Active Question & Deadline
+      description: Returns candidate's currently active question in sequential mode with server-authoritative deadline. Zero answer keys or hidden test cases returned (FR-UI-003, TC-09).
+      operationId: getCurrentQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Active question details and authoritative deadline.
+        '403':
+          description: Access denied to other candidate's session (TC-08).
+        '409':
+          description: Session is not in ACTIVE state.
+
+  /candidate/sessions/{id}/status:
+    get:
+      summary: Authoritative Session Status & Remaining Time
+      description: Returns authoritative server clock, overall remaining seconds, current question remaining seconds, and palette status (FR-TIME-008, FR-UI-004). Disconnected sessions automatically transition back to ACTIVE without pausing deadlines (BR-010, TC-07).
+      operationId: getSessionStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authoritative session state and timing.
+
+  /candidate/sessions/{id}/heartbeat:
+    post:
+      summary: Candidate Session Heartbeat
+      description: Periodic keepalive updating device presence and detecting interruptions. Deadlines never pause during interruptions (BR-010, UC-12).
+      operationId: sendSessionHeartbeat
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                clientVersion:
+                  type: string
+      responses:
+        '200':
+          description: Heartbeat acknowledged.
+
+  /candidate/sessions/{id}/answers:
     post:
       summary: Submit Question Answer
-      description: >
-        Submits candidate answer for the currently active question.
-        Requires an Idempotency-Key header (FR-ANS-009). Late submissions return 409 QUESTION_EXPIRED.
+      description: Submit answer for candidate's currently active question attempt with client-generated Idempotency-Key. Late submissions rejected with 409 QUESTION_EXPIRED (FR-ANS-001..009, FR-TIME-001..011, TC-01..05).
       operationId: submitAnswer
+      security:
+        - BearerAuth: []
       parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
         - name: Idempotency-Key
           in: header
           required: true
           schema:
             type: string
             format: uuid
-          description: Unique client-generated UUID for deduplication.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SubmitAnswerPayload'
+              type: object
+              required:
+                - questionAttemptId
+                - answer
+              properties:
+                questionAttemptId:
+                  type: string
+                answer:
+                  type: object
       responses:
         '200':
-          description: Submission accepted or original outcome returned for duplicate key.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubmitAnswerResponse'
-        '401':
-          description: Unauthenticated session.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+          description: Answer already processed (duplicate request with original ack) or accepted.
+        '201':
+          description: Answer accepted, persisted durably, and next question activated.
         '409':
-          description: Question timed out or invalid session state.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+          description: Question expired (QUESTION_EXPIRED) or invalid state (INVALID_STATE).
+
+  /candidate/sessions/{id}/draft:
+    put:
+      summary: Autosave Draft Response
+      description: Autosaves candidate response draft without extending deadlines or submitting (FR-ANS-005).
+      operationId: saveSessionDraft
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - draftPayload
+              properties:
+                questionAttemptId:
+                  type: string
+                draftPayload:
+                  type: object
+      responses:
+        '200':
+          description: Draft persisted.
+
+  /candidate/sessions/{id}/final-submit:
+    post:
+      summary: Final Assessment Submission
+      description: Explicit final test submission. Finalizes active attempt, marks session SUBMITTED, and locks out further edits (FR-ANS-008, UC-13, Decision 4).
+      operationId: finalSubmitSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assessment finalized and submitted.
+
+  /admin/sessions/{id}/override:
+    post:
+      summary: Admin Session Override
+      description: SuperAdmin session override (EXTEND, REOPEN, PAUSE, RESUME, CANCEL) requiring a mandatory reason, fully audited (BR-012, UC-12, FR-TIME-011).
+      operationId: overrideSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - reason
+              properties:
+                action:
+                  type: string
+                  enum: [EXTEND, REOPEN, PAUSE, RESUME, CANCEL]
+                reason:
+                  type: string
+                extensionMinutes:
+                  type: integer
+      responses:
+        '200':
+          description: Override executed and audited.
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatusResponse:
       type: object
@@ -127,24 +843,22 @@ components:
       properties:
         identifier:
           type: string
-          description: Candidate ID, username, or admin email address.
+          description: Candidate ID (e.g. CAN-2026-001) or Username (Decision 3).
           example: 'CAN-2026-001'
         password:
           type: string
           format: password
           example: 'Secret123!'
-        mfaCode:
-          type: string
-          description: 6-digit TOTP code for MFA-enabled accounts.
-          example: '123456'
 
     LoginResponse:
       type: object
       required:
-        - accessToken
-        - refreshToken
-        - user
+        - mfaRequired
       properties:
+        mfaRequired:
+          type: boolean
+        mfaToken:
+          type: string
         accessToken:
           type: string
         refreshToken:
@@ -159,46 +873,88 @@ components:
             role:
               type: string
               enum: [SUPER_ADMIN, CANDIDATE, TECHNICAL_EVALUATOR]
+            candidateProfile:
+              type: object
 
-    SubmitAnswerPayload:
+    VerifyMfaRequest:
       type: object
       required:
-        - questionAttemptId
-        - response
+        - mfaToken
+        - code
       properties:
-        questionAttemptId:
+        mfaToken:
           type: string
-          example: 'qa_0142'
-        response:
-          description: Selected option ID(s), text answer, or code.
+        code:
+          type: string
+          example: '123456'
 
-    SubmitAnswerResponse:
+    RefreshTokenRequest:
       type: object
       required:
-        - status
-        - questionAttemptId
-        - submittedAt
-        - serverTime
+        - refreshToken
       properties:
-        status:
+        refreshToken:
           type: string
-          enum: [accepted]
-        questionAttemptId:
+
+    TokenPairResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+      properties:
+        accessToken:
           type: string
-        submittedAt:
+        refreshToken:
+          type: string
+
+    AdminPasswordResetRequest:
+      type: object
+      required:
+        - newPassword
+      properties:
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+
+    DeactivateAccountRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          example: 'Suspicious exam behavior / violation of policy'
+
+    AuditLogEntry:
+      type: object
+      required:
+        - id
+        - eventType
+        - affectedEntity
+        - eventTimestamp
+        - outcome
+        - correlationId
+      properties:
+        id:
+          type: string
+        actorUserId:
+          type: string
+          nullable: true
+        eventType:
+          type: string
+        affectedEntity:
+          type: string
+        eventTimestamp:
           type: string
           format: date-time
-        next:
+        outcome:
+          type: string
+          enum: [SUCCESS, DENIED, FAILURE]
+        correlationId:
+          type: string
+        metadata:
           type: object
-          properties:
-            questionAttemptId:
-              type: string
-            deadlineAt:
-              type: string
-              format: date-time
-        serverTime:
-          type: string
-          format: date-time
 
     ApiErrorCode:
       type: string
@@ -230,9 +986,384 @@ components:
           $ref: '#/components/schemas/ApiErrorCode'
         message:
           type: string
-          example: 'This question has timed out.'
+          example: 'Invalid username/candidate ID or password'
         correlationId:
           type: string
           example: 'c-7d21f8'
         details:
           type: object
+
+    CreateCandidateRequest:
+      type: object
+      required:
+        - candidateIdentifier
+        - fullName
+        - username
+        - email
+        - institution
+        - qualification
+        - graduationYear
+        - recruitmentReference
+      properties:
+        candidateIdentifier:
+          type: string
+          example: 'CAN-2026-001'
+        fullName:
+          type: string
+          example: 'Rohan Mehta'
+        username:
+          type: string
+          example: 'rohan.mehta'
+        email:
+          type: string
+          format: email
+          example: 'rohan@example.com'
+        phone:
+          type: string
+          nullable: true
+          example: '+91 9876543210'
+        institution:
+          type: string
+          example: 'National Institute of Technology'
+        qualification:
+          type: string
+          example: 'B.Tech Computer Science'
+        graduationYear:
+          type: integer
+          example: 2026
+        recruitmentReference:
+          type: string
+          example: 'DRIVE-2026-AUTUMN'
+        password:
+          type: string
+          nullable: true
+          description: Optional initial password; if omitted, a secure temporary password is generated.
+
+    CreateCandidateResponse:
+      type: object
+      required:
+        - candidate
+      properties:
+        candidate:
+          type: object
+        temporaryPassword:
+          type: string
+          description: Provisioned once; never logged or exported in general APIs (FR-AUTH-009).
+
+    BulkImportCandidatesRequest:
+      type: object
+      required:
+        - csvData
+      properties:
+        csvData:
+          type: string
+          description: Raw CSV string adhering to candidate import template.
+
+    CandidateCsvImportResult:
+      type: object
+      required:
+        - totalRows
+        - importedCount
+        - errorCount
+        - errors
+      properties:
+        totalRows:
+          type: integer
+        importedCount:
+          type: integer
+        errorCount:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              candidateId:
+                type: string
+              field:
+                type: string
+              error:
+                type: string
+        importedCandidates:
+          type: array
+          items:
+            type: object
+
+    UpdateCandidateRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        institution:
+          type: string
+        qualification:
+          type: string
+        graduationYear:
+          type: integer
+        recruitmentReference:
+          type: string
+        accountStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, LOCKED]
+
+    AssignAssessmentRequest:
+      type: object
+      required:
+        - assessmentId
+      properties:
+        assessmentId:
+          type: string
+        candidateIds:
+          type: array
+          items:
+            type: string
+          description: List of candidate profile IDs or identifiers.
+        groupFilter:
+          type: object
+          properties:
+            recruitmentReference:
+              type: string
+            institution:
+              type: string
+            graduationYear:
+              type: integer
+          description: Filter criteria to assign to an entire candidate cohort.
+
+    UnassignAssessmentRequest:
+      type: object
+      required:
+        - assessmentId
+        - candidateId
+      properties:
+        assessmentId:
+          type: string
+        candidateId:
+          type: string
+
+    CreateQuestionRequest:
+      type: object
+      required:
+        - questionType
+        - questionText
+        - topic
+        - difficulty
+        - maximumMarks
+      properties:
+        questionType:
+          type: string
+          enum:
+            [MCQ_SINGLE, MCQ_MULTIPLE, TRUE_FALSE, SHORT_ANSWER, DESCRIPTIVE, SCENARIO, CODING, SQL]
+        questionText:
+          type: string
+        codeSnippet:
+          type: string
+          nullable: true
+        topic:
+          type: string
+        difficulty:
+          type: string
+          example: 'Medium'
+        maximumMarks:
+          type: number
+          example: 5
+        negativeMarks:
+          type: number
+          default: 0
+        explanation:
+          type: string
+          nullable: true
+        options:
+          type: array
+          items:
+            type: object
+            required:
+              - optionText
+              - displayOrder
+            properties:
+              optionText:
+                type: string
+              displayOrder:
+                type: integer
+              isCorrect:
+                type: boolean
+                default: false
+        testCases:
+          type: array
+          items:
+            type: object
+            required:
+              - inputData
+              - visibility
+            properties:
+              inputData:
+                type: string
+              expectedOutput:
+                type: string
+              visibility:
+                type: string
+                enum: [SAMPLE, HIDDEN]
+              marks:
+                type: number
+
+    CreateAssessmentRequest:
+      type: object
+      required:
+        - title
+        - roleCategory
+        - overallDuration
+        - startAt
+        - endAt
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        roleCategory:
+          type: string
+        overallDuration:
+          type: integer
+          description: Duration in minutes
+        totalMarks:
+          type: number
+          nullable: true
+        passingMarks:
+          type: number
+          nullable: true
+        negativeMarking:
+          type: boolean
+          default: false
+        negativeMarkValue:
+          type: number
+          default: 0
+        randomizeQuestions:
+          type: boolean
+          default: false
+        randomizeOptions:
+          type: boolean
+          default: false
+        navigationMode:
+          type: string
+          enum: [SEQUENTIAL, FREE]
+          default: SEQUENTIAL
+        resultVisibility:
+          type: string
+          enum: [IMMEDIATE, SCHEDULED, ADMIN_RELEASE]
+          default: ADMIN_RELEASE
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        attemptLimit:
+          type: integer
+          default: 1
+
+    MapAssessmentQuestionsRequest:
+      type: object
+      required:
+        - questions
+      properties:
+        questions:
+          type: array
+          items:
+            type: object
+            required:
+              - questionId
+              - sequenceNumber
+            properties:
+              questionId:
+                type: string
+              sequenceNumber:
+                type: integer
+              timeLimitSeconds:
+                type: integer
+                nullable: true
+              marksOverride:
+                type: number
+                nullable: true
+
+    UpdateAssessmentStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [DRAFT, SCHEDULED, ACTIVE, COMPLETED, SUSPENDED, ARCHIVED]
+        reason:
+          type: string
+          nullable: true
+
+    CandidateAssignedAssessment:
+      type: object
+      required:
+        - assignmentId
+        - assessmentId
+        - title
+        - roleCategory
+        - overallDuration
+        - startAt
+        - endAt
+        - status
+        - attemptLimit
+        - attemptsUsed
+        - attemptsRemaining
+        - isEligible
+        - navigationMode
+        - serverTime
+      properties:
+        assignmentId:
+          type: string
+        assessmentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        roleCategory:
+          type: string
+        overallDuration:
+          type: integer
+        totalMarks:
+          type: number
+          nullable: true
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+        attemptLimit:
+          type: integer
+        attemptsUsed:
+          type: integer
+        attemptsRemaining:
+          type: integer
+        isEligible:
+          type: boolean
+        eligibilityReason:
+          type: string
+          nullable: true
+        navigationMode:
+          type: string
+          enum: [SEQUENTIAL, FREE]
+        serverTime:
+          type: string
+          format: date-time

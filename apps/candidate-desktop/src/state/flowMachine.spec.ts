@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  flowReducer,
-  initialFlowState,
-  FlowState,
-} from './flowMachine';
+import { flowReducer, initialFlowState, FlowState } from './flowMachine';
 import { MockAssessmentSession, MockUser } from '../services/mockApi';
 import { UserRole } from '@verisync/shared';
 

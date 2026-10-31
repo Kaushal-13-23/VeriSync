@@ -35,7 +35,7 @@ function getOrCreateDeviceId(): string {
     fs.writeFileSync(
       deviceIdFile,
       JSON.stringify({ deviceId: newDeviceId, createdAt: new Date().toISOString() }),
-      'utf-8'
+      'utf-8',
     );
     return newDeviceId;
   } catch {

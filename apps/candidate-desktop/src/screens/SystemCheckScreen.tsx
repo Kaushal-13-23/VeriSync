@@ -175,7 +175,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
             status: 'passed',
             value: 'Detected',
             icon: Mic,
-          }
+          },
         );
       }
 
@@ -275,10 +275,10 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
                         item.status === 'passed'
                           ? '#34d399'
                           : item.status === 'warning'
-                          ? '#fbbf24'
-                          : item.status === 'failed'
-                          ? '#f87171'
-                          : '#9ca3af',
+                            ? '#fbbf24'
+                            : item.status === 'failed'
+                              ? '#f87171'
+                              : '#9ca3af',
                     }}
                   >
                     {item.value}
@@ -320,7 +320,9 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
         >
           <Info size={20} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
           <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>
-            <strong style={{ color: '#93c5fd' }}>Notice:</strong> Do not close the application during the test. Any suspicious activity, keyboard shortcuts, or application switching will be recorded in the security audit trail.
+            <strong style={{ color: '#93c5fd' }}>Notice:</strong> Do not close the application
+            during the test. Any suspicious activity, keyboard shortcuts, or application switching
+            will be recorded in the security audit trail.
           </div>
         </div>
 

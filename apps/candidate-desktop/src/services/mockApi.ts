@@ -107,7 +107,8 @@ const sampleQuestions: MockQuestion[] = [
     sampleInput: 'Employee(id INT, salary INT)',
     sampleOutput: 'SecondHighestSalary: 200',
     type: 'sql',
-    codeSnippet: 'SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);',
+    codeSnippet:
+      'SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);',
     durationMinutes: 8,
   },
 ];
@@ -132,7 +133,7 @@ export const mockApi = {
    */
   async login(
     identifier: string,
-    password?: string
+    password?: string,
   ): Promise<{ accessToken: string; refreshToken: string; user: MockUser }> {
     if (!identifier || identifier.trim() === '') {
       const err: ApiErrorResponse = {
@@ -155,7 +156,9 @@ export const mockApi = {
     }
 
     // In mock mode, any non-empty password is accepted for testing candidate credentials
-    const candidateId = identifier.startsWith('CAN-') ? identifier : `CAN-2026-${identifier.toUpperCase().slice(0, 3)}`;
+    const candidateId = identifier.startsWith('CAN-')
+      ? identifier
+      : `CAN-2026-${identifier.toUpperCase().slice(0, 3)}`;
     const user: MockUser = {
       id: `usr-${candidateId.toLowerCase()}`,
       username: identifier,
@@ -207,7 +210,7 @@ export const mockApi = {
    */
   async submitAnswer(
     payload: SubmitAnswerPayload,
-    idempotencyKey?: string
+    idempotencyKey?: string,
   ): Promise<SubmitAnswerResponse> {
     // Non-Negotiable Rule 3 & openapi.yaml: Idempotency-Key is required UUID header
     if (!idempotencyKey || idempotencyKey.trim() === '') {
@@ -238,7 +241,8 @@ export const mockApi = {
     const nowIso = new Date().toISOString();
     const session = activeMockSession;
     const nextQuestion = session?.questions.find(
-      (q) => q.attemptId !== payload.questionAttemptId && !session?.answeredAttemptIds.has(q.attemptId)
+      (q) =>
+        q.attemptId !== payload.questionAttemptId && !session?.answeredAttemptIds.has(q.attemptId),
     );
 
     if (session) {
@@ -252,7 +256,9 @@ export const mockApi = {
       next: nextQuestion
         ? {
             questionAttemptId: nextQuestion.attemptId,
-            deadlineAt: new Date(Date.now() + nextQuestion.durationMinutes * 60 * 1000).toISOString(),
+            deadlineAt: new Date(
+              Date.now() + nextQuestion.durationMinutes * 60 * 1000,
+            ).toISOString(),
           }
         : undefined,
       serverTime: nowIso,
@@ -266,7 +272,10 @@ export const mockApi = {
   /**
    * Mark attempt as final submitted (FR-UI-007, FR-ANS-008)
    */
-  async finalSubmit(_sessionId: string, idempotencyKey?: string): Promise<{ status: 'accepted'; submittedAt: string }> {
+  async finalSubmit(
+    _sessionId: string,
+    idempotencyKey?: string,
+  ): Promise<{ status: 'accepted'; submittedAt: string }> {
     if (!idempotencyKey) {
       const err: ApiErrorResponse = {
         status: 'rejected',

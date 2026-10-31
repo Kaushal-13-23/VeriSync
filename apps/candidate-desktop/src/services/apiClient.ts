@@ -26,7 +26,9 @@ export interface ApiClientConfig {
 
 class ApiClient {
   private config: ApiClientConfig = {
-    baseUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://localhost:4000/api/v1',
+    baseUrl:
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+      'http://localhost:4000/api/v1',
     forceMock: false,
   };
   private cachedDeviceId: string | null = null;
@@ -139,7 +141,7 @@ class ApiClient {
    */
   public async login(
     identifier: string,
-    password: string
+    password: string,
   ): Promise<{ accessToken: string; refreshToken: string; user: MockUser }> {
     const startMs = Date.now();
     if (!this.config.forceMock && this.isServerReachable) {
@@ -189,7 +191,7 @@ class ApiClient {
    */
   public async submitAnswer(
     payload: SubmitAnswerPayload,
-    idempotencyKey?: string
+    idempotencyKey?: string,
   ): Promise<SubmitAnswerResponse> {
     const key = idempotencyKey || crypto.randomUUID();
     const startMs = Date.now();
@@ -227,7 +229,9 @@ class ApiClient {
   /**
    * Final Assessment Submission (FR-UI-007, FR-ANS-008)
    */
-  public async finalSubmit(sessionId: string): Promise<{ status: 'accepted'; submittedAt: string }> {
+  public async finalSubmit(
+    sessionId: string,
+  ): Promise<{ status: 'accepted'; submittedAt: string }> {
     const key = crypto.randomUUID();
     return mockApi.finalSubmit(sessionId, key);
   }

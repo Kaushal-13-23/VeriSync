@@ -73,7 +73,8 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
             Assessment Instructions
           </h2>
           <p style={{ margin: 0, fontSize: 14, color: '#9ca3af' }}>
-            Candidate: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{user.candidateId}</span> &bull; {user.username}
+            Candidate: <span style={{ color: '#60a5fa', fontWeight: 600 }}>{user.candidateId}</span>{' '}
+            &bull; {user.username}
           </p>
         </div>
 
@@ -99,7 +100,14 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
           >
             <FileText size={22} color="#60a5fa" />
             <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#9ca3af',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                }}
+              >
                 Total Questions
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>20</div>
@@ -119,7 +127,14 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
           >
             <Clock size={22} color="#34d399" />
             <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#9ca3af',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                }}
+              >
                 Total Duration
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>90 Minutes</div>
@@ -139,10 +154,19 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
           >
             <Layers size={22} color="#fbbf24" />
             <div>
-              <div style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#9ca3af',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                }}
+              >
                 Question Types
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>MCQ, Coding, SQL</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
+                MCQ, Coding, SQL
+              </div>
             </div>
           </div>
         </div>
@@ -163,35 +187,40 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <AlertOctagon size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Lockdown mode:</strong> Do not attempt to switch applications, minimize the window, or launch prohibited tools.
+              <strong>Lockdown mode:</strong> Do not attempt to switch applications, minimize the
+              window, or launch prohibited tools.
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <Eye size={18} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Audit Logging:</strong> Window focus loss and abnormal process events are logged with timestamps (FR-LAB-006).
+              <strong>Audit Logging:</strong> Window focus loss and abnormal process events are
+              logged with timestamps (FR-LAB-006).
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <Smartphone size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              Do not use mobile phones, headphones, or external electronic devices during the session.
+              Do not use mobile phones, headphones, or external electronic devices during the
+              session.
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <Lock size={18} color="#fbbf24" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#e5e7eb' }}>
-              <strong>Sequential Progression:</strong> Questions must be answered in sequence. Once submitted or timed out, past questions cannot be revisited (FR-UI-004, Decision 1).
+              <strong>Sequential Progression:</strong> Questions must be answered in sequence. Once
+              submitted or timed out, past questions cannot be revisited (FR-UI-004, Decision 1).
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <ShieldAlert size={18} color="#f87171" style={{ flexShrink: 0, marginTop: 2 }} />
             <span style={{ fontSize: 13, color: '#f87171' }}>
-              Any suspicious activity, tampering, or policy violations will result in immediate disqualification.
+              Any suspicious activity, tampering, or policy violations will result in immediate
+              disqualification.
             </span>
           </div>
         </div>
@@ -224,7 +253,9 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({ user, on
                 accentColor: '#2563eb',
               }}
             />
-            <span style={{ fontSize: 14, fontWeight: 600, color: acknowledged ? '#f8fafc' : '#cbd5e1' }}>
+            <span
+              style={{ fontSize: 14, fontWeight: 600, color: acknowledged ? '#f8fafc' : '#cbd5e1' }}
+            >
               I have read and understood the instructions.
             </span>
           </label>

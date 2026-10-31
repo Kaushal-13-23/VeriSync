@@ -21,7 +21,11 @@ class TimeSyncService {
    * Synchronizes server time and computes offset
    * offset = serverTime - (clientSend + clientReceive) / 2
    */
-  public recordServerTime(serverIsoUtc: string, roundTripStartMs: number, roundTripEndMs: number): void {
+  public recordServerTime(
+    serverIsoUtc: string,
+    roundTripStartMs: number,
+    roundTripEndMs: number,
+  ): void {
     const serverMs = new Date(serverIsoUtc).getTime();
     const networkLatencyMs = Math.max(0, (roundTripEndMs - roundTripStartMs) / 2);
     const estimatedClientArrivalMs = roundTripStartMs + networkLatencyMs;

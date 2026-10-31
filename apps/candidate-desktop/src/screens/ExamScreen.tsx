@@ -51,9 +51,13 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
   const handleRunCode = () => {
     // Local dry-run of sample test cases (FR-CODE-003)
     if (currentQuestion.type === 'coding') {
-      setCodeOutput('Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.');
+      setCodeOutput(
+        'Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.',
+      );
     } else if (currentQuestion.type === 'sql') {
-      setCodeOutput('Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).');
+      setCodeOutput(
+        'Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).',
+      );
     }
   };
 
@@ -64,7 +68,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
     const answerPayload = {
       questionAttemptId: qAttemptId,
-      response: currentAnswer ?? (currentQuestion.type === 'coding' ? currentQuestion.codeSnippet : 'no_response'),
+      response:
+        currentAnswer ??
+        (currentQuestion.type === 'coding' ? currentQuestion.codeSnippet : 'no_response'),
     };
 
     try {
@@ -139,21 +145,34 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           }}
         >
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 16 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#94a3b8',
+                textTransform: 'uppercase',
+                marginBottom: 16,
+              }}
+            >
               Question Palette (Sequential)
             </div>
 
             {/* MCQ Section */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>MCQ</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>
+                MCQ
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
-                  const isCurrent = currentQuestion.section === 'MCQ' && currentQuestion.index === num;
+                  const isCurrent =
+                    currentQuestion.section === 'MCQ' && currentQuestion.index === num;
                   const isAnswered = answeredIds.has(`qa_${num.toString().padStart(4, '0')}`);
                   return (
                     <div
                       key={`mcq-${num}`}
-                      title={isCurrent ? 'Current active question' : 'Read-only sequential indicator'}
+                      title={
+                        isCurrent ? 'Current active question' : 'Read-only sequential indicator'
+                      }
                       style={{
                         height: 36,
                         display: 'flex',
@@ -177,15 +196,20 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
             {/* Coding Section */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>Coding</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>
+                Coding
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                 {[11, 12, 13, 14, 15].map((num) => {
-                  const isCurrent = currentQuestion.section === 'Coding' && currentQuestion.index === num;
+                  const isCurrent =
+                    currentQuestion.section === 'Coding' && currentQuestion.index === num;
                   const isAnswered = answeredIds.has(`qa_${num.toString().padStart(4, '0')}`);
                   return (
                     <div
                       key={`coding-${num}`}
-                      title={isCurrent ? 'Current active question' : 'Read-only sequential indicator'}
+                      title={
+                        isCurrent ? 'Current active question' : 'Read-only sequential indicator'
+                      }
                       style={{
                         height: 36,
                         display: 'flex',
@@ -209,15 +233,20 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
             {/* SQL Section */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>SQL</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#cbd5e1', marginBottom: 10 }}>
+                SQL
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                 {[16, 17, 18, 19, 20].map((num) => {
-                  const isCurrent = currentQuestion.section === 'SQL' && currentQuestion.index === num;
+                  const isCurrent =
+                    currentQuestion.section === 'SQL' && currentQuestion.index === num;
                   const isAnswered = answeredIds.has(`qa_${num.toString().padStart(4, '0')}`);
                   return (
                     <div
                       key={`sql-${num}`}
-                      title={isCurrent ? 'Current active question' : 'Read-only sequential indicator'}
+                      title={
+                        isCurrent ? 'Current active question' : 'Read-only sequential indicator'
+                      }
                       style={{
                         height: 36,
                         display: 'flex',
@@ -253,19 +282,33 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#059669' }} />
+              <span
+                style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#059669' }}
+              />
               <span>Answered</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#2563eb' }} />
+              <span
+                style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#2563eb' }}
+              />
               <span>Current Question</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#1e293b', border: '1px solid #334155' }} />
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                }}
+              />
               <span>Not Answered</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#a855f7' }} />
+              <span
+                style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#a855f7' }}
+              />
               <span>Mark for Review (Local)</span>
             </div>
           </div>
@@ -318,7 +361,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                 {currentQuestion.title}
               </h2>
               <span style={{ fontSize: 12, color: '#64748b' }}>
-                Section: {currentQuestion.section} &bull; Time Limit: {currentQuestion.durationMinutes} mins
+                Section: {currentQuestion.section} &bull; Time Limit:{' '}
+                {currentQuestion.durationMinutes} mins
               </span>
             </div>
 
@@ -380,7 +424,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                 }}
               >
                 <div style={{ fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>Input:</div>
-                <code style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{currentQuestion.sampleInput}</code>
+                <code style={{ color: '#38bdf8', fontFamily: 'monospace' }}>
+                  {currentQuestion.sampleInput}
+                </code>
               </div>
               <div
                 style={{
@@ -391,7 +437,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                 }}
               >
                 <div style={{ fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>Output:</div>
-                <code style={{ color: '#34d399', fontFamily: 'monospace' }}>{currentQuestion.sampleOutput}</code>
+                <code style={{ color: '#34d399', fontFamily: 'monospace' }}>
+                  {currentQuestion.sampleOutput}
+                </code>
               </div>
             </div>
           )}
@@ -463,7 +511,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                     color: '#94a3b8',
                   }}
                 >
-                  <span style={{ fontWeight: 600 }}>Language: {currentQuestion.language || 'Python 3.11'}</span>
+                  <span style={{ fontWeight: 600 }}>
+                    Language: {currentQuestion.language || 'Python 3.11'}
+                  </span>
                   <span>Editor &bull; Monaco Mock</span>
                 </div>
                 <textarea
@@ -598,7 +648,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               Confirm Final Assessment Submission
             </h3>
             <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-              Are you sure you want to end your assessment? Once submitted, unanswered questions will be auto-finalized and no further modifications can be made.
+              Are you sure you want to end your assessment? Once submitted, unanswered questions
+              will be auto-finalized and no further modifications can be made.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button

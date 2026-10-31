@@ -46,4 +46,3 @@ export interface CandidateAssignedAssessment {
   resultVisibility?: ResultVisibility;
   serverTime: string;
 }
-

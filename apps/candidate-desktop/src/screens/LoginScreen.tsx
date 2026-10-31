@@ -91,7 +91,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <ShieldCheck size={28} color="#ffffff" />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: 24,
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  color: '#ffffff',
+                }}
+              >
                 VeriSync
               </h1>
               <p style={{ margin: 0, fontSize: 13, color: '#93c5fd', fontWeight: 500 }}>
@@ -103,12 +111,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
         {/* Central Hero Copy */}
         <div style={{ maxWidth: 440, margin: '40px 0' }}>
-          <h2 style={{ fontSize: 36, fontWeight: 800, margin: '0 0 16px 0', lineHeight: 1.15, color: '#ffffff' }}>
+          <h2
+            style={{
+              fontSize: 36,
+              fontWeight: 800,
+              margin: '0 0 16px 0',
+              lineHeight: 1.15,
+              color: '#ffffff',
+            }}
+          >
             Welcome to <br />
             <span style={{ color: '#60a5fa' }}>VeriSync</span>
           </h2>
           <p style={{ fontSize: 16, color: '#cbd5e1', lineHeight: 1.6, margin: 0 }}>
-            Please login with your credentials to start the assessment. Ensure your lab workstation is authorized and no background applications are active.
+            Please login with your credentials to start the assessment. Ensure your lab workstation
+            is authorized and no background applications are active.
           </p>
 
           <div
@@ -138,7 +155,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         {/* Footer info */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 12, color: '#64748b' }}>Institutional Testing Terminal</span>
-          <span style={{ fontSize: 12, color: '#64748b', fontFamily: 'monospace' }}>VeriSync v1.1.0</span>
+          <span style={{ fontSize: 12, color: '#64748b', fontFamily: 'monospace' }}>
+            VeriSync v1.1.0
+          </span>
         </div>
       </div>
 
@@ -185,7 +204,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+          >
             {/* Candidate ID or Username Input */}
             <div>
               <label

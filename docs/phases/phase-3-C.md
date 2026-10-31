@@ -3,7 +3,7 @@
 **Developer**: Developer C (Vimal Raj)  
 **Role**: Candidate Desktop and Lockdown  
 **Branch**: `phase-3/C-sessions-timing-exam`  
-**Date**: 2026-10-29  
+**Date**: 2026-10-29
 
 ---
 
@@ -62,12 +62,14 @@ Implemented the complete candidate examination experience in `apps/candidate-des
 ## 2. Endpoints, Screens, and Modules Added or Updated
 
 ### Screens & Components (`apps/candidate-desktop/src/`):
+
 - `screens/ExamScreen.tsx`: Complete exam interface integrating timer, question area, read-only status panel, idempotent submit, timeout handling, reconnection sync, and final submit confirmation.
 - `screens/SubmittedScreen.tsx`: Updated submission confirmation screen displaying candidate ID, assessment title, total questions, answered count, UTC submitted timestamp, and Close Application action.
 - `state/flowMachine.ts`: Updated flow reducer to capture `FinalSubmitResponseDto` and transition between `EXAM` and `SUBMITTED`.
 - `App.tsx`: Wired exam completion flow and metadata propagation to `SubmittedScreen`.
 
 ### Services & API Client (`apps/candidate-desktop/src/services/`):
+
 - `services/apiClient.ts`:
   - `startSession(assessmentId)`: Calls `POST /candidate/assessments/:id/start` with client version and device ID.
   - `getCurrentQuestion(sessionId)`: Calls `GET /candidate/sessions/:id/current-question`.
@@ -82,36 +84,36 @@ Implemented the complete candidate examination experience in `apps/candidate-des
 
 ## 3. SRS Requirement Traceability
 
-| Requirement ID | Description | Implementation Details |
-| :--- | :--- | :--- |
-| `FR-TIME-001` | Authoritative backend timing | Client clocks are untrusted; timer uses drift compensation against server deadline |
-| `FR-TIME-003` | Authoritative question deadline | Capped by overall assessment deadline; synchronized via API |
-| `FR-TIME-004` | Rejection of late answers | HTTP 409 `QUESTION_EXPIRED` handled gracefully with timeout notice |
-| `FR-TIME-005` | Automatic question finalization | Auto-advances to next question upon timeout |
-| `FR-TIME-007` | Overall deadline precedence | Overall deadline expiration triggers automatic final submission |
-| `FR-TIME-008` | Authoritative remaining-time sync | `getSessionStatus` synchronizes clock offset, overall time, and active question |
-| `FR-TIME-009` | Sequential question progression | Previous questions cannot be revisited once submitted |
-| `FR-TIME-010` | Continuous deadline progression | Deadlines continue running during candidate disconnection; no timer resets |
-| `FR-ANS-001` | Active question attempt acceptance | Submissions accepted only for current attempt sequence |
-| `FR-ANS-003` | Durable database persistence | Server commits before acknowledgement; client requires ack to confirm |
-| `FR-ANS-005` | Local draft autosave | Drafts saved without altering attempt state machine or extending deadlines |
-| `FR-ANS-006` | Server acknowledgement display | Green success checkmark shown only upon server response receipt |
-| `FR-ANS-007` | Safe connection recovery | Active attempt recovered without duplicating accepted submissions |
-| `FR-ANS-008` | Assessment completion marking | Session locked upon final submission; further modifications prevented |
-| `FR-ANS-009` | Client Idempotency-Key | Mandatory UUID header on every submission; repeats return original ack |
-| `FR-UI-003` | Sequential single question view | One question rendered per screen in sequential examination mode |
-| `FR-UI-004` | Countdown timer with warnings | Synchronized countdown timer with yellow warning (< 5m) and red critical (< 1m) |
-| `FR-UI-005` | Read-only question palette | Palette numbers are unclickable in sequential mode; Previous button hidden |
-| `FR-UI-006` | Double-click protection | In-flight state disables submit button and displays loading spinner |
-| `FR-UI-007` | Visual timeout notice | Alert toast displayed when question expires with auto-transition |
-| `FR-UI-008` | Connection status indicator | Connection banner displays live connectivity status and sync button |
-| `FR-UI-009` | Final submission summary | Submitted screen displays candidate ID, test title, total questions, timestamp |
-| `FR-QB-003` | Question formats support | Renderers for MCQ Single, MCQ Multiple, True/False, Short Answer, Coding, SQL |
-| `Rule 1` | Server authority | Display is visual aid only; server alone decides acceptance |
-| `Rule 2` | Zero answer key leakage | Candidate desktop representations exclude all correct answers and hidden cases |
-| `Rule 3` | Idempotent submissions | Persistent `Idempotency-Key` preserved across retries |
-| `Rule 4` | Durable persistence | Acknowledged submissions committed before ack |
-| `Rule 9` | Standardized UTC timestamps | ISO-8601 UTC timestamps across all API payloads and screens |
+| Requirement ID | Description                        | Implementation Details                                                             |
+| :------------- | :--------------------------------- | :--------------------------------------------------------------------------------- |
+| `FR-TIME-001`  | Authoritative backend timing       | Client clocks are untrusted; timer uses drift compensation against server deadline |
+| `FR-TIME-003`  | Authoritative question deadline    | Capped by overall assessment deadline; synchronized via API                        |
+| `FR-TIME-004`  | Rejection of late answers          | HTTP 409 `QUESTION_EXPIRED` handled gracefully with timeout notice                 |
+| `FR-TIME-005`  | Automatic question finalization    | Auto-advances to next question upon timeout                                        |
+| `FR-TIME-007`  | Overall deadline precedence        | Overall deadline expiration triggers automatic final submission                    |
+| `FR-TIME-008`  | Authoritative remaining-time sync  | `getSessionStatus` synchronizes clock offset, overall time, and active question    |
+| `FR-TIME-009`  | Sequential question progression    | Previous questions cannot be revisited once submitted                              |
+| `FR-TIME-010`  | Continuous deadline progression    | Deadlines continue running during candidate disconnection; no timer resets         |
+| `FR-ANS-001`   | Active question attempt acceptance | Submissions accepted only for current attempt sequence                             |
+| `FR-ANS-003`   | Durable database persistence       | Server commits before acknowledgement; client requires ack to confirm              |
+| `FR-ANS-005`   | Local draft autosave               | Drafts saved without altering attempt state machine or extending deadlines         |
+| `FR-ANS-006`   | Server acknowledgement display     | Green success checkmark shown only upon server response receipt                    |
+| `FR-ANS-007`   | Safe connection recovery           | Active attempt recovered without duplicating accepted submissions                  |
+| `FR-ANS-008`   | Assessment completion marking      | Session locked upon final submission; further modifications prevented              |
+| `FR-ANS-009`   | Client Idempotency-Key             | Mandatory UUID header on every submission; repeats return original ack             |
+| `FR-UI-003`    | Sequential single question view    | One question rendered per screen in sequential examination mode                    |
+| `FR-UI-004`    | Countdown timer with warnings      | Synchronized countdown timer with yellow warning (< 5m) and red critical (< 1m)    |
+| `FR-UI-005`    | Read-only question palette         | Palette numbers are unclickable in sequential mode; Previous button hidden         |
+| `FR-UI-006`    | Double-click protection            | In-flight state disables submit button and displays loading spinner                |
+| `FR-UI-007`    | Visual timeout notice              | Alert toast displayed when question expires with auto-transition                   |
+| `FR-UI-008`    | Connection status indicator        | Connection banner displays live connectivity status and sync button                |
+| `FR-UI-009`    | Final submission summary           | Submitted screen displays candidate ID, test title, total questions, timestamp     |
+| `FR-QB-003`    | Question formats support           | Renderers for MCQ Single, MCQ Multiple, True/False, Short Answer, Coding, SQL      |
+| `Rule 1`       | Server authority                   | Display is visual aid only; server alone decides acceptance                        |
+| `Rule 2`       | Zero answer key leakage            | Candidate desktop representations exclude all correct answers and hidden cases     |
+| `Rule 3`       | Idempotent submissions             | Persistent `Idempotency-Key` preserved across retries                              |
+| `Rule 4`       | Durable persistence                | Acknowledged submissions committed before ack                                      |
+| `Rule 9`       | Standardized UTC timestamps        | ISO-8601 UTC timestamps across all API payloads and screens                        |
 
 ---
 
@@ -120,21 +122,25 @@ Implemented the complete candidate examination experience in `apps/candidate-des
 Added comprehensive test suites in `apps/candidate-desktop/src/tests/e2e-phase3.spec.tsx` and updated `apps/candidate-desktop/src/services/apiClient.spec.ts`:
 
 ### 1. TC-04 (Idempotency & Retries):
+
 - Validated that duplicate answer submission with identical `Idempotency-Key` returns original acceptance without duplicate records.
 - Validated that `SubmitNextButton` enters in-flight state and disables double clicks.
 - Validated that `Idempotency-Key` is preserved in memory and reused when retrying lost responses.
 
 ### 2. TC-05 (Question Expiry & Auto-advance):
+
 - Validated that submitting after question deadline is rejected by API with HTTP 409 `QUESTION_EXPIRED`.
 - Validated that `ExamScreen` catches `QUESTION_EXPIRED`, displays visual timeout alert, and automatically advances to next question.
 
 ### 3. TC-07 (Session Recovery After Disconnection):
+
 - Validated that disconnected session resumes in `ACTIVE` state upon reconnection.
 - Validated that server deadline continues progressing during disconnection (no timer reset or pause).
 - Validated that answered questions remain marked `ANSWERED` in the read-only palette.
 - Validated that candidate can resume and submit active question with a fresh idempotency key.
 
 ### 4. Final Submission Flow:
+
 - Validated End Test confirmation dialog, final submission commit, and transition to `SubmittedScreen`.
 - Validated that `SubmittedScreen` renders candidate ID, assessment title, total questions, answered count, and Close Application action.
 
@@ -206,4 +212,3 @@ pnpm --filter @verisync/candidate-desktop build
 # 3. Launch candidate desktop application in development mode
 pnpm --filter @verisync/candidate-desktop dev
 ```
-

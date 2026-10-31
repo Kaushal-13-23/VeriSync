@@ -21,11 +21,7 @@ import { ShortAnswerRenderer } from '../components/exam/renderers/ShortAnswerRen
 import { TimerComponent } from '../components/exam/TimerComponent';
 import { SubmitNextButton, SubmissionButtonState } from '../components/exam/SubmitNextButton';
 import { handleApiError } from '../services/errorHandler';
-import {
-  CandidateQuestionDto,
-  QuestionType,
-  SessionState,
-} from '@verisync/shared';
+import { CandidateQuestionDto, QuestionType, SessionState } from '@verisync/shared';
 import { CandidateFinalSubmitResponse } from '../types/assessment';
 
 /**
@@ -204,7 +200,10 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           if (chosenIdx >= 0 && chosenIdx < currentQuestion.options.length) {
             e.preventDefault();
             const optionId = currentQuestion.options[chosenIdx].id;
-            if (currentQuestion.type === 'multiple_select' || currentQuestion.type === QuestionType.MCQ_MULTIPLE) {
+            if (
+              currentQuestion.type === 'multiple_select' ||
+              currentQuestion.type === QuestionType.MCQ_MULTIPLE
+            ) {
               const currentArr = Array.isArray(currentAnswer) ? (currentAnswer as string[]) : [];
               const updated = currentArr.includes(optionId)
                 ? currentArr.filter((id) => id !== optionId)
@@ -226,9 +225,13 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
   const handleRunCode = () => {
     if (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING) {
-      setCodeOutput('Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.');
+      setCodeOutput(
+        'Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.',
+      );
     } else if (currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL) {
-      setCodeOutput('Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).');
+      setCodeOutput(
+        'Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).',
+      );
     }
   };
 
@@ -253,8 +256,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       (currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING
         ? currentQuestion.codeSnippet
         : currentQuestion.type === 'sql' || currentQuestion.type === QuestionType.SQL
-        ? currentQuestion.codeSnippet
-        : '');
+          ? currentQuestion.codeSnippet
+          : '');
 
     try {
       // Send answer with Idempotency-Key header to server
@@ -264,7 +267,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
           questionAttemptId: qAttemptId,
           answer: answerValue,
         },
-        idempotencyKey
+        idempotencyKey,
       );
 
       // Display success ONLY upon receipt of server acknowledgement (FR-ANS-006)
@@ -290,7 +293,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
       // Handle QUESTION_EXPIRED (HTTP 409) - automatic advance (FR-TIME-004, TC-05)
       if (formatted.code === 'QUESTION_EXPIRED') {
-        setTimeoutNotice('Question time limit has expired. Automatically advancing to next question...');
+        setTimeoutNotice(
+          'Question time limit has expired. Automatically advancing to next question...',
+        );
         setSubmissionState('idle');
         setTimeout(() => {
           setTimeoutNotice(null);
@@ -440,10 +445,24 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             }}
           >
             <div>
-              <div style={{ fontSize: 13, color: isHighContrast ? '#facc15' : '#93c5fd', fontWeight: 600, textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: isHighContrast ? '#facc15' : '#93c5fd',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                }}
+              >
                 {currentQuestion.section} &bull; Question {currentIdx + 1} of {totalQuestions}
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0 0', color: isHighContrast ? '#ffffff' : '#f8fafc' }}>
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  margin: '4px 0 0 0',
+                  color: isHighContrast ? '#ffffff' : '#f8fafc',
+                }}
+              >
                 {currentQuestion.title}
               </h2>
             </div>
@@ -589,7 +608,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                   gap: 6,
                   padding: '6px 12px',
                   borderRadius: 6,
-                  backgroundColor: markedForReview[qAttemptId] ? 'rgba(245, 158, 11, 0.15)' : '#1e293b',
+                  backgroundColor: markedForReview[qAttemptId]
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : '#1e293b',
                   border: `1px solid ${markedForReview[qAttemptId] ? '#f59e0b' : '#334155'}`,
                   color: markedForReview[qAttemptId] ? '#fbbf24' : '#cbd5e1',
                   fontSize: 12,
@@ -637,27 +658,34 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
           {/* Renderers per Question Type (FR-QB-003) */}
           <div style={{ marginBottom: 32 }}>
-            {(currentQuestion.type === 'single_choice' || currentQuestion.type === QuestionType.MCQ_SINGLE) &&
+            {(currentQuestion.type === 'single_choice' ||
+              currentQuestion.type === QuestionType.MCQ_SINGLE) &&
               currentQuestion.options && (
                 <SingleChoiceRenderer
                   questionId={qAttemptId}
                   options={currentQuestion.options}
                   value={(currentAnswer as string) || null}
-                  onChange={(optId) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))}
+                  onChange={(optId) =>
+                    setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))
+                  }
                 />
               )}
 
-            {(currentQuestion.type === 'multiple_select' || currentQuestion.type === QuestionType.MCQ_MULTIPLE) &&
+            {(currentQuestion.type === 'multiple_select' ||
+              currentQuestion.type === QuestionType.MCQ_MULTIPLE) &&
               currentQuestion.options && (
                 <MultipleSelectRenderer
                   questionId={qAttemptId}
                   options={currentQuestion.options}
                   value={Array.isArray(currentAnswer) ? (currentAnswer as string[]) : []}
-                  onChange={(optIds) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))}
+                  onChange={(optIds) =>
+                    setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))
+                  }
                 />
               )}
 
-            {(currentQuestion.type === 'true_false' || currentQuestion.type === QuestionType.TRUE_FALSE) && (
+            {(currentQuestion.type === 'true_false' ||
+              currentQuestion.type === QuestionType.TRUE_FALSE) && (
               <TrueFalseRenderer
                 questionId={qAttemptId}
                 value={(currentAnswer as string) || null}
@@ -665,7 +693,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
               />
             )}
 
-            {(currentQuestion.type === 'short_answer' || currentQuestion.type === QuestionType.SHORT_ANSWER) && (
+            {(currentQuestion.type === 'short_answer' ||
+              currentQuestion.type === QuestionType.SHORT_ANSWER) && (
               <ShortAnswerRenderer
                 questionId={qAttemptId}
                 value={(currentAnswer as string) || ''}
@@ -692,14 +721,24 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                     justifyContent: 'space-between',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#93c5fd' }}>
-                    {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 13,
+                      color: '#93c5fd',
+                    }}
+                  >
+                    {currentQuestion.type === 'coding' ||
+                    currentQuestion.type === QuestionType.CODING ? (
                       <Code2 size={16} />
                     ) : (
                       <Database size={16} />
                     )}
                     <span>
-                      {currentQuestion.type === 'coding' || currentQuestion.type === QuestionType.CODING
+                      {currentQuestion.type === 'coding' ||
+                      currentQuestion.type === QuestionType.CODING
                         ? 'Python 3.10'
                         : 'SQLite Ephemeral'}
                     </span>
@@ -732,7 +771,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                       ? (currentAnswer as string)
                       : currentQuestion.codeSnippet || ''
                   }
-                  onChange={(e) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: e.target.value }))}
+                  onChange={(e) =>
+                    setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: e.target.value }))
+                  }
                   rows={8}
                   style={{
                     width: '100%',
@@ -871,8 +912,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             </div>
 
             <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-              Are you sure you want to end and submit your assessment? Any unanswered questions will be auto-finalized.
-              Once confirmed, your responses cannot be modified.
+              Are you sure you want to end and submit your assessment? Any unanswered questions will
+              be auto-finalized. Once confirmed, your responses cannot be modified.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>

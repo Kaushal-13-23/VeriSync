@@ -7,11 +7,7 @@
     "output": "release",
     "buildResources": "build"
   },
-  "files": [
-    "dist/**",
-    "dist-electron/**",
-    "package.json"
-  ],
+  "files": ["dist/**", "dist-electron/**", "package.json"],
   "extraMetadata": {
     "version": "1.1.0",
     "main": "dist-electron/main.js"
@@ -42,4 +38,3 @@
     "differentialPackage": false
   }
 }
-

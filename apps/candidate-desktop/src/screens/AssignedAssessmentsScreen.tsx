@@ -113,7 +113,8 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
               VeriSync Candidate Portal
             </h1>
             <span style={{ fontSize: 12, color: '#9ca3af' }}>
-              Candidate ID: <strong style={{ color: '#93c5fd' }}>{user?.candidateId || 'CND12345'}</strong>
+              Candidate ID:{' '}
+              <strong style={{ color: '#93c5fd' }}>{user?.candidateId || 'CND12345'}</strong>
             </span>
           </div>
         </div>
@@ -166,14 +167,17 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
       </header>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, maxWidth: 1000, width: '100%', margin: '0 auto', padding: '36px 20px' }}>
+      <main
+        style={{ flex: 1, maxWidth: 1000, width: '100%', margin: '0 auto', padding: '36px 20px' }}
+      >
         {/* Title & Description */}
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0', color: '#f8fafc' }}>
             Assigned Assessments
           </h2>
           <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
-            Below are the assessments registered to your candidate profile. Select an eligible assessment to view its instructions and begin.
+            Below are the assessments registered to your candidate profile. Select an eligible
+            assessment to view its instructions and begin.
           </p>
         </div>
 
@@ -200,7 +204,9 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
                 {error.message} {error.actionHint && `— ${error.actionHint}`}
               </div>
               {error.correlationId && (
-                <div style={{ fontSize: 11, color: '#f87171', marginTop: 4, fontFamily: 'monospace' }}>
+                <div
+                  style={{ fontSize: 11, color: '#f87171', marginTop: 4, fontFamily: 'monospace' }}
+                >
                   Correlation ID: {error.correlationId}
                 </div>
               )}
@@ -242,7 +248,8 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
               No Assessments Assigned
             </h3>
             <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
-              There are currently no active or scheduled assessments mapped to your candidate account.
+              There are currently no active or scheduled assessments mapped to your candidate
+              account.
             </p>
           </div>
         )}
@@ -268,9 +275,19 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
                   }}
                 >
                   {/* Card Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                    }}
+                  >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}
+                      >
                         <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#f8fafc' }}>
                           {asmt.title}
                         </h3>
@@ -390,7 +407,14 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
                   </div>
 
                   {/* Card Actions */}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 4 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      marginTop: 4,
+                    }}
+                  >
                     <button
                       onClick={() => onSelectAssessment(asmt)}
                       disabled={!eligible}
@@ -424,4 +448,3 @@ export const AssignedAssessmentsScreen: React.FC<AssignedAssessmentsScreenProps>
     </div>
   );
 };
-

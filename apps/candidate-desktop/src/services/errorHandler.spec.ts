@@ -64,7 +64,7 @@ describe('Central Error Handler (SRS 8.3.3, NFR-USE-003, Rule 9)', () => {
   // NFR-REL-005: User-facing messages never expose internals
   it('strips internal stack traces and technical paths from user-facing error message (NFR-REL-005)', () => {
     const internalErr = new Error(
-      'TypeError: Cannot read property "id" of null\n    at SessionsController.submit (C:\\VeriSync\\apps\\api\\src\\sessions.ts:42:12)'
+      'TypeError: Cannot read property "id" of null\n    at SessionsController.submit (C:\\VeriSync\\apps\\api\\src\\sessions.ts:42:12)',
     );
     Object.assign(internalErr, { correlationId: 'c-stack-trace-001' });
 
@@ -91,4 +91,3 @@ describe('Central Error Handler (SRS 8.3.3, NFR-USE-003, Rule 9)', () => {
     expect(result.correlationId).toBe('c-db-refused-002');
   });
 });
-

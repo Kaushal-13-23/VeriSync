@@ -46,7 +46,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
   };
 
   const candidateId = finalResult?.candidateIdentifier || user.candidateId || 'CAN-2026-081';
-  const testTitle = finalResult?.assessmentTitle || session.title || 'Frontend Developer Assessment';
+  const testTitle =
+    finalResult?.assessmentTitle || session.title || 'Frontend Developer Assessment';
   const totalQuestions = finalResult?.totalQuestions ?? session.totalQuestions ?? 6;
   const answeredCount = finalResult?.answeredCount ?? session.answeredAttemptIds?.size ?? 0;
   const submittedTimestamp = finalResult?.submittedAt
@@ -54,7 +55,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
     : new Date().toUTCString();
 
   // FR-ASMT-002: Result Visibility Policy Check
-  const resultVisibility = finalResult?.resultVisibility || session.resultVisibility || 'ADMIN_RELEASE';
+  const resultVisibility =
+    finalResult?.resultVisibility || session.resultVisibility || 'ADMIN_RELEASE';
   const hasImmediateResults = resultVisibility === 'IMMEDIATE' && Boolean(finalResult?.result);
   const result = finalResult?.result;
 
@@ -124,8 +126,24 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 16,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: '#f8fafc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
                 <TrendingUp size={18} color="#60a5fa" />
                 Assessment Results
               </span>
@@ -152,7 +170,9 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
                 <span
                   data-testid="outcome-badge"
                   style={{
-                    backgroundColor: result.passed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    backgroundColor: result.passed
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(239, 68, 68, 0.15)',
                     color: result.passed ? '#34d399' : '#f87171',
                     border: `1px solid ${result.passed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                     fontSize: 12,
@@ -170,9 +190,18 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
               <span style={{ fontSize: 28, fontWeight: 800, color: '#ffffff' }}>
                 {result.totalScore}
-                <span style={{ fontSize: 16, fontWeight: 500, color: '#94a3b8' }}> / {result.maximumScore} pts</span>
+                <span style={{ fontSize: 16, fontWeight: 500, color: '#94a3b8' }}>
+                  {' '}
+                  / {result.maximumScore} pts
+                </span>
               </span>
-              <span style={{ fontSize: 18, fontWeight: 700, color: result.passed ? '#34d399' : '#60a5fa' }}>
+              <span
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: result.passed ? '#34d399' : '#60a5fa',
+                }}
+              >
                 ({result.percentage}%)
               </span>
             </div>
@@ -200,7 +229,15 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
             </div>
 
             {/* Passing Benchmark & Provisional Notice */}
-            <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: '#94a3b8',
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: 8,
+              }}
+            >
               <span>Passing Benchmark: {result.benchmarkScore ?? 60}%</span>
               <span>Outcome: {result.passed ? 'Qualified' : 'Unqualified'}</span>
             </div>
@@ -218,7 +255,9 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
                   lineHeight: 1.4,
                 }}
               >
-                <strong>Provisional Notice (FR-SCORE-008):</strong> Subjective questions or programming test cases are undergoing manual review. Final score will be updated upon evaluator completion.
+                <strong>Provisional Notice (FR-SCORE-008):</strong> Subjective questions or
+                programming test cases are undergoing manual review. Final score will be updated
+                upon evaluator completion.
               </div>
             )}
           </div>
@@ -244,7 +283,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
                 Result Visibility Policy (FR-ASMT-002)
               </div>
               <div style={{ fontSize: 12, color: '#bfdbfe', lineHeight: 1.4 }}>
-                In accordance with institutional assessment policy, individual scores are withheld for administrative review and will be released after cohort evaluation concludes.
+                In accordance with institutional assessment policy, individual scores are withheld
+                for administrative review and will be released after cohort evaluation concludes.
               </div>
             </div>
           </div>
@@ -302,7 +342,9 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session,
             <span style={{ color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Clock size={14} /> Submitted On:
             </span>
-            <span style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}>
+            <span
+              style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}
+            >
               {submittedTimestamp}
             </span>
           </div>

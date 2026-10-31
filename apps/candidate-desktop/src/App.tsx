@@ -37,7 +37,10 @@ export const App: React.FC = () => {
             status.sessionStatus === ('ACTIVE' as unknown) ||
             status.sessionStatus === ('INTERRUPTED' as unknown)
           ) {
-            const recoveredSession = mockApi.initMockSession(activeMeta.candidateId, activeMeta.assessmentId);
+            const recoveredSession = mockApi.initMockSession(
+              activeMeta.candidateId,
+              activeMeta.assessmentId,
+            );
             recoveredSession.sessionId = activeMeta.sessionId;
             recoveredSession.title = activeMeta.title;
             const recoveredUser: MockUser = {
@@ -116,9 +119,7 @@ export const App: React.FC = () => {
         color: '#f8fafc',
       }}
     >
-      {state.currentScreen === 'LOGIN' && (
-        <LoginScreen onLoginSuccess={handleLoginSuccess} />
-      )}
+      {state.currentScreen === 'LOGIN' && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
 
       {state.currentScreen === 'SYSTEM_CHECK' && (
         <SystemCheckScreen
@@ -145,10 +146,7 @@ export const App: React.FC = () => {
       )}
 
       {state.currentScreen === 'EXAM' && state.session && (
-        <ExamScreen
-          session={state.session}
-          onFinishExam={handleFinishExam}
-        />
+        <ExamScreen session={state.session} onFinishExam={handleFinishExam} />
       )}
 
       {state.currentScreen === 'SUBMITTED' && state.user && state.session && (

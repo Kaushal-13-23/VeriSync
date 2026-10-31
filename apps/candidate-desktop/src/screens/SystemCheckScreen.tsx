@@ -113,7 +113,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
     if (handshake.isUnsupportedClient) {
       setUnsupportedClientError(
         handshake.errorMessage ||
-          'Unsupported client version (HTTP 426). Please contact lab staff immediately to update this machine.'
+          'Unsupported client version (HTTP 426). Please contact lab staff immediately to update this machine.',
       );
     }
 
@@ -132,17 +132,15 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
         value: handshake.ok
           ? `Connected (${handshake.latencyMs}ms)`
           : handshake.isUnsupportedClient
-          ? 'Rejected (426)'
-          : 'Degraded / Mock fallback',
+            ? 'Rejected (426)'
+            : 'Degraded / Mock fallback',
         icon: Server,
       },
       {
         id: 'version',
         label: 'Client Version Handshake',
         status: handshake.isUnsupportedClient ? 'failed' : 'passed',
-        value: handshake.isUnsupportedClient
-          ? `v${ver} (Rejected 426)`
-          : `v${ver} (Approved)`,
+        value: handshake.isUnsupportedClient ? `v${ver} (Rejected 426)` : `v${ver} (Approved)`,
         icon: ShieldCheck,
       },
       {
@@ -179,7 +177,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
           status: 'passed',
           value: 'Detected',
           icon: Mic,
-        }
+        },
       );
     }
 
@@ -192,8 +190,7 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
   }, [hardwareProctoringEnabled]);
 
   const allPassed =
-    !unsupportedClientError &&
-    checks.every((c) => c.status === 'passed' || c.status === 'warning');
+    !unsupportedClientError && checks.every((c) => c.status === 'passed' || c.status === 'warning');
 
   return (
     <div
@@ -221,7 +218,14 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
         }}
       >
         {/* Header */}
-        <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div
+          style={{
+            marginBottom: 28,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <div
@@ -310,7 +314,10 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
                   padding: '14px 18px',
                   backgroundColor: '#1f2937',
                   borderRadius: 10,
-                  border: item.status === 'failed' ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid #374151',
+                  border:
+                    item.status === 'failed'
+                      ? '1px solid rgba(239, 68, 68, 0.5)'
+                      : '1px solid #374151',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -329,10 +336,10 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
                         item.status === 'passed'
                           ? '#34d399'
                           : item.status === 'warning'
-                          ? '#fbbf24'
-                          : item.status === 'failed'
-                          ? '#f87171'
-                          : '#9ca3af',
+                            ? '#fbbf24'
+                            : item.status === 'failed'
+                              ? '#f87171'
+                              : '#9ca3af',
                     }}
                   >
                     {item.value}
@@ -374,7 +381,9 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
         >
           <Info size={20} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
           <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>
-            <strong style={{ color: '#93c5fd' }}>Notice:</strong> Do not close the application during the test. Any suspicious activity, keyboard shortcuts, or application switching will be recorded in the security audit trail.
+            <strong style={{ color: '#93c5fd' }}>Notice:</strong> Do not close the application
+            during the test. Any suspicious activity, keyboard shortcuts, or application switching
+            will be recorded in the security audit trail.
           </div>
         </div>
 

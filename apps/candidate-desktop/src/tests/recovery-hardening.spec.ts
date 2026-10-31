@@ -48,7 +48,7 @@ describe('Session Recovery Hardening (FR-TIME-010, FR-ANS-007, NFR-REL-004)', ()
     await apiClient.submitSessionAnswer(
       session.sessionId,
       { questionAttemptId: 'qa_0001', answer: 'opt_2' },
-      key1
+      key1,
     );
 
     // 3. Simulate crash / application restart by checking recovery state
@@ -107,7 +107,7 @@ describe('Session Recovery Hardening (FR-TIME-010, FR-ANS-007, NFR-REL-004)', ()
     const firstAck = await apiClient.submitSessionAnswer(
       session.sessionId,
       { questionAttemptId: 'qa_0001', answer: 'opt_2' },
-      idempotencyKey
+      idempotencyKey,
     );
     expect(firstAck.status).toBe('accepted');
 
@@ -115,7 +115,7 @@ describe('Session Recovery Hardening (FR-TIME-010, FR-ANS-007, NFR-REL-004)', ()
     const retriedAck = await apiClient.submitSessionAnswer(
       session.sessionId,
       { questionAttemptId: 'qa_0001', answer: 'opt_2' },
-      idempotencyKey
+      idempotencyKey,
     );
 
     // Returns identical acceptance timestamp without duplicate records
@@ -141,7 +141,9 @@ describe('Session Recovery Hardening (FR-TIME-010, FR-ANS-007, NFR-REL-004)', ()
     // Sync authoritative status
     const statusAfter = await apiClient.getSessionStatus(session.sessionId);
     expect(statusAfter.sessionId).toBe(session.sessionId);
-    expect(statusAfter.overallRemainingSeconds).toBeLessThanOrEqual(statusBefore.overallRemainingSeconds);
+    expect(statusAfter.overallRemainingSeconds).toBeLessThanOrEqual(
+      statusBefore.overallRemainingSeconds,
+    );
   });
 
   // =========================================================================

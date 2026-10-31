@@ -44,7 +44,11 @@ describe('CandidateDesktop App Component (FR-AUTH-002, FR-CAN-007, FR-UI-001)', 
 
     await waitFor(() => {
       expect(screen.getByText('System Check')).toBeInTheDocument();
-      expect(screen.getByText('Please ensure your system meets all requirements before starting the test.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Please ensure your system meets all requirements before starting the test.',
+        ),
+      ).toBeInTheDocument();
     });
   }, 15000);
 

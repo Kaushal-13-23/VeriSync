@@ -47,13 +47,7 @@ describe('SubmittedScreen Results Visibility (FR-ASMT-002, FR-SCORE-008, FR-UI-0
       result: null,
     };
 
-    render(
-      <SubmittedScreen
-        user={dummyUser}
-        session={dummySession}
-        finalResult={finalResult}
-      />
-    );
+    render(<SubmittedScreen user={dummyUser} session={dummySession} finalResult={finalResult} />);
 
     // Submission confirmation details are present
     expect(screen.getByText('Test Submitted Successfully!')).toBeInTheDocument();
@@ -91,13 +85,7 @@ describe('SubmittedScreen Results Visibility (FR-ASMT-002, FR-SCORE-008, FR-UI-0
       },
     };
 
-    render(
-      <SubmittedScreen
-        user={dummyUser}
-        session={dummySession}
-        finalResult={finalResult}
-      />
-    );
+    render(<SubmittedScreen user={dummyUser} session={dummySession} finalResult={finalResult} />);
 
     // Results card is rendered
     expect(screen.getByTestId('candidate-results-card')).toBeInTheDocument();
@@ -135,13 +123,7 @@ describe('SubmittedScreen Results Visibility (FR-ASMT-002, FR-SCORE-008, FR-UI-0
       },
     };
 
-    render(
-      <SubmittedScreen
-        user={dummyUser}
-        session={dummySession}
-        finalResult={finalResult}
-      />
-    );
+    render(<SubmittedScreen user={dummyUser} session={dummySession} finalResult={finalResult} />);
 
     expect(screen.getByTestId('provisional-badge')).toHaveTextContent('Provisional');
     expect(screen.getByText(/Provisional Notice \(FR-SCORE-008\)/i)).toBeInTheDocument();
@@ -153,13 +135,7 @@ describe('SubmittedScreen Results Visibility (FR-ASMT-002, FR-SCORE-008, FR-UI-0
       closeApp: mockCloseApp,
     } as unknown as typeof window.verisyncBridge;
 
-    render(
-      <SubmittedScreen
-        user={dummyUser}
-        session={dummySession}
-        finalResult={null}
-      />
-    );
+    render(<SubmittedScreen user={dummyUser} session={dummySession} finalResult={null} />);
 
     const closeBtn = screen.getByRole('button', { name: /Close Application/i });
     fireEvent.click(closeBtn);

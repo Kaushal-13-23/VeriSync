@@ -13,12 +13,7 @@ import { MockAssessmentSession, MockUser } from '../services/mockApi';
 import { CandidateAssignedAssessment, CandidateFinalSubmitResponse } from '../types/assessment';
 
 export type ScreenState =
-  | 'LOGIN'
-  | 'SYSTEM_CHECK'
-  | 'ASSIGNED_ASSESSMENTS'
-  | 'INSTRUCTIONS'
-  | 'EXAM'
-  | 'SUBMITTED';
+  'LOGIN' | 'SYSTEM_CHECK' | 'ASSIGNED_ASSESSMENTS' | 'INSTRUCTIONS' | 'EXAM' | 'SUBMITTED';
 
 export interface FlowState {
   currentScreen: ScreenState;

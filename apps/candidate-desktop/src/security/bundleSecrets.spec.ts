@@ -21,7 +21,11 @@ describe('Security Gate: Zero Secrets in Candidate Desktop Bundle (NFR-SEC-005, 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name !== 'node_modules' && entry.name !== 'dist' && entry.name !== 'dist-electron') {
+        if (
+          entry.name !== 'node_modules' &&
+          entry.name !== 'dist' &&
+          entry.name !== 'dist-electron'
+        ) {
           files.push(...getAllFiles(fullPath));
         }
       } else if (/\.(ts|tsx|js|html|json)$/.test(entry.name) && !entry.name.endsWith('.spec.ts')) {
@@ -35,8 +39,14 @@ describe('Security Gate: Zero Secrets in Candidate Desktop Bundle (NFR-SEC-005, 
     { pattern: /postgres(ql)?:\/\/[^\s"']+/i, name: 'Database connection string' },
     { pattern: /-----BEGIN\s+PRIVATE\s+KEY-----/, name: 'Private cryptographic key' },
     { pattern: /aws_secret_access_key/i, name: 'AWS secret key' },
-    { pattern: /(jwt_secret|app_secret|api_secret)\s*[:=]\s*["'][^"']+["']/i, name: 'Hardcoded secret' },
-    { pattern: /password\s*[:=]\s*["'](?!Enter|••••)[a-zA-Z0-9!@#$%^&*]{10,}["']/i, name: 'Hardcoded plaintext password' },
+    {
+      pattern: /(jwt_secret|app_secret|api_secret)\s*[:=]\s*["'][^"']+["']/i,
+      name: 'Hardcoded secret',
+    },
+    {
+      pattern: /password\s*[:=]\s*["'](?!Enter|••••)[a-zA-Z0-9!@#$%^&*]{10,}["']/i,
+      name: 'Hardcoded plaintext password',
+    },
   ];
 
   it('NFR-SEC-005: ensures no database credentials, private keys, or passwords in source code', () => {

@@ -25,12 +25,12 @@ describe('App Bundle Tamper & Integrity Verification (NFR-SEC-005, FR-LAB-002, F
     fs.writeFileSync(
       path.join(tempDir, 'dist', 'index.html'),
       '<!DOCTYPE html><html><head><title>VeriSync</title></head><body><div id="root"></div></body></html>',
-      'utf-8'
+      'utf-8',
     );
     fs.writeFileSync(
       path.join(tempDir, 'dist-electron', 'preload.js'),
       '"use strict"; const { contextBridge } = require("electron");',
-      'utf-8'
+      'utf-8',
     );
 
     const result = verifyBundleIntegrity(tempDir);
@@ -44,12 +44,12 @@ describe('App Bundle Tamper & Integrity Verification (NFR-SEC-005, FR-LAB-002, F
     fs.writeFileSync(
       path.join(tempDir, 'dist', 'index.html'),
       '<!DOCTYPE html><html><head><script src="https://attacker.site/leak.js"></script></head><body></body></html>',
-      'utf-8'
+      'utf-8',
     );
     fs.writeFileSync(
       path.join(tempDir, 'dist-electron', 'preload.js'),
       '"use strict"; const { contextBridge } = require("electron");',
-      'utf-8'
+      'utf-8',
     );
 
     const result = verifyBundleIntegrity(tempDir);
@@ -62,12 +62,12 @@ describe('App Bundle Tamper & Integrity Verification (NFR-SEC-005, FR-LAB-002, F
     fs.writeFileSync(
       path.join(tempDir, 'dist', 'index.html'),
       '<!DOCTYPE html><html><body><script>debugger;</script></body></html>',
-      'utf-8'
+      'utf-8',
     );
     fs.writeFileSync(
       path.join(tempDir, 'dist-electron', 'preload.js'),
       '"use strict"; const { contextBridge } = require("electron");',
-      'utf-8'
+      'utf-8',
     );
 
     const result = verifyBundleIntegrity(tempDir);

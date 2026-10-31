@@ -53,14 +53,28 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#f8fafc' }}>{title}</h2>
           <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: '#94a3b8' }}>
-            <span>Max Score: <strong style={{ color: '#38bdf8' }}>{maxMarks} pts</strong></span>
-            <span>Time: <strong>{timeLimitMs / 1000}s</strong></span>
-            <span>Memory: <strong>{memoryLimitMb}MB</strong></span>
+            <span>
+              Max Score: <strong style={{ color: '#38bdf8' }}>{maxMarks} pts</strong>
+            </span>
+            <span>
+              Time: <strong>{timeLimitMs / 1000}s</strong>
+            </span>
+            <span>
+              Memory: <strong>{memoryLimitMb}MB</strong>
+            </span>
           </div>
         </div>
 
         {/* Tab Selector */}
-        <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: 6, padding: 3, gap: 4 }}>
+        <div
+          style={{
+            display: 'flex',
+            backgroundColor: '#0f172a',
+            borderRadius: 6,
+            padding: 3,
+            gap: 4,
+          }}
+        >
           <button
             type="button"
             onClick={() => setActiveTab('problem')}
@@ -112,7 +126,15 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
           <div>
             {/* Statement */}
             <div style={{ marginBottom: 20 }}>
-              <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 8 }}>
+              <h3
+                style={{
+                  fontSize: 13,
+                  textTransform: 'uppercase',
+                  color: '#94a3b8',
+                  letterSpacing: '0.05em',
+                  marginBottom: 8,
+                }}
+              >
                 Description
               </h3>
               <div
@@ -130,7 +152,15 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
             {/* Input Format */}
             {details.inputFormat && (
               <div style={{ marginBottom: 16 }}>
-                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 6 }}>
+                <h4
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#38bdf8',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
                   Input Format
                 </h4>
                 <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>
@@ -142,7 +172,15 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
             {/* Output Format */}
             {details.outputFormat && (
               <div style={{ marginBottom: 16 }}>
-                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 6 }}>
+                <h4
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#38bdf8',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
                   Output Format
                 </h4>
                 <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 }}>
@@ -154,10 +192,26 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
             {/* Constraints */}
             {details.constraints && details.constraints.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', marginBottom: 6 }}>
+                <h4
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#fbbf24',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
                   Constraints
                 </h4>
-                <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: 20,
+                    fontSize: 13,
+                    color: '#94a3b8',
+                    lineHeight: 1.6,
+                  }}
+                >
                   {details.constraints.map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
@@ -170,7 +224,15 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
         {/* Examples Tab */}
         {(activeTab === 'samples' || activeTab === 'problem') && (
           <div style={{ marginTop: activeTab === 'problem' ? 24 : 0 }}>
-            <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 12 }}>
+            <h3
+              style={{
+                fontSize: 13,
+                textTransform: 'uppercase',
+                color: '#94a3b8',
+                letterSpacing: '0.05em',
+                marginBottom: 12,
+              }}
+            >
               Sample Test Cases
             </h3>
 
@@ -185,13 +247,31 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
                   marginBottom: 16,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, color: '#60a5fa', fontSize: 13, fontWeight: 600 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginBottom: 10,
+                    color: '#60a5fa',
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
                   <CheckCircle2 size={15} />
                   <span>Example {idx + 1}</span>
                 </div>
 
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 3 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      marginBottom: 3,
+                    }}
+                  >
                     Input
                   </div>
                   <pre
@@ -211,7 +291,15 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
                 </div>
 
                 <div style={{ marginBottom: sample.explanation ? 8 : 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 3 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      marginBottom: 3,
+                    }}
+                  >
                     Expected Output
                   </div>
                   <pre
@@ -231,7 +319,16 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
                 </div>
 
                 {sample.explanation && (
-                  <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 12,
+                      color: '#94a3b8',
+                      display: 'flex',
+                      gap: 6,
+                      alignItems: 'flex-start',
+                    }}
+                  >
                     <Info size={13} style={{ marginTop: 2, flexShrink: 0, color: '#38bdf8' }} />
                     <span>Explanation: {sample.explanation}</span>
                   </div>
@@ -244,4 +341,3 @@ export const ProblemPanel: React.FC<ProblemPanelProps> = ({
     </div>
   );
 };
-

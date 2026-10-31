@@ -34,10 +34,13 @@ export const SqlRenderer: React.FC<SqlRendererProps> = ({
 }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<SqlRunResponse | null>(null);
-  const [submissionsUsed, setSubmissionsUsed] = useState(codeRunnerService.getSubmissionsUsed(questionId));
+  const [submissionsUsed, setSubmissionsUsed] = useState(
+    codeRunnerService.getSubmissionsUsed(questionId),
+  );
 
   const maxSubs = details.maxSubmissions;
-  const remainingSubmissions = maxSubs !== undefined ? Math.max(0, maxSubs - submissionsUsed) : undefined;
+  const remainingSubmissions =
+    maxSubs !== undefined ? Math.max(0, maxSubs - submissionsUsed) : undefined;
   const fontSize = fontScale === 'xlarge' ? 18 : fontScale === 'large' ? 16 : 14;
 
   const handleRunQuery = async () => {
@@ -107,7 +110,16 @@ export const SqlRenderer: React.FC<SqlRendererProps> = ({
             borderBottom: '1px solid #27272a',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#38bdf8', fontWeight: 600 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 13,
+              color: '#38bdf8',
+              fontWeight: 600,
+            }}
+          >
             <Database size={15} />
             <span>SQL Query Editor (SQLite 3)</span>
           </div>
@@ -186,7 +198,9 @@ export const SqlRenderer: React.FC<SqlRendererProps> = ({
               <span>Draft autosaves every 10s without extending deadline</span>
             )}
           </div>
-          <div>Dialect: <strong style={{ color: '#cbd5e1' }}>SQLITE</strong></div>
+          <div>
+            Dialect: <strong style={{ color: '#cbd5e1' }}>SQLITE</strong>
+          </div>
         </div>
 
         {/* SQL Results Grid & Execution Console */}

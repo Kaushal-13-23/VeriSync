@@ -114,4 +114,3 @@ export const SubmitNextButton: React.FC<SubmitNextButtonProps> = ({
     </div>
   );
 };
-

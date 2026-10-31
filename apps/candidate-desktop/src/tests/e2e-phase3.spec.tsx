@@ -45,7 +45,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
           questionAttemptId: 'qa_0001',
           answer: 'opt_2',
         },
-        idempotencyKey
+        idempotencyKey,
       );
 
       expect(firstAck.status).toBe('accepted');
@@ -59,7 +59,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
           questionAttemptId: 'qa_0001',
           answer: 'opt_2',
         },
-        idempotencyKey
+        idempotencyKey,
       );
 
       // Must return identical original acceptance without creating a second attempt or error
@@ -98,7 +98,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
         () => {
           expect(container.textContent).toContain('Question 2 of 6');
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
     });
   });
@@ -122,8 +122,8 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
             questionAttemptId: 'qa_0001',
             answer: 'opt_1',
           },
-          lateKey
-        )
+          lateKey,
+        ),
       ).rejects.toMatchObject({
         status: 'rejected',
         code: ApiErrorCode.QUESTION_EXPIRED,
@@ -159,7 +159,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
         () => {
           expect(screen.getByText(/Question 2 of 6/i)).toBeDefined();
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
     });
   });
@@ -180,7 +180,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
           questionAttemptId: 'qa_0001',
           answer: 'opt_2',
         },
-        crypto.randomUUID()
+        crypto.randomUUID(),
       );
       expect(ack1.status).toBe('accepted');
 
@@ -190,7 +190,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
       timeSync.recordServerTime(
         new Date(Date.now() + simulatedDisconnectSeconds * 1000).toISOString(),
         Date.now(),
-        Date.now()
+        Date.now(),
       );
 
       // Reconnect: fetch authoritative session status (FR-TIME-008, TC-07)
@@ -216,7 +216,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
           questionAttemptId: 'qa_0002',
           answer: ['opt_2a', 'opt_2b'],
         },
-        crypto.randomUUID()
+        crypto.randomUUID(),
       );
       expect(ack2.status).toBe('accepted');
       expect(ack2.questionAttemptId).toBe('qa_0002');
@@ -281,11 +281,7 @@ describe('Phase 3 E2E Exam Runtime: TC04, TC05, TC07 (FR-TIME, FR-ANS, FR-UI)', 
       };
 
       const { container } = render(
-        <SubmittedScreen
-          user={mockUser}
-          session={mockSession}
-          finalResult={finishedResult}
-        />
+        <SubmittedScreen user={mockUser} session={mockSession} finalResult={finishedResult} />,
       );
 
       // Verify summary elements per UI Sample (Screen 5)

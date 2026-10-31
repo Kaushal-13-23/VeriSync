@@ -49,13 +49,25 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#f8fafc' }}>{title}</h2>
           <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: '#94a3b8' }}>
-            <span>Max Score: <strong style={{ color: '#38bdf8' }}>{maxMarks} pts</strong></span>
-            <span>Database: <strong>SQLite Ephemeral</strong></span>
+            <span>
+              Max Score: <strong style={{ color: '#38bdf8' }}>{maxMarks} pts</strong>
+            </span>
+            <span>
+              Database: <strong>SQLite Ephemeral</strong>
+            </span>
           </div>
         </div>
 
         {/* Tab Selector */}
-        <div style={{ display: 'flex', backgroundColor: '#0f172a', borderRadius: 6, padding: 3, gap: 4 }}>
+        <div
+          style={{
+            display: 'flex',
+            backgroundColor: '#0f172a',
+            borderRadius: 6,
+            padding: 3,
+            gap: 4,
+          }}
+        >
           <button
             type="button"
             onClick={() => setActiveTab('statement')}
@@ -106,7 +118,15 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
         {activeTab === 'statement' ? (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 8 }}>
+              <h3
+                style={{
+                  fontSize: 13,
+                  textTransform: 'uppercase',
+                  color: '#94a3b8',
+                  letterSpacing: '0.05em',
+                  marginBottom: 8,
+                }}
+              >
                 Instructions
               </h3>
               <div
@@ -123,7 +143,18 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
 
             {/* Quick Schema Summary Preview */}
             <div>
-              <h4 style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h4
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: '#38bdf8',
+                  textTransform: 'uppercase',
+                  marginBottom: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
                 <Table size={14} />
                 <span>Table Definition</span>
               </h4>
@@ -147,7 +178,15 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
         ) : (
           <div>
             <div style={{ marginBottom: 16 }}>
-              <h3 style={{ fontSize: 13, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.05em', marginBottom: 8 }}>
+              <h3
+                style={{
+                  fontSize: 13,
+                  textTransform: 'uppercase',
+                  color: '#94a3b8',
+                  letterSpacing: '0.05em',
+                  marginBottom: 8,
+                }}
+              >
                 Database DDL & Constraints
               </h3>
               <pre
@@ -170,7 +209,15 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
 
             {details.seedDataSql && (
               <div>
-                <h4 style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', marginBottom: 6 }}>
+                <h4
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#a78bfa',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
                   Seed Data Sample
                 </h4>
                 <pre
@@ -196,4 +243,3 @@ export const SqlProblemPanel: React.FC<SqlProblemPanelProps> = ({
     </div>
   );
 };
-

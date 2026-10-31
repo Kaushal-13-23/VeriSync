@@ -35,7 +35,7 @@ function getOrCreateDeviceId(): string {
     fs.writeFileSync(
       deviceIdFile,
       JSON.stringify({ deviceId: newDeviceId, createdAt: new Date().toISOString() }),
-      'utf-8'
+      'utf-8',
     );
     return newDeviceId;
   } catch {
@@ -129,7 +129,10 @@ const MAX_LOG_FILES = 3;
 
 function scrubSensitiveData(text: string): string {
   return text
-    .replace(/(password|token|secret|key|authorization|bearer)\s*[:=]\s*["']?[^"',\s]+["']?/gi, '$1=[REDACTED]')
+    .replace(
+      /(password|token|secret|key|authorization|bearer)\s*[:=]\s*["']?[^"',\s]+["']?/gi,
+      '$1=[REDACTED]',
+    )
     .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
     .replace(/[A-Za-z0-9]{32,}/g, (match) => match.slice(0, 4) + '...[REDACTED]');
 }
@@ -138,7 +141,7 @@ function appendLocalLog(
   level: string,
   message: string,
   correlationId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): boolean {
   try {
     const userDataPath = app.getPath('userData');
@@ -221,10 +224,7 @@ export function verifyBundleIntegrity(baseDir?: string): TamperCheckResult {
 
     try {
       const content = fs.readFileSync(fullPath, 'utf-8');
-      const forbiddenSignatures = [
-        /<script[^>]*src=["']https?:\/\//i,
-        /\bdebugger\b/i,
-      ];
+      const forbiddenSignatures = [/<script[^>]*src=["']https?:\/\//i, /\bdebugger\b/i];
 
       for (const sig of forbiddenSignatures) {
         if (sig.test(content)) {
@@ -268,8 +268,13 @@ function setupIpcHandlers() {
     'verisync:writeLog',
     (
       _event,
-      entry: { level: string; message: string; correlationId?: string; metadata?: Record<string, unknown> }
-    ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata)
+      entry: {
+        level: string;
+        message: string;
+        correlationId?: string;
+        metadata?: Record<string, unknown>;
+      },
+    ) => appendLocalLog(entry.level, entry.message, entry.correlationId, entry.metadata),
   );
   ipcMain.handle('verisync:verifyIntegrity', () => verifyBundleIntegrity());
   ipcMain.handle('verisync:closeApp', () => {
@@ -347,7 +352,10 @@ if (app && typeof app.requestSingleInstanceLock === 'function') {
       // Startup Bundle Integrity Verification (NFR-SEC-005, FR-LAB-002)
       const integrity = verifyBundleIntegrity();
       if (integrity.isTampered) {
-        appendLocalLog('error', `SECURITY ALERT: App bundle tampering detected: ${integrity.reason}`);
+        appendLocalLog(
+          'error',
+          `SECURITY ALERT: App bundle tampering detected: ${integrity.reason}`,
+        );
         if (process.env.NODE_ENV === 'production') {
           app.quit();
           return;

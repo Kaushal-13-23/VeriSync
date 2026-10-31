@@ -3,7 +3,7 @@
 **Developer**: Developer C (Vimal Raj)  
 **Role**: Candidate Desktop and Lockdown  
 **Branch**: `phase-2/C-exam-components`  
-**Date**: 2026-10-29  
+**Date**: 2026-10-29
 
 ---
 
@@ -48,47 +48,47 @@ Extended `apps/candidate-desktop` with production-ready reusable exam components
 
 ## 2. Endpoints, Screens & Modules Added
 
-| Component / Module | Path | Purpose |
-| :--- | :--- | :--- |
-| **Assigned Assessments Screen** | `src/screens/AssignedAssessmentsScreen.tsx` | Eligibility, availability windows, attempts remaining, status (`FR-UI-001`) |
-| **Instructions Screen** | `src/screens/InstructionsScreen.tsx` | Summary metrics, rules, BR-015 policy, mandatory acknowledgment (`FR-UI-002`) |
-| **System Check Screen** | `src/screens/SystemCheckScreen.tsx` | Handshake, 426 UNSUPPORTED_CLIENT handling, prohibited app scanner (`FR-LAB-003`) |
-| **Exam Screen** | `src/screens/ExamScreen.tsx` | Integrated exam interface with question renderers, timer, palette, and retry button |
-| **Single Choice Renderer** | `src/components/exam/renderers/SingleChoiceRenderer.tsx` | Single MCQ option selection with radio accessibility (`FR-QB-003`) |
-| **Multiple Select Renderer** | `src/components/exam/renderers/MultipleSelectRenderer.tsx` | Multi MCQ option selection with checkboxes (`FR-QB-003`) |
-| **True/False Renderer** | `src/components/exam/renderers/TrueFalseRenderer.tsx` | True/False cards with distinct states (`FR-QB-003`) |
-| **Short Answer Renderer** | `src/components/exam/renderers/ShortAnswerRenderer.tsx` | Text answer with character counter (`FR-QB-003`) |
-| **Timer Component** | `src/components/exam/TimerComponent.tsx` | Server deadline, drift correction, TC-01 display never decides acceptance (`FR-TIME-001`) |
-| **Question Status Panel** | `src/components/exam/QuestionStatusPanel.tsx` | Read-only palette in sequential mode (`Decision 1`, `FR-UI-005`) |
-| **Submit & Next Button** | `src/components/exam/SubmitNextButton.tsx` | In-flight spinner & retry with preserved Idempotency-Key (`FR-UI-006`, `Rule 3`) |
-| **Central Error Handler** | `src/services/errorHandler.ts` | Complete mapping for all 10 SRS 8.3.3 error codes with correlation IDs |
-| **Structured Local Logger** | `src/services/logger.ts` & `electron/main.ts` | Rotating log files with automated secret scrubber (`Rule 5`, `FR-AUD-007`) |
-| **API Client Extensions** | `src/services/apiClient.ts` | `getAssignedAssessments()`, `checkServerHandshake()`, `startAssessment()` |
+| Component / Module              | Path                                                       | Purpose                                                                                   |
+| :------------------------------ | :--------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
+| **Assigned Assessments Screen** | `src/screens/AssignedAssessmentsScreen.tsx`                | Eligibility, availability windows, attempts remaining, status (`FR-UI-001`)               |
+| **Instructions Screen**         | `src/screens/InstructionsScreen.tsx`                       | Summary metrics, rules, BR-015 policy, mandatory acknowledgment (`FR-UI-002`)             |
+| **System Check Screen**         | `src/screens/SystemCheckScreen.tsx`                        | Handshake, 426 UNSUPPORTED_CLIENT handling, prohibited app scanner (`FR-LAB-003`)         |
+| **Exam Screen**                 | `src/screens/ExamScreen.tsx`                               | Integrated exam interface with question renderers, timer, palette, and retry button       |
+| **Single Choice Renderer**      | `src/components/exam/renderers/SingleChoiceRenderer.tsx`   | Single MCQ option selection with radio accessibility (`FR-QB-003`)                        |
+| **Multiple Select Renderer**    | `src/components/exam/renderers/MultipleSelectRenderer.tsx` | Multi MCQ option selection with checkboxes (`FR-QB-003`)                                  |
+| **True/False Renderer**         | `src/components/exam/renderers/TrueFalseRenderer.tsx`      | True/False cards with distinct states (`FR-QB-003`)                                       |
+| **Short Answer Renderer**       | `src/components/exam/renderers/ShortAnswerRenderer.tsx`    | Text answer with character counter (`FR-QB-003`)                                          |
+| **Timer Component**             | `src/components/exam/TimerComponent.tsx`                   | Server deadline, drift correction, TC-01 display never decides acceptance (`FR-TIME-001`) |
+| **Question Status Panel**       | `src/components/exam/QuestionStatusPanel.tsx`              | Read-only palette in sequential mode (`Decision 1`, `FR-UI-005`)                          |
+| **Submit & Next Button**        | `src/components/exam/SubmitNextButton.tsx`                 | In-flight spinner & retry with preserved Idempotency-Key (`FR-UI-006`, `Rule 3`)          |
+| **Central Error Handler**       | `src/services/errorHandler.ts`                             | Complete mapping for all 10 SRS 8.3.3 error codes with correlation IDs                    |
+| **Structured Local Logger**     | `src/services/logger.ts` & `electron/main.ts`              | Rotating log files with automated secret scrubber (`Rule 5`, `FR-AUD-007`)                |
+| **API Client Extensions**       | `src/services/apiClient.ts`                                | `getAssignedAssessments()`, `checkServerHandshake()`, `startAssessment()`                 |
 
 ---
 
 ## 3. SRS Requirements Covered
 
-| SRS Requirement ID | Priority | Description | Implementation Status |
-| :--- | :--- | :--- | :--- |
-| `FR-UI-001` | Must | Post-login assigned assessments dashboard with eligibility and start window | **Done** (`AssignedAssessmentsScreen.tsx` & real endpoint) |
-| `FR-UI-002` | Must | Mandatory instructions display with lockdown notice and explicit acknowledgment | **Done** (Guarded checkbox and BR-015 policy in `InstructionsScreen.tsx`) |
-| `FR-UI-003` | Must | Single question presentation per screen in sequential examination mode | **Done** (`ExamScreen.tsx` with renderers) |
-| `FR-UI-004` | Must | Prominent server-synchronized countdown timer with low-time warning | **Done** (`TimerComponent.tsx` with amber/red thresholds) |
-| `FR-UI-005` | Must | Read-only question status palette in sequential mode; Previous button hidden | **Done** (`QuestionStatusPanel.tsx` and `ExamScreen.tsx` per Decision 1) |
-| `FR-UI-006` | Must | Explicit Submit and Next action with double-click protection and retry states | **Done** (`SubmitNextButton.tsx` with in-flight/retry states) |
-| `FR-TIME-001` | Must | Server authoritative timing; client clock never trusted for decisions | **Done** (`TimerComponent.tsx` drift correction & TC-01 logic) |
-| `FR-TIME-008` | Must | Authoritative remaining-time synchronization API helper | **Done** (`timeSync.ts` clock offset compensation) |
-| `FR-TIME-009` | Must | Sequential question progression without revisiting past questions | **Done** (`flowMachine.ts` and `ExamScreen.tsx`) |
-| `FR-QB-003` | Must | Support for question formats: Single MCQ, Multi MCQ, True/False, Short Answer | **Done** (Modular question renderer components) |
-| `FR-LAB-002` | Must | Unique application-managed device identifier persistence | **Done** (`device-identity.json` persistent UUID via bridge) |
-| `FR-LAB-003` | Must | Installed client version verification; rejection of outdated versions with HTTP 426 | **Done** (`X-Client-Version: 1.1.0` & 426 handling in `SystemCheckScreen.tsx`) |
-| `FR-LAB-006` | Must | Detection and reporting of prohibited background applications | **Done** (IPC process inspector in `main.ts` & `SystemCheckScreen.tsx`) |
-| `BR-015` | Must | Candidates informed about monitoring, lockdown, and integrity policies before starting | **Done** (Explicit policy banner in `InstructionsScreen.tsx`) |
-| `SRS 8.3.3` | Must | Standard Error Codes handling with correlation IDs | **Done** (`errorHandler.ts` mapping all 10 error codes) |
-| `NFR-MNT-005` | Must | Structured logging with correlation IDs and zero sensitive data | **Done** (`logger.ts` & rotating `candidate-desktop.log` in Electron) |
-| `NFR-SEC-005` | Must | Application bundle integrity and secret-free client builds | **Done** (Verified by bundle security audit test) |
-| `Rule 3` / `FR-ANS-009` | Must | Mandatory client-generated Idempotency-Key on submissions; duplicate returns original | **Done** (Preserved across retry states in `SubmitNextButton.tsx` & `apiClient.ts`) |
+| SRS Requirement ID      | Priority | Description                                                                            | Implementation Status                                                               |
+| :---------------------- | :------- | :------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| `FR-UI-001`             | Must     | Post-login assigned assessments dashboard with eligibility and start window            | **Done** (`AssignedAssessmentsScreen.tsx` & real endpoint)                          |
+| `FR-UI-002`             | Must     | Mandatory instructions display with lockdown notice and explicit acknowledgment        | **Done** (Guarded checkbox and BR-015 policy in `InstructionsScreen.tsx`)           |
+| `FR-UI-003`             | Must     | Single question presentation per screen in sequential examination mode                 | **Done** (`ExamScreen.tsx` with renderers)                                          |
+| `FR-UI-004`             | Must     | Prominent server-synchronized countdown timer with low-time warning                    | **Done** (`TimerComponent.tsx` with amber/red thresholds)                           |
+| `FR-UI-005`             | Must     | Read-only question status palette in sequential mode; Previous button hidden           | **Done** (`QuestionStatusPanel.tsx` and `ExamScreen.tsx` per Decision 1)            |
+| `FR-UI-006`             | Must     | Explicit Submit and Next action with double-click protection and retry states          | **Done** (`SubmitNextButton.tsx` with in-flight/retry states)                       |
+| `FR-TIME-001`           | Must     | Server authoritative timing; client clock never trusted for decisions                  | **Done** (`TimerComponent.tsx` drift correction & TC-01 logic)                      |
+| `FR-TIME-008`           | Must     | Authoritative remaining-time synchronization API helper                                | **Done** (`timeSync.ts` clock offset compensation)                                  |
+| `FR-TIME-009`           | Must     | Sequential question progression without revisiting past questions                      | **Done** (`flowMachine.ts` and `ExamScreen.tsx`)                                    |
+| `FR-QB-003`             | Must     | Support for question formats: Single MCQ, Multi MCQ, True/False, Short Answer          | **Done** (Modular question renderer components)                                     |
+| `FR-LAB-002`            | Must     | Unique application-managed device identifier persistence                               | **Done** (`device-identity.json` persistent UUID via bridge)                        |
+| `FR-LAB-003`            | Must     | Installed client version verification; rejection of outdated versions with HTTP 426    | **Done** (`X-Client-Version: 1.1.0` & 426 handling in `SystemCheckScreen.tsx`)      |
+| `FR-LAB-006`            | Must     | Detection and reporting of prohibited background applications                          | **Done** (IPC process inspector in `main.ts` & `SystemCheckScreen.tsx`)             |
+| `BR-015`                | Must     | Candidates informed about monitoring, lockdown, and integrity policies before starting | **Done** (Explicit policy banner in `InstructionsScreen.tsx`)                       |
+| `SRS 8.3.3`             | Must     | Standard Error Codes handling with correlation IDs                                     | **Done** (`errorHandler.ts` mapping all 10 error codes)                             |
+| `NFR-MNT-005`           | Must     | Structured logging with correlation IDs and zero sensitive data                        | **Done** (`logger.ts` & rotating `candidate-desktop.log` in Electron)               |
+| `NFR-SEC-005`           | Must     | Application bundle integrity and secret-free client builds                             | **Done** (Verified by bundle security audit test)                                   |
+| `Rule 3` / `FR-ANS-009` | Must     | Mandatory client-generated Idempotency-Key on submissions; duplicate returns original  | **Done** (Preserved across retry states in `SubmitNextButton.tsx` & `apiClient.ts`) |
 
 ---
 
@@ -150,6 +150,7 @@ All 57 automated tests pass cleanly across 11 test suites:
     - Scans all client source files for hardcoded secrets, database strings, private keys, and passwords.
 
 **Test Execution Results**:
+
 ```text
  ✓ src/services/timeSync.spec.ts  (4 tests) 22ms
  ✓ src/state/flowMachine.spec.ts  (10 tests) 13ms
@@ -169,6 +170,7 @@ All 57 automated tests pass cleanly across 11 test suites:
 ```
 
 **Quality Gate Results**:
+
 - `pnpm --filter @verisync/candidate-desktop lint`: Passed (0 errors, 0 warnings).
 - `pnpm --filter @verisync/candidate-desktop typecheck`: Passed (0 TypeScript errors).
 - `pnpm --filter @verisync/candidate-desktop build`: Passed (Production Vite + Electron distribution bundle generated cleanly).

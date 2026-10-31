@@ -72,7 +72,7 @@ describe('Phase 5 E2E Exam Runtime: Coding and SQL Assessment (FR-CODE, FR-SQL, 
       () => {
         expect(screen.getByText(/End Assessment Confirmation/i)).toBeInTheDocument();
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     const confirmSubmitBtn = screen.getByRole('button', { name: /Confirm & End Test/i });

@@ -8,7 +8,11 @@ import React, { useState } from 'react';
 import { ProblemPanel } from '../coding/ProblemPanel';
 import { MonacoCodeEditor } from '../coding/MonacoCodeEditor';
 import { CodeExecutionConsole } from '../coding/CodeExecutionConsole';
-import { CodingQuestionDetails, CodeRunResponse, SupportedLanguage } from '../../../types/codeRunner';
+import {
+  CodingQuestionDetails,
+  CodeRunResponse,
+  SupportedLanguage,
+} from '../../../types/codeRunner';
 import { codeRunnerService } from '../../../services/codeRunnerService';
 
 interface CodingRendererProps {
@@ -33,10 +37,13 @@ export const CodingRenderer: React.FC<CodingRendererProps> = ({
   const [language, setLanguage] = useState<SupportedLanguage>(details.defaultLanguage || 'python');
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<CodeRunResponse | null>(null);
-  const [submissionsUsed, setSubmissionsUsed] = useState(codeRunnerService.getSubmissionsUsed(questionId));
+  const [submissionsUsed, setSubmissionsUsed] = useState(
+    codeRunnerService.getSubmissionsUsed(questionId),
+  );
 
   const maxSubs = details.maxSubmissions;
-  const remainingSubmissions = maxSubs !== undefined ? Math.max(0, maxSubs - submissionsUsed) : undefined;
+  const remainingSubmissions =
+    maxSubs !== undefined ? Math.max(0, maxSubs - submissionsUsed) : undefined;
 
   const handleRunCode = async () => {
     if (isRunning) return;
@@ -132,7 +139,9 @@ export const CodingRenderer: React.FC<CodingRendererProps> = ({
               <span>Draft autosaves every 10s without extending deadline</span>
             )}
           </div>
-          <div>Language: <strong style={{ color: '#cbd5e1' }}>{language.toUpperCase()}</strong></div>
+          <div>
+            Language: <strong style={{ color: '#cbd5e1' }}>{language.toUpperCase()}</strong>
+          </div>
         </div>
 
         {/* Bottom Console */}

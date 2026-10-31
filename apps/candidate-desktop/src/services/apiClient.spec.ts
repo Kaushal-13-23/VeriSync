@@ -69,7 +69,7 @@ describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 
         questionAttemptId: 'qa_0001',
         response: 'opt_2',
       },
-      key
+      key,
     );
 
     expect(res.status).toBe('accepted');
@@ -162,7 +162,7 @@ describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 
         questionAttemptId: 'qa_0001',
         answer: 'opt_2',
       },
-      idempotencyKey
+      idempotencyKey,
     );
 
     expect(ack1.status).toBe('accepted');
@@ -176,7 +176,7 @@ describe('apiClient & mockApi (FR-TIME-001, FR-ANS-009, FR-LAB-002, Rule 3, SRS 
         questionAttemptId: 'qa_0001',
         answer: 'opt_2',
       },
-      idempotencyKey
+      idempotencyKey,
     );
 
     expect(ack2).toEqual(ack1);

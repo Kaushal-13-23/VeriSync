@@ -3,7 +3,7 @@
 **Developer**: Developer C (Vimal Raj)  
 **Role**: Candidate Desktop and Lockdown  
 **Branch**: `phase-4/C-scoring-results-reports`  
-**Date**: 2026-10-29  
+**Date**: 2026-10-29
 
 ---
 
@@ -66,17 +66,20 @@ In Phase 4, Developer C hardened, packaged, and elevated the accessibility and s
 ## 2. Endpoints, Screens, and Modules Added or Updated
 
 ### Screens & Components:
+
 - `src/screens/SubmittedScreen.tsx`: Added `resultVisibility` policy evaluation, provisional result notice, score percentage gauge, and passing benchmark badge.
 - `src/screens/ExamScreen.tsx`: Added accessibility toolbar (font scaler and contrast toggle), keyboard navigation shortcuts listener, and updated modal actions.
 - `src/App.tsx`: Added startup session recovery hook, resuming active attempts directly from persistent metadata.
 
 ### Electron & Packaging:
+
 - `electron-builder.json`: Added NSIS per-machine installer config with code-signing placeholder.
 - `electron/main.ts`: Implemented `verifyBundleIntegrity()`, startup tamper inspection, and single-instance lock safeguarding for test environments.
 - `electron/preload.ts`: Exposed `verifyIntegrity` capability on `window.verisyncBridge`.
 - `package.json`: Version stamped to `1.1.0` and added `package:win` build script.
 
 ### Services:
+
 - `src/services/tokenStorage.ts`: Added `setActiveSession()`, `getActiveSession()`, and `clearActiveSession()` for reboot recovery.
 - `src/services/errorHandler.ts`: Implemented `sanitizeUserFacingMessage()` and `containsInternalDetails()` preventing internal error leakage (NFR-REL-005).
 - `src/services/mockApi.ts`: Added `setResultVisibility()` and simulated provisional/final score evaluation.
@@ -86,23 +89,23 @@ In Phase 4, Developer C hardened, packaged, and elevated the accessibility and s
 
 ## 3. SRS Requirements Traceability
 
-| Requirement ID | Description | Implementation Details |
-| :--- | :--- | :--- |
-| `FR-ASMT-002` | Result visibility policy | Shows candidate results only when policy is `IMMEDIATE`; withholds scores when `ADMIN_RELEASE` or `SCHEDULED` |
-| `FR-SCORE-008` | Provisional results | Renders amber `Provisional` badge with manual evaluation disclosure when subjective items are pending |
-| `FR-UI-009` | Final submission summary | Displays candidate ID, test title, total questions, answered count, and UTC submitted timestamp |
-| `FR-TIME-010` | Disconnection recovery | Server deadlines continue running; client reconnects and resumes active attempt without timer reset |
-| `FR-ANS-007` | Safe session recovery | Resumes without creating duplicate submissions or resetting question progression |
-| `NFR-REL-004` | Crash & restart recovery | Restores session state from secure storage after app crash, backend restart, or lab PC reboot |
-| `NFR-REL-005` | Internal leak prevention | Sanitizes errors before presenting to candidates; internal traces captured with correlation IDs in local logs |
-| `NFR-USE-005` | Accessibility in lockdown | Full keyboard hotkeys (`1-4`, `Alt+S`, `Alt+M`, `Alt+C`), font size scaling, and high contrast mode |
-| `NFR-SEC-005` | App bundle integrity | Startup SHA-256 / signature verification detecting script injection or file tampering |
-| `FR-LAB-002` | Device identity | Application-managed device UUID persisted and sent with every request |
-| `FR-LAB-005` | Kiosk packaging | NSIS per-machine installer deploying application to `Program Files` for all lab users |
-| `Rule 1` | Server authority | Display clocks are visual aids only; backend governs all deadlines and acceptance |
-| `Rule 3` | Idempotency | Client Idempotency-Key preserved and reused on ambiguous submit retries |
-| `Rule 5` | Secret scrubbing | Sensitive credentials, tokens, and keys redacted from logs and errors |
-| `Rule 9` | Standardized UTC timestamps | ISO-8601 UTC timestamps across all API payloads, logs, and UI timestamps |
+| Requirement ID | Description                 | Implementation Details                                                                                        |
+| :------------- | :-------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| `FR-ASMT-002`  | Result visibility policy    | Shows candidate results only when policy is `IMMEDIATE`; withholds scores when `ADMIN_RELEASE` or `SCHEDULED` |
+| `FR-SCORE-008` | Provisional results         | Renders amber `Provisional` badge with manual evaluation disclosure when subjective items are pending         |
+| `FR-UI-009`    | Final submission summary    | Displays candidate ID, test title, total questions, answered count, and UTC submitted timestamp               |
+| `FR-TIME-010`  | Disconnection recovery      | Server deadlines continue running; client reconnects and resumes active attempt without timer reset           |
+| `FR-ANS-007`   | Safe session recovery       | Resumes without creating duplicate submissions or resetting question progression                              |
+| `NFR-REL-004`  | Crash & restart recovery    | Restores session state from secure storage after app crash, backend restart, or lab PC reboot                 |
+| `NFR-REL-005`  | Internal leak prevention    | Sanitizes errors before presenting to candidates; internal traces captured with correlation IDs in local logs |
+| `NFR-USE-005`  | Accessibility in lockdown   | Full keyboard hotkeys (`1-4`, `Alt+S`, `Alt+M`, `Alt+C`), font size scaling, and high contrast mode           |
+| `NFR-SEC-005`  | App bundle integrity        | Startup SHA-256 / signature verification detecting script injection or file tampering                         |
+| `FR-LAB-002`   | Device identity             | Application-managed device UUID persisted and sent with every request                                         |
+| `FR-LAB-005`   | Kiosk packaging             | NSIS per-machine installer deploying application to `Program Files` for all lab users                         |
+| `Rule 1`       | Server authority            | Display clocks are visual aids only; backend governs all deadlines and acceptance                             |
+| `Rule 3`       | Idempotency                 | Client Idempotency-Key preserved and reused on ambiguous submit retries                                       |
+| `Rule 5`       | Secret scrubbing            | Sensitive credentials, tokens, and keys redacted from logs and errors                                         |
+| `Rule 9`       | Standardized UTC timestamps | ISO-8601 UTC timestamps across all API payloads, logs, and UI timestamps                                      |
 
 ---
 
@@ -136,6 +139,7 @@ Added 5 comprehensive test suites covering Phase 4 requirements:
    - Validates stripping of raw stack traces, file paths, database internals, and network hostnames from user-facing error text (NFR-REL-005).
 
 ### Test Suite Execution:
+
 ```bash
 $ pnpm --filter @verisync/candidate-desktop test
 
@@ -162,6 +166,7 @@ $ pnpm --filter @verisync/candidate-desktop test
 ```
 
 ### Quality Gates (Lint, Typecheck, Build):
+
 ```bash
 # Lint: 0 errors, 0 warnings
 $ pnpm --filter @verisync/candidate-desktop lint
@@ -204,4 +209,3 @@ pnpm --filter @verisync/candidate-desktop dev
 # 4. Generate Windows NSIS installer package (per-machine)
 pnpm --filter @verisync/candidate-desktop package:win
 ```
-

@@ -19,7 +19,13 @@ export const TrueFalseRenderer: React.FC<TrueFalseRendererProps> = ({
   disabled = false,
 }) => {
   const normalizedValue =
-    typeof value === 'boolean' ? (value ? 'true' : 'false') : value ? String(value).toLowerCase() : null;
+    typeof value === 'boolean'
+      ? value
+        ? 'true'
+        : 'false'
+      : value
+        ? String(value).toLowerCase()
+        : null;
 
   return (
     <div
@@ -111,4 +117,3 @@ export const TrueFalseRenderer: React.FC<TrueFalseRendererProps> = ({
     </div>
   );
 };
-

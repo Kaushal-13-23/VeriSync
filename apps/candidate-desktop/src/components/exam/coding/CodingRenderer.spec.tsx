@@ -47,7 +47,7 @@ describe('CodingRenderer Component (FR-CODE-001..010, UC-11, Rule 2)', () => {
         details={mockDetails}
         value="def sum_primes(n):\n    return 0"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText(/Write a function sum_primes/i)).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('CodingRenderer Component (FR-CODE-001..010, UC-11, Rule 2)', () => {
         details={mockDetails}
         value=""
         onChange={handleChange}
-      />
+      />,
     );
 
     const select = screen.getByLabelText(/Programming Language/i) as HTMLSelectElement;
@@ -84,7 +84,7 @@ describe('CodingRenderer Component (FR-CODE-001..010, UC-11, Rule 2)', () => {
         details={mockDetails}
         value={code}
         onChange={vi.fn()}
-      />
+      />,
     );
 
     const runBtn = screen.getByRole('button', { name: /Run Code against Sample Cases/i });
@@ -108,7 +108,7 @@ describe('CodingRenderer Component (FR-CODE-001..010, UC-11, Rule 2)', () => {
         details={mockDetails}
         value="def sum_primes(n): return 17"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     const runBtn = screen.getByRole('button', { name: /Run Code against Sample Cases/i });

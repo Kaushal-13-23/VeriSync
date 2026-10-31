@@ -51,7 +51,16 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#38bdf8' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#38bdf8',
+            }}
+          >
             <Table2 size={14} />
             <span>Query Results Grid</span>
           </div>
@@ -68,7 +77,9 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
               }}
             >
               <CheckCircle2 size={13} />
-              <span>{result.rowCount} rows returned ({result.executionTimeMs}ms)</span>
+              <span>
+                {result.rowCount} rows returned ({result.executionTimeMs}ms)
+              </span>
             </span>
           )}
 
@@ -79,7 +90,9 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
                 fontWeight: 600,
                 padding: '2px 8px',
                 borderRadius: 4,
-                backgroundColor: isExhausted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(14, 165, 233, 0.15)',
+                backgroundColor: isExhausted
+                  ? 'rgba(239, 68, 68, 0.2)'
+                  : 'rgba(14, 165, 233, 0.15)',
                 color: isExhausted ? '#ef4444' : '#38bdf8',
                 border: isExhausted ? '1px solid #ef4444' : '1px solid #0284c7',
               }}
@@ -212,9 +225,11 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          {row[col] !== null && row[col] !== undefined
-                            ? String(row[col])
-                            : <em style={{ color: '#64748b' }}>NULL</em>}
+                          {row[col] !== null && row[col] !== undefined ? (
+                            String(row[col])
+                          ) : (
+                            <em style={{ color: '#64748b' }}>NULL</em>
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -232,4 +247,3 @@ export const SqlExecutionConsole: React.FC<SqlExecutionConsoleProps> = ({
     </div>
   );
 };
-

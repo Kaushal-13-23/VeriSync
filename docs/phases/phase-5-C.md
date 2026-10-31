@@ -3,7 +3,7 @@
 **Developer**: Developer C (Vimal Raj)  
 **Role**: Candidate Desktop and Lockdown  
 **Branch**: `phase-5/C-coding-sql-assessment`  
-**Date**: 2026-10-30  
+**Date**: 2026-10-30
 
 ---
 
@@ -45,6 +45,7 @@ In Phase 5, Developer C extended `apps/candidate-desktop` with full-featured **C
 ## 2. Endpoints, Screens, and Modules Added or Updated
 
 ### Components:
+
 - `src/components/exam/coding/ProblemPanel.tsx`: Problem description, constraints, and sample test case viewer.
 - `src/components/exam/coding/MonacoCodeEditor.tsx`: Monaco code editor with language selector (Python default), theme, and starter templates.
 - `src/components/exam/coding/CodeExecutionConsole.tsx`: Execution console rendering sample results, compiler messages, and remaining submission quotas.
@@ -55,6 +56,7 @@ In Phase 5, Developer C extended `apps/candidate-desktop` with full-featured **C
 - `src/screens/ExamScreen.tsx`: Updated to seamlessly render `CodingRenderer` and `SqlRenderer` with draft autosave hooks.
 
 ### Services & Types:
+
 - `src/types/codeRunner.ts`: Domain models for code execution, SQL query results, sample test cases, and autosave state.
 - `src/services/codeRunnerService.ts`: HTTP client connecting to `services/code-runner` on port 5050 with fallback simulation harness.
 - `src/services/draftAutosave.ts`: Robust debounced timer saving drafts every 10s via `apiClient.saveDraft()`.
@@ -64,24 +66,24 @@ In Phase 5, Developer C extended `apps/candidate-desktop` with full-featured **C
 
 ## 3. SRS Requirements Traceability
 
-| Requirement ID | Description | Implementation Details |
-| :--- | :--- | :--- |
-| `FR-CODE-001` | Multi-language support | Monaco editor supports Python 3.10, JS Node 20, Java 21, C GCC 13.2, C++20 G++ 13.2 |
-| `FR-CODE-002` | Monaco code editor | Integrated `@monaco-editor/react` with dark theme and accessible fallback |
-| `FR-CODE-003` | Visible sample cases | Problem panel displays visible sample cases; Run Code executes only sample cases |
-| `FR-CODE-004` | Hidden cases protection | Hidden test cases are strictly excluded from candidate client payloads |
-| `FR-CODE-008` | Status classification | Renders Accepted, Wrong Answer, Compilation Error, Runtime Error, Time Limit Exceeded |
-| `FR-CODE-009` | Output sanitization | Stacks/paths stripped; zero internal server disclosure |
-| `FR-CODE-010` | Submission limits | Enforces maximum execution count per question with remaining submission counter |
-| `FR-SQL-001` | SQL question layout | Schema DDL and instructions presented in dedicated problem panel |
-| `FR-SQL-002` | Isolated SQL sandbox | Queries dispatched to ephemeral SQLite database sandbox |
-| `FR-SQL-003` | Block dangerous SQL | Client & runner block `DROP`, `ALTER`, `CREATE`, `TRUNCATE`, `ATTACH` |
-| `FR-SQL-004` | SQL execution limits | Execution time, statement timeout, and max row bounds displayed |
-| `FR-SQL-005` | SQL results grid | Dynamic tabular grid displaying returned columns, row counts, and error states |
-| `FR-ANS-005` | Draft autosave | Periodic background autosave without deadline extension or bypass of submission |
-| `UC-11` | Coding solution workflow | Candidate writes, runs sample cases, autosaves, and submits final answer |
-| `Rule 2` | Hidden data exclusion | Candidate APIs never receive hidden test cases or expected answers |
-| `Rule 8` | No code in API process | Execution delegated to isolated code runner microservice |
+| Requirement ID | Description              | Implementation Details                                                                |
+| :------------- | :----------------------- | :------------------------------------------------------------------------------------ |
+| `FR-CODE-001`  | Multi-language support   | Monaco editor supports Python 3.10, JS Node 20, Java 21, C GCC 13.2, C++20 G++ 13.2   |
+| `FR-CODE-002`  | Monaco code editor       | Integrated `@monaco-editor/react` with dark theme and accessible fallback             |
+| `FR-CODE-003`  | Visible sample cases     | Problem panel displays visible sample cases; Run Code executes only sample cases      |
+| `FR-CODE-004`  | Hidden cases protection  | Hidden test cases are strictly excluded from candidate client payloads                |
+| `FR-CODE-008`  | Status classification    | Renders Accepted, Wrong Answer, Compilation Error, Runtime Error, Time Limit Exceeded |
+| `FR-CODE-009`  | Output sanitization      | Stacks/paths stripped; zero internal server disclosure                                |
+| `FR-CODE-010`  | Submission limits        | Enforces maximum execution count per question with remaining submission counter       |
+| `FR-SQL-001`   | SQL question layout      | Schema DDL and instructions presented in dedicated problem panel                      |
+| `FR-SQL-002`   | Isolated SQL sandbox     | Queries dispatched to ephemeral SQLite database sandbox                               |
+| `FR-SQL-003`   | Block dangerous SQL      | Client & runner block `DROP`, `ALTER`, `CREATE`, `TRUNCATE`, `ATTACH`                 |
+| `FR-SQL-004`   | SQL execution limits     | Execution time, statement timeout, and max row bounds displayed                       |
+| `FR-SQL-005`   | SQL results grid         | Dynamic tabular grid displaying returned columns, row counts, and error states        |
+| `FR-ANS-005`   | Draft autosave           | Periodic background autosave without deadline extension or bypass of submission       |
+| `UC-11`        | Coding solution workflow | Candidate writes, runs sample cases, autosaves, and submits final answer              |
+| `Rule 2`       | Hidden data exclusion    | Candidate APIs never receive hidden test cases or expected answers                    |
+| `Rule 8`       | No code in API process   | Execution delegated to isolated code runner microservice                              |
 
 ---
 
@@ -106,6 +108,7 @@ Added 4 new test suites for Coding, SQL, Draft Autosave, and E2E runtime:
    - Complete exam progression: solves coding question, runs sample cases, verifies autosave, submits answer, advances to SQL question, executes query, reviews results grid, submits final test, and confirms completion.
 
 ### Test Execution Summary:
+
 ```bash
 $ pnpm --filter @verisync/candidate-desktop test
 
@@ -136,6 +139,7 @@ $ pnpm --filter @verisync/candidate-desktop test
 ```
 
 ### Quality Gates (Lint, Typecheck, Build):
+
 ```bash
 # Lint: 0 errors, 0 warnings
 $ pnpm --filter @verisync/candidate-desktop lint
@@ -176,4 +180,3 @@ pnpm --filter @verisync/code-runner start
 # 3. Launch candidate desktop in development mode
 pnpm --filter @verisync/candidate-desktop dev
 ```
-

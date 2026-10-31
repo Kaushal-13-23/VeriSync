@@ -110,4 +110,3 @@ export const SingleChoiceRenderer: React.FC<SingleChoiceRendererProps> = ({
     </div>
   );
 };
-

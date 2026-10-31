@@ -115,27 +115,32 @@ class CodeRunnerService {
 
       if (res.ok) {
         const data = await res.json();
-        const sampleResults: SampleCaseResult[] = (data.results || []).map((r: {
-          testCaseId?: string;
-          status: ExecutionStatus;
-          actualOutput?: string;
-          executionTimeMs?: number;
-          memoryUsedKb?: number;
-          errorMessage?: string;
-        }, idx: number) => {
-          const sc = sampleCases[idx] || { input: '', expectedOutput: '' };
-          return {
-            testCaseId: r.testCaseId || sampleCases[idx]?.id || `case-${idx + 1}`,
-            input: sc.input,
-            expectedOutput: sc.expectedOutput,
-            actualOutput: r.actualOutput ?? '',
-            passed: r.status === 'ACCEPTED',
-            status: r.status,
-            executionTimeMs: r.executionTimeMs,
-            memoryUsedKb: r.memoryUsedKb,
-            errorMessage: r.errorMessage,
-          };
-        });
+        const sampleResults: SampleCaseResult[] = (data.results || []).map(
+          (
+            r: {
+              testCaseId?: string;
+              status: ExecutionStatus;
+              actualOutput?: string;
+              executionTimeMs?: number;
+              memoryUsedKb?: number;
+              errorMessage?: string;
+            },
+            idx: number,
+          ) => {
+            const sc = sampleCases[idx] || { input: '', expectedOutput: '' };
+            return {
+              testCaseId: r.testCaseId || sampleCases[idx]?.id || `case-${idx + 1}`,
+              input: sc.input,
+              expectedOutput: sc.expectedOutput,
+              actualOutput: r.actualOutput ?? '',
+              passed: r.status === 'ACCEPTED',
+              status: r.status,
+              executionTimeMs: r.executionTimeMs,
+              memoryUsedKb: r.memoryUsedKb,
+              errorMessage: r.errorMessage,
+            };
+          },
+        );
 
         return {
           status: data.status,
@@ -143,8 +148,13 @@ class CodeRunnerService {
           passedSampleCases: sampleResults.filter((r) => r.passed).length,
           sampleResults,
           compilerOutput: data.compilerOutput,
-          runtimeError: data.results?.find((r: { errorMessage?: string }) => r.errorMessage)?.errorMessage,
-          executionTimeMs: data.results?.reduce((acc: number, r: { executionTimeMs?: number }) => acc + (r.executionTimeMs || 0), 0) || 12,
+          runtimeError: data.results?.find((r: { errorMessage?: string }) => r.errorMessage)
+            ?.errorMessage,
+          executionTimeMs:
+            data.results?.reduce(
+              (acc: number, r: { executionTimeMs?: number }) => acc + (r.executionTimeMs || 0),
+              0,
+            ) || 12,
           remainingSubmissions: remaining,
           maxSubmissions,
           correlationId: data.correlationId || `cid-${Date.now().toString(36)}`,
@@ -162,7 +172,15 @@ class CodeRunnerService {
    * Run SQL: Executes candidate query against ephemeral schema (FR-SQL-002..005)
    */
   public async runSql(options: SqlRunOptions): Promise<SqlRunResponse> {
-    const { candidateQuery, schemaDdl, seedDataSql, sampleExpectedRows, questionAttemptId, comparisonMode, maxSubmissions } = options;
+    const {
+      candidateQuery,
+      schemaDdl,
+      seedDataSql,
+      sampleExpectedRows,
+      questionAttemptId,
+      comparisonMode,
+      maxSubmissions,
+    } = options;
 
     const used = this.submissionsUsedMap[questionAttemptId] || 0;
     const remaining = maxSubmissions !== undefined ? Math.max(0, maxSubmissions - used) : undefined;
@@ -239,7 +257,7 @@ class CodeRunnerService {
     _language: SupportedLanguage,
     sampleCases: SampleTestCase[],
     remainingSubmissions?: number,
-    maxSubmissions?: number
+    maxSubmissions?: number,
   ): CodeRunResponse {
     const trimmed = sourceCode.trim();
 
@@ -267,7 +285,11 @@ class CodeRunnerService {
     }
 
     // Check for runtime error simulation
-    if (trimmed.includes('raise Exception') || trimmed.includes('throw new Error') || trimmed.includes('runtime_error')) {
+    if (
+      trimmed.includes('raise Exception') ||
+      trimmed.includes('throw new Error') ||
+      trimmed.includes('runtime_error')
+    ) {
       return {
         status: 'RUNTIME_ERROR',
         totalSampleCases: sampleCases.length,
@@ -290,7 +312,11 @@ class CodeRunnerService {
     }
 
     // Check for timeout / TLE simulation
-    if (trimmed.includes('while True:') || trimmed.includes('while(true)') || trimmed.includes('infinite_loop')) {
+    if (
+      trimmed.includes('while True:') ||
+      trimmed.includes('while(true)') ||
+      trimmed.includes('infinite_loop')
+    ) {
       return {
         status: 'TIME_LIMIT_EXCEEDED',
         totalSampleCases: sampleCases.length,
@@ -313,9 +339,13 @@ class CodeRunnerService {
     }
 
     // Normal evaluation: Check if code produces expected output
-    const isAccepted = !trimmed.includes('return false') && !trimmed.includes('wrong_answer') && (
-      trimmed.includes('return') || trimmed.includes('print') || trimmed.includes('def') || trimmed.includes('function')
-    );
+    const isAccepted =
+      !trimmed.includes('return false') &&
+      !trimmed.includes('wrong_answer') &&
+      (trimmed.includes('return') ||
+        trimmed.includes('print') ||
+        trimmed.includes('def') ||
+        trimmed.includes('function'));
 
     const sampleResults: SampleCaseResult[] = sampleCases.map((sc, idx) => {
       const passed = isAccepted || (idx === 0 && !trimmed.includes('wrong_answer'));
@@ -333,7 +363,8 @@ class CodeRunnerService {
     });
 
     const passedCount = sampleResults.filter((r) => r.passed).length;
-    const finalStatus: ExecutionStatus = passedCount === sampleCases.length ? 'ACCEPTED' : 'WRONG_ANSWER';
+    const finalStatus: ExecutionStatus =
+      passedCount === sampleCases.length ? 'ACCEPTED' : 'WRONG_ANSWER';
 
     return {
       status: finalStatus,
@@ -354,13 +385,22 @@ class CodeRunnerService {
     candidateQuery: string,
     sampleExpectedRows?: Array<Record<string, unknown>>,
     remainingSubmissions?: number,
-    maxSubmissions?: number
+    maxSubmissions?: number,
   ): SqlRunResponse {
     const trimmed = candidateQuery.trim();
     const upper = trimmed.toUpperCase();
 
     // Check for blocked dangerous commands (FR-SQL-003)
-    const dangerousKeywords = ['DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'ATTACH', 'DETACH', 'PRAGMA', 'VACUUM'];
+    const dangerousKeywords = [
+      'DROP',
+      'ALTER',
+      'CREATE',
+      'TRUNCATE',
+      'ATTACH',
+      'DETACH',
+      'PRAGMA',
+      'VACUUM',
+    ];
     for (const kw of dangerousKeywords) {
       const regex = new RegExp(`\\b${kw}\\b`, 'i');
       if (regex.test(trimmed)) {
@@ -395,13 +435,14 @@ class CodeRunnerService {
     }
 
     // Default mock returned rows if none specified
-    const mockRows = sampleExpectedRows && sampleExpectedRows.length > 0
-      ? sampleExpectedRows
-      : [
-          { id: 101, name: 'Alice Smith', department: 'Engineering', salary: 95000 },
-          { id: 104, name: 'David Lee', department: 'Engineering', salary: 110000 },
-          { id: 107, name: 'Grace Hopper', department: 'Research', salary: 125000 },
-        ];
+    const mockRows =
+      sampleExpectedRows && sampleExpectedRows.length > 0
+        ? sampleExpectedRows
+        : [
+            { id: 101, name: 'Alice Smith', department: 'Engineering', salary: 95000 },
+            { id: 104, name: 'David Lee', department: 'Engineering', salary: 110000 },
+            { id: 107, name: 'Grace Hopper', department: 'Research', salary: 125000 },
+          ];
 
     const isWrong = upper.includes('WHERE 1=0') || upper.includes('WRONG');
     const rows = isWrong ? [] : mockRows;
@@ -422,4 +463,3 @@ class CodeRunnerService {
 }
 
 export const codeRunnerService = new CodeRunnerService();
-

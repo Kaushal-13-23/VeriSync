@@ -25,7 +25,7 @@ describe('SqlRenderer Component (FR-SQL-001..005, UC-11)', () => {
         details={mockSqlDetails}
         value="SELECT MAX(salary) FROM Employee;"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText(/Report the second highest salary/i)).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('SqlRenderer Component (FR-SQL-001..005, UC-11)', () => {
         details={mockSqlDetails}
         value="SELECT MAX(salary) AS SecondHighestSalary FROM Employee;"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     const runBtn = screen.getByRole('button', { name: /Execute SQL Query/i });
@@ -62,7 +62,7 @@ describe('SqlRenderer Component (FR-SQL-001..005, UC-11)', () => {
         details={mockSqlDetails}
         value="DROP TABLE Employee;"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     const runBtn = screen.getByRole('button', { name: /Execute SQL Query/i });

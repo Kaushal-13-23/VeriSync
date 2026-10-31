@@ -113,7 +113,10 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <label htmlFor="language-selector" style={{ fontSize: 12, fontWeight: 600, color: '#a1a1aa' }}>
+          <label
+            htmlFor="language-selector"
+            style={{ fontSize: 12, fontWeight: 600, color: '#a1a1aa' }}
+          >
             Language:
           </label>
           <select
@@ -139,12 +142,12 @@ export const MonacoCodeEditor: React.FC<MonacoCodeEditorProps> = ({
                 {lang === 'python'
                   ? 'Python 3.10'
                   : lang === 'javascript'
-                  ? 'JavaScript (Node 20)'
-                  : lang === 'java'
-                  ? 'Java 21 (Temurin)'
-                  : lang === 'cpp'
-                  ? 'C++ (G++ 13.2)'
-                  : 'C (GCC 13.2)'}
+                    ? 'JavaScript (Node 20)'
+                    : lang === 'java'
+                      ? 'Java 21 (Temurin)'
+                      : lang === 'cpp'
+                        ? 'C++ (G++ 13.2)'
+                        : 'C (GCC 13.2)'}
               </option>
             ))}
           </select>

@@ -53,7 +53,14 @@ export interface MockQuestion {
   explanation?: string;
   sampleInput?: string;
   sampleOutput?: string;
-  type: 'single_choice' | 'multiple_select' | 'true_false' | 'short_answer' | 'coding' | 'sql' | QuestionType;
+  type:
+    | 'single_choice'
+    | 'multiple_select'
+    | 'true_false'
+    | 'short_answer'
+    | 'coding'
+    | 'sql'
+    | QuestionType;
   options?: Array<{ id: string; text: string; optionText?: string }>;
   codeSnippet?: string;
   language?: string;
@@ -128,7 +135,8 @@ const sampleQuestions: MockQuestion[] = [
     totalQuestions: 6,
     section: 'MCQ',
     title: 'Question 3 (True / False)',
-    statement: 'In TypeScript, `unknown` is a type-safe counterpart of the `any` type and requires type narrowing before use.',
+    statement:
+      'In TypeScript, `unknown` is a type-safe counterpart of the `any` type and requires type narrowing before use.',
     type: 'true_false',
     options: [
       { id: 'true', text: 'True' },
@@ -143,7 +151,8 @@ const sampleQuestions: MockQuestion[] = [
     totalQuestions: 6,
     section: 'MCQ',
     title: 'Question 4 (Short Answer)',
-    statement: 'What HTTP status code is officially returned by the server when the client software version is rejected as obsolete?',
+    statement:
+      'What HTTP status code is officially returned by the server when the client software version is rejected as obsolete?',
     type: 'short_answer',
     durationMinutes: 3,
   },
@@ -154,7 +163,8 @@ const sampleQuestions: MockQuestion[] = [
     totalQuestions: 6,
     section: 'Coding',
     title: 'Question 5 (Coding)',
-    statement: 'Write a function sum_primes(n) that calculates the sum of all prime numbers less than or equal to n.',
+    statement:
+      'Write a function sum_primes(n) that calculates the sum of all prime numbers less than or equal to n.',
     sampleInput: 'n = 10',
     sampleOutput: '17',
     explanation: 'Prime numbers up to 10 are 2, 3, 5, 7. Sum = 17.',
@@ -163,7 +173,8 @@ const sampleQuestions: MockQuestion[] = [
     codeSnippet: 'def sum_primes(n):\n    # Write your solution here\n    pass\n',
     durationMinutes: 15,
     codingDetails: {
-      statement: 'Write a function sum_primes(n) that takes an integer n and returns the sum of all prime numbers less than or equal to n.',
+      statement:
+        'Write a function sum_primes(n) that takes an integer n and returns the sum of all prime numbers less than or equal to n.',
       inputFormat: 'A single positive integer n (1 <= n <= 1000).',
       outputFormat: 'Return the integer sum of prime numbers.',
       constraints: ['1 <= n <= 1000', 'Time limit: 3000ms', 'Memory limit: 256MB'],
@@ -171,8 +182,18 @@ const sampleQuestions: MockQuestion[] = [
       defaultLanguage: 'python',
       maxSubmissions: 5,
       sampleCases: [
-        { id: 'sc-1', input: 'n = 10', expectedOutput: '17', explanation: 'Prime numbers up to 10 are 2, 3, 5, 7. Their sum is 17.' },
-        { id: 'sc-2', input: 'n = 20', expectedOutput: '77', explanation: 'Prime numbers up to 20 are 2, 3, 5, 7, 11, 13, 17, 19. Sum is 77.' },
+        {
+          id: 'sc-1',
+          input: 'n = 10',
+          expectedOutput: '17',
+          explanation: 'Prime numbers up to 10 are 2, 3, 5, 7. Their sum is 17.',
+        },
+        {
+          id: 'sc-2',
+          input: 'n = 20',
+          expectedOutput: '77',
+          explanation: 'Prime numbers up to 20 are 2, 3, 5, 7, 11, 13, 17, 19. Sum is 77.',
+        },
       ],
       starterTemplates: {
         python: 'def sum_primes(n):\n    # Write your solution here\n    pass\n',
@@ -194,15 +215,17 @@ const sampleQuestions: MockQuestion[] = [
     sampleInput: 'Employee(id INT, salary INT)',
     sampleOutput: 'SecondHighestSalary: 95000',
     type: 'sql',
-    codeSnippet: 'SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);',
+    codeSnippet:
+      'SELECT MAX(salary) AS SecondHighestSalary\nFROM Employee\nWHERE salary < (SELECT MAX(salary) FROM Employee);',
     durationMinutes: 8,
     sqlDetails: {
-      statement: 'Write an SQL query to report the second highest salary from the Employee table. If there is no second highest salary, the query should report NULL.',
-      schemaDdl: 'CREATE TABLE Employee (\n    id INT PRIMARY KEY,\n    name VARCHAR(100),\n    department VARCHAR(50),\n    salary INT\n);',
-      seedDataSql: "INSERT INTO Employee VALUES (1, 'Alice', 'Engineering', 95000);\nINSERT INTO Employee VALUES (2, 'Bob', 'HR', 75000);\nINSERT INTO Employee VALUES (3, 'Charlie', 'Engineering', 120000);\nINSERT INTO Employee VALUES (4, 'David', 'Marketing', 90000);",
-      sampleExpectedRows: [
-        { SecondHighestSalary: 95000 },
-      ],
+      statement:
+        'Write an SQL query to report the second highest salary from the Employee table. If there is no second highest salary, the query should report NULL.',
+      schemaDdl:
+        'CREATE TABLE Employee (\n    id INT PRIMARY KEY,\n    name VARCHAR(100),\n    department VARCHAR(50),\n    salary INT\n);',
+      seedDataSql:
+        "INSERT INTO Employee VALUES (1, 'Alice', 'Engineering', 95000);\nINSERT INTO Employee VALUES (2, 'Bob', 'HR', 75000);\nINSERT INTO Employee VALUES (3, 'Charlie', 'Engineering', 120000);\nINSERT INTO Employee VALUES (4, 'David', 'Marketing', 90000);",
+      sampleExpectedRows: [{ SecondHighestSalary: 95000 }],
       maxSubmissions: 5,
       comparisonMode: 'EXACT_MATCH',
     },
@@ -213,12 +236,21 @@ let activeMockSession: MockAssessmentSession | null = null;
 let mockSessionStatus: SessionState = SessionState.NOT_STARTED;
 let currentQuestionDeadline: Date = new Date();
 
-function mapMockQuestionToDto(q: MockQuestion, sequence: number, deadlineAt: string, remainingSec: number): CandidateQuestionDto {
+function mapMockQuestionToDto(
+  q: MockQuestion,
+  sequence: number,
+  deadlineAt: string,
+  remainingSec: number,
+): CandidateQuestionDto {
   let mappedType: QuestionType = QuestionType.MCQ_SINGLE;
-  if (q.type === 'single_choice' || q.type === QuestionType.MCQ_SINGLE) mappedType = QuestionType.MCQ_SINGLE;
-  else if (q.type === 'multiple_select' || q.type === QuestionType.MCQ_MULTIPLE) mappedType = QuestionType.MCQ_MULTIPLE;
-  else if (q.type === 'true_false' || q.type === QuestionType.TRUE_FALSE) mappedType = QuestionType.TRUE_FALSE;
-  else if (q.type === 'short_answer' || q.type === QuestionType.SHORT_ANSWER) mappedType = QuestionType.SHORT_ANSWER;
+  if (q.type === 'single_choice' || q.type === QuestionType.MCQ_SINGLE)
+    mappedType = QuestionType.MCQ_SINGLE;
+  else if (q.type === 'multiple_select' || q.type === QuestionType.MCQ_MULTIPLE)
+    mappedType = QuestionType.MCQ_MULTIPLE;
+  else if (q.type === 'true_false' || q.type === QuestionType.TRUE_FALSE)
+    mappedType = QuestionType.TRUE_FALSE;
+  else if (q.type === 'short_answer' || q.type === QuestionType.SHORT_ANSWER)
+    mappedType = QuestionType.SHORT_ANSWER;
   else if (q.type === 'coding' || q.type === QuestionType.CODING) mappedType = QuestionType.CODING;
   else if (q.type === 'sql' || q.type === QuestionType.SQL) mappedType = QuestionType.SQL;
 
@@ -269,7 +301,7 @@ export const mockApi = {
    */
   async login(
     identifier: string,
-    password?: string
+    password?: string,
   ): Promise<{ accessToken: string; refreshToken: string; user: MockUser }> {
     if (!identifier || identifier.trim() === '') {
       const err: ApiErrorResponse = {
@@ -291,7 +323,9 @@ export const mockApi = {
       throw err;
     }
 
-    const candidateId = identifier.startsWith('CAN-') ? identifier : `CAN-2026-${identifier.toUpperCase().slice(0, 3)}`;
+    const candidateId = identifier.startsWith('CAN-')
+      ? identifier
+      : `CAN-2026-${identifier.toUpperCase().slice(0, 3)}`;
     const user: MockUser = {
       id: `usr-${candidateId.toLowerCase()}`,
       username: identifier,
@@ -326,8 +360,10 @@ export const mockApi = {
         assignmentId: 'asgn_01',
         assessmentId: 'asmt-frontend-2026',
         title: 'Frontend Developer Assessment',
-        description: 'Comprehensive technical evaluation covering React, TypeScript, ECMAScript, Coding, and SQL.',
-        instructions: 'Please read all rules carefully before proceeding. Sequential examination mode enforced.',
+        description:
+          'Comprehensive technical evaluation covering React, TypeScript, ECMAScript, Coding, and SQL.',
+        instructions:
+          'Please read all rules carefully before proceeding. Sequential examination mode enforced.',
         roleCategory: 'Frontend Engineering',
         overallDuration: 90,
         totalMarks: 100,
@@ -346,7 +382,8 @@ export const mockApi = {
         assignmentId: 'asgn_02',
         assessmentId: 'asmt-backend-2026',
         title: 'Backend Systems & Database Assessment',
-        description: 'Covers NestJS, PostgreSQL concurrency, caching, and algorithmic problem solving.',
+        description:
+          'Covers NestJS, PostgreSQL concurrency, caching, and algorithmic problem solving.',
         instructions: 'Lockdown kiosk policy applies throughout the session.',
         roleCategory: 'Backend Engineering',
         overallDuration: 120,
@@ -404,7 +441,12 @@ export const mockApi = {
       status: idx === 0 ? 'CURRENT' : 'NOT_ANSWERED',
     }));
 
-    const dto = mapMockQuestionToDto(currentQ, 1, currentQuestionDeadline.toISOString(), currentQ.durationMinutes * 60);
+    const dto = mapMockQuestionToDto(
+      currentQ,
+      1,
+      currentQuestionDeadline.toISOString(),
+      currentQ.durationMinutes * 60,
+    );
 
     return {
       sessionId: session.sessionId,
@@ -430,9 +472,17 @@ export const mockApi = {
     const session = activeMockSession!;
     const idx = session.currentQuestionIndex;
     const currentQ = session.questions[idx] || session.questions[0];
-    const remainingSec = Math.max(0, Math.floor((currentQuestionDeadline.getTime() - Date.now()) / 1000));
+    const remainingSec = Math.max(
+      0,
+      Math.floor((currentQuestionDeadline.getTime() - Date.now()) / 1000),
+    );
 
-    return mapMockQuestionToDto(currentQ, idx + 1, currentQuestionDeadline.toISOString(), remainingSec);
+    return mapMockQuestionToDto(
+      currentQ,
+      idx + 1,
+      currentQuestionDeadline.toISOString(),
+      remainingSec,
+    );
   },
 
   /**
@@ -483,7 +533,7 @@ export const mockApi = {
   async submitSessionAnswer(
     _sessionId: string,
     dto: SubmitAnswerDto,
-    idempotencyKey: string
+    idempotencyKey: string,
   ): Promise<SubmitAnswerAckDto> {
     if (!idempotencyKey || idempotencyKey.trim() === '') {
       throw {
@@ -517,7 +567,8 @@ export const mockApi = {
     session.answeredAttemptIds.add(dto.questionAttemptId);
 
     const nextIdx = session.currentQuestionIndex + 1;
-    let nextInfo: { questionAttemptId: string; sequenceNumber: number; deadlineAt: string } | null = null;
+    let nextInfo: { questionAttemptId: string; sequenceNumber: number; deadlineAt: string } | null =
+      null;
 
     if (nextIdx < session.questions.length) {
       session.currentQuestionIndex = nextIdx;
@@ -604,7 +655,10 @@ export const mockApi = {
     };
   },
 
-  setResultVisibility(visibility: ResultVisibility, customResult?: CandidateResultSummary | null): void {
+  setResultVisibility(
+    visibility: ResultVisibility,
+    customResult?: CandidateResultSummary | null,
+  ): void {
     if (activeMockSession) {
       activeMockSession.resultVisibility = visibility;
       if (customResult !== undefined) {
@@ -648,7 +702,9 @@ export const mockApi = {
       isFinalSubmitted: false,
     };
     mockSessionStatus = SessionState.ACTIVE;
-    currentQuestionDeadline = new Date(now.getTime() + sampleQuestions[0].durationMinutes * 60 * 1000);
+    currentQuestionDeadline = new Date(
+      now.getTime() + sampleQuestions[0].durationMinutes * 60 * 1000,
+    );
 
     return activeMockSession;
   },
@@ -663,7 +719,7 @@ export const mockApi = {
 
   async submitAnswer(
     payload: SubmitAnswerPayload,
-    idempotencyKey?: string
+    idempotencyKey?: string,
   ): Promise<SubmitAnswerResponse> {
     if (!idempotencyKey || idempotencyKey.trim() === '') {
       const err: ApiErrorResponse = {
@@ -692,7 +748,8 @@ export const mockApi = {
     const nowIso = new Date().toISOString();
     const session = activeMockSession;
     const nextQuestion = session?.questions.find(
-      (q) => q.attemptId !== payload.questionAttemptId && !session?.answeredAttemptIds.has(q.attemptId)
+      (q) =>
+        q.attemptId !== payload.questionAttemptId && !session?.answeredAttemptIds.has(q.attemptId),
     );
 
     if (session) {
@@ -706,7 +763,9 @@ export const mockApi = {
       next: nextQuestion
         ? {
             questionAttemptId: nextQuestion.attemptId,
-            deadlineAt: new Date(Date.now() + nextQuestion.durationMinutes * 60 * 1000).toISOString(),
+            deadlineAt: new Date(
+              Date.now() + nextQuestion.durationMinutes * 60 * 1000,
+            ).toISOString(),
           }
         : undefined,
       serverTime: nowIso,
@@ -716,7 +775,10 @@ export const mockApi = {
     return response;
   },
 
-  async finalSubmit(_sessionId: string, idempotencyKey?: string): Promise<{ status: 'accepted'; submittedAt: string }> {
+  async finalSubmit(
+    _sessionId: string,
+    idempotencyKey?: string,
+  ): Promise<{ status: 'accepted'; submittedAt: string }> {
     if (!idempotencyKey) {
       const err: ApiErrorResponse = {
         status: 'rejected',

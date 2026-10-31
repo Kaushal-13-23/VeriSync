@@ -54,7 +54,16 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#38bdf8' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#38bdf8',
+            }}
+          >
             <Terminal size={14} />
             <span>Test Results</span>
           </div>
@@ -67,7 +76,9 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
                 fontWeight: 600,
                 padding: '2px 8px',
                 borderRadius: 4,
-                backgroundColor: isExhausted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(14, 165, 233, 0.15)',
+                backgroundColor: isExhausted
+                  ? 'rgba(239, 68, 68, 0.2)'
+                  : 'rgba(14, 165, 233, 0.15)',
                 color: isExhausted ? '#ef4444' : '#38bdf8',
                 border: isExhausted ? '1px solid #ef4444' : '1px solid #0284c7',
               }}
@@ -138,14 +149,14 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
                   result.status === 'ACCEPTED'
                     ? 'rgba(34, 197, 94, 0.12)'
                     : result.status === 'WRONG_ANSWER'
-                    ? 'rgba(239, 68, 68, 0.12)'
-                    : 'rgba(245, 158, 11, 0.12)',
+                      ? 'rgba(239, 68, 68, 0.12)'
+                      : 'rgba(245, 158, 11, 0.12)',
                 border: `1px solid ${
                   result.status === 'ACCEPTED'
                     ? '#22c55e'
                     : result.status === 'WRONG_ANSWER'
-                    ? '#ef4444'
-                    : '#f59e0b'
+                      ? '#ef4444'
+                      : '#f59e0b'
                 }`,
                 marginBottom: 12,
               }}
@@ -166,8 +177,8 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
                       result.status === 'ACCEPTED'
                         ? '#22c55e'
                         : result.status === 'WRONG_ANSWER'
-                        ? '#ef4444'
-                        : '#f59e0b',
+                          ? '#ef4444'
+                          : '#f59e0b',
                   }}
                 >
                   {result.status.replace(/_/g, ' ')}
@@ -221,11 +232,7 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
                         fontSize: 12,
                         fontWeight: 600,
                         backgroundColor:
-                          selectedCaseIdx === idx
-                            ? sc.passed
-                              ? '#166534'
-                              : '#991b1b'
-                            : '#1e293b',
+                          selectedCaseIdx === idx ? (sc.passed ? '#166534' : '#991b1b') : '#1e293b',
                         color: sc.passed ? '#86efac' : '#fca5a5',
                         cursor: 'pointer',
                         display: 'flex',
@@ -269,7 +276,9 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
                       <span style={{ color: '#64748b', fontWeight: 700 }}>Your Output: </span>
                       <span
                         style={{
-                          color: result.sampleResults[selectedCaseIdx].passed ? '#34d399' : '#f87171',
+                          color: result.sampleResults[selectedCaseIdx].passed
+                            ? '#34d399'
+                            : '#f87171',
                           fontWeight: 600,
                         }}
                       >
@@ -286,4 +295,3 @@ export const CodeExecutionConsole: React.FC<CodeExecutionConsoleProps> = ({
     </div>
   );
 };
-

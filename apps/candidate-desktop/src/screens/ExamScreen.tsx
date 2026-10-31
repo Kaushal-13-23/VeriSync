@@ -66,9 +66,13 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
   const handleRunCode = () => {
     if (currentQuestion.type === 'coding') {
-      setCodeOutput('Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.');
+      setCodeOutput(
+        'Running sample test cases...\nTest 1 (n=10): Passed (Output: 17, Expected: 17)\nAll visible sample cases passed.',
+      );
     } else if (currentQuestion.type === 'sql') {
-      setCodeOutput('Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).');
+      setCodeOutput(
+        'Executing query on ephemeral SQLite instance...\n| SecondHighestSalary |\n| 200                 |\n1 row returned (4ms).',
+      );
     }
   };
 
@@ -87,7 +91,11 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
       questionAttemptId: qAttemptId,
       response:
         currentAnswer ??
-        (currentQuestion.type === 'coding' ? currentQuestion.codeSnippet : currentQuestion.type === 'sql' ? currentQuestion.codeSnippet : ''),
+        (currentQuestion.type === 'coding'
+          ? currentQuestion.codeSnippet
+          : currentQuestion.type === 'sql'
+            ? currentQuestion.codeSnippet
+            : ''),
     };
 
     try {
@@ -181,8 +189,16 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             }}
           >
             <div>
-              <div style={{ fontSize: 13, color: '#93c5fd', fontWeight: 600, textTransform: 'uppercase' }}>
-                {currentQuestion.section} &bull; Question {currentIdx + 1} of {session.questions.length}
+              <div
+                style={{
+                  fontSize: 13,
+                  color: '#93c5fd',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {currentQuestion.section} &bull; Question {currentIdx + 1} of{' '}
+                {session.questions.length}
               </div>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0 0', color: '#f8fafc' }}>
                 {currentQuestion.title}
@@ -191,10 +207,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               {/* Question Countdown Timer with Drift Correction (FR-TIME-001, FR-TIME-008) */}
-              <TimerComponent
-                serverDeadline={session.overallDeadlineAt}
-                label="Exam Timer"
-              />
+              <TimerComponent serverDeadline={session.overallDeadlineAt} label="Exam Timer" />
 
               {/* Local Mark for Review Checkbox (Decision 4) */}
               <button
@@ -206,7 +219,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                   gap: 6,
                   padding: '6px 12px',
                   borderRadius: 6,
-                  backgroundColor: markedForReview[qAttemptId] ? 'rgba(245, 158, 11, 0.15)' : '#1e293b',
+                  backgroundColor: markedForReview[qAttemptId]
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : '#1e293b',
                   border: `1px solid ${markedForReview[qAttemptId] ? '#f59e0b' : '#334155'}`,
                   color: markedForReview[qAttemptId] ? '#fbbf24' : '#cbd5e1',
                   fontSize: 12,
@@ -259,7 +274,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                 questionId={qAttemptId}
                 options={currentQuestion.options}
                 value={(currentAnswer as string) || null}
-                onChange={(optId) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))}
+                onChange={(optId) =>
+                  setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optId }))
+                }
               />
             )}
 
@@ -268,7 +285,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                 questionId={qAttemptId}
                 options={currentQuestion.options}
                 value={Array.isArray(currentAnswer) ? (currentAnswer as string[]) : []}
-                onChange={(optIds) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))}
+                onChange={(optIds) =>
+                  setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: optIds }))
+                }
               />
             )}
 
@@ -304,9 +323,23 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                     justifyContent: 'space-between',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#93c5fd' }}>
-                    {currentQuestion.type === 'coding' ? <Code2 size={16} /> : <Database size={16} />}
-                    <span>{currentQuestion.type === 'coding' ? 'Python 3.10' : 'SQLite Ephemeral'}</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 13,
+                      color: '#93c5fd',
+                    }}
+                  >
+                    {currentQuestion.type === 'coding' ? (
+                      <Code2 size={16} />
+                    ) : (
+                      <Database size={16} />
+                    )}
+                    <span>
+                      {currentQuestion.type === 'coding' ? 'Python 3.10' : 'SQLite Ephemeral'}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -336,7 +369,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
                       ? (currentAnswer as string)
                       : currentQuestion.codeSnippet || ''
                   }
-                  onChange={(e) => setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: e.target.value }))}
+                  onChange={(e) =>
+                    setSelectedAnswers((prev) => ({ ...prev, [qAttemptId]: e.target.value }))
+                  }
                   rows={8}
                   style={{
                     width: '100%',
@@ -449,7 +484,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
             </div>
 
             <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.5, margin: '0 0 20px 0' }}>
-              Are you sure you want to end and submit your assessment? Any unanswered questions will be auto-finalized. Once confirmed, your responses cannot be modified.
+              Are you sure you want to end and submit your assessment? Any unanswered questions will
+              be auto-finalized. Once confirmed, your responses cannot be modified.
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>

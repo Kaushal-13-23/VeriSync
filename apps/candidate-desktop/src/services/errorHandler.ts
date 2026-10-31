@@ -38,7 +38,8 @@ export const ERROR_MAPPINGS: Record<
   [ApiErrorCode.NOT_ELIGIBLE]: {
     title: 'Assessment Ineligible',
     defaultMessage: 'You are not eligible to take this assessment at this time.',
-    actionHint: 'The assessment window may not have opened yet, has expired, or maximum attempts have been reached.',
+    actionHint:
+      'The assessment window may not have opened yet, has expired, or maximum attempts have been reached.',
     isFatal: false,
   },
   [ApiErrorCode.INVALID_STATE]: {
@@ -61,7 +62,8 @@ export const ERROR_MAPPINGS: Record<
   },
   [ApiErrorCode.UNSUPPORTED_CLIENT]: {
     title: 'Unsupported Client Version (HTTP 426)',
-    defaultMessage: 'This computer is running an outdated or unapproved version of the VeriSync client.',
+    defaultMessage:
+      'This computer is running an outdated or unapproved version of the VeriSync client.',
     actionHint: 'Please contact lab staff immediately to update this machine before proceeding.',
     isFatal: true,
   },
@@ -94,7 +96,8 @@ export function handleApiError(error: unknown): UserFacingError {
 
   const code: ApiErrorCode = apiError?.code || ApiErrorCode.INTERNAL_ERROR;
   const mapping = ERROR_MAPPINGS[code] || ERROR_MAPPINGS[ApiErrorCode.INTERNAL_ERROR];
-  const correlationId = apiError?.correlationId || (error as { correlationId?: string })?.correlationId;
+  const correlationId =
+    apiError?.correlationId || (error as { correlationId?: string })?.correlationId;
   const message = apiError?.message || (error as Error)?.message || mapping.defaultMessage;
 
   const result: UserFacingError = {
@@ -115,4 +118,3 @@ export function handleApiError(error: unknown): UserFacingError {
 
   return result;
 }
-

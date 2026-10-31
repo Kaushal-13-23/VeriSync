@@ -25,7 +25,9 @@ export const ConnectionBanner: React.FC<ConnectionBannerProps> = ({
   onEndTest,
   showTimer = false,
 }) => {
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(timeSync.getConnectionStatus());
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
+    timeSync.getConnectionStatus(),
+  );
   const [remainingSeconds, setRemainingSeconds] = useState<number>(() => {
     return deadlineIsoUtc ? timeSync.getRemainingSeconds(deadlineIsoUtc) : 0;
   });
@@ -82,19 +84,24 @@ export const ConnectionBanner: React.FC<ConnectionBannerProps> = ({
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.01em' }}>
+            <span
+              style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.01em' }}
+            >
               VeriSync
             </span>
             {assessmentTitle && (
               <>
                 <span style={{ color: '#475569', fontSize: 14 }}>|</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#cbd5e1' }}>{assessmentTitle}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#cbd5e1' }}>
+                  {assessmentTitle}
+                </span>
               </>
             )}
           </div>
           {candidateId && (
             <div style={{ fontSize: 11, color: '#94a3b8' }}>
-              Candidate: <span style={{ fontFamily: 'monospace', color: '#60a5fa' }}>{candidateId}</span>
+              Candidate:{' '}
+              <span style={{ fontFamily: 'monospace', color: '#60a5fa' }}>{candidateId}</span>
             </div>
           )}
         </div>

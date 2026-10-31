@@ -17,7 +17,10 @@ export function redactSensitiveData(data: unknown): unknown {
   if (typeof data === 'string') {
     return data
       .replace(/bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
-      .replace(/(password|token|secret|api[-_]?key)\s*[:=]\s*["']?[^"',\s]+["']?/gi, '$1=[REDACTED]')
+      .replace(
+        /(password|token|secret|api[-_]?key)\s*[:=]\s*["']?[^"',\s]+["']?/gi,
+        '$1=[REDACTED]',
+      )
       .replace(/([A-Fa-f0-9]{32,}|[A-Za-z0-9_-]{32,})/g, (m) => m.slice(0, 4) + '...[REDACTED]');
   }
 
@@ -48,9 +51,16 @@ export function redactSensitiveData(data: unknown): unknown {
 }
 
 class LocalLogger {
-  public async log(level: 'info' | 'warn' | 'error', message: string, correlationId?: string, metadata?: Record<string, unknown>): Promise<void> {
+  public async log(
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
     const cleanMessage = String(redactSensitiveData(message));
-    const cleanMetadata = metadata ? (redactSensitiveData(metadata) as Record<string, unknown>) : undefined;
+    const cleanMetadata = metadata
+      ? (redactSensitiveData(metadata) as Record<string, unknown>)
+      : undefined;
 
     if (typeof window !== 'undefined' && window.verisyncBridge?.writeLog) {
       try {
@@ -68,23 +78,50 @@ class LocalLogger {
     // Console logging in development
     const prefix = `[VeriSync-${level.toUpperCase()}]`;
     if (level === 'error') {
-      console.error(prefix, cleanMessage, correlationId ? `[correlationId: ${correlationId}]` : '', cleanMetadata || '');
+      console.error(
+        prefix,
+        cleanMessage,
+        correlationId ? `[correlationId: ${correlationId}]` : '',
+        cleanMetadata || '',
+      );
     } else if (level === 'warn') {
-      console.warn(prefix, cleanMessage, correlationId ? `[correlationId: ${correlationId}]` : '', cleanMetadata || '');
+      console.warn(
+        prefix,
+        cleanMessage,
+        correlationId ? `[correlationId: ${correlationId}]` : '',
+        cleanMetadata || '',
+      );
     } else {
-      console.log(prefix, cleanMessage, correlationId ? `[correlationId: ${correlationId}]` : '', cleanMetadata || '');
+      console.log(
+        prefix,
+        cleanMessage,
+        correlationId ? `[correlationId: ${correlationId}]` : '',
+        cleanMetadata || '',
+      );
     }
   }
 
-  public async info(message: string, correlationId?: string, metadata?: Record<string, unknown>): Promise<void> {
+  public async info(
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
     return this.log('info', message, correlationId, metadata);
   }
 
-  public async warn(message: string, correlationId?: string, metadata?: Record<string, unknown>): Promise<void> {
+  public async warn(
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
     return this.log('warn', message, correlationId, metadata);
   }
 
-  public async error(message: string, correlationId?: string, metadata?: Record<string, unknown>): Promise<void> {
+  public async error(
+    message: string,
+    correlationId?: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
     return this.log('error', message, correlationId, metadata);
   }
 }

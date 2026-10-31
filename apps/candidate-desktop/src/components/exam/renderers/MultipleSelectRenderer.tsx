@@ -120,4 +120,3 @@ export const MultipleSelectRenderer: React.FC<MultipleSelectRendererProps> = ({
     </div>
   );
 };
-

@@ -90,7 +90,14 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
         }}
       >
         {/* Navigation Bar / Title */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 20,
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <div
@@ -111,7 +118,8 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
               </h2>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: '#9ca3af' }}>
-              {assessmentTitle} &bull; Candidate: <strong style={{ color: '#93c5fd' }}>{user.candidateId}</strong>
+              {assessmentTitle} &bull; Candidate:{' '}
+              <strong style={{ color: '#93c5fd' }}>{user.candidateId}</strong>
             </p>
           </div>
 
@@ -155,9 +163,7 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
           >
             <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>
-                {error.title}
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>{error.title}</div>
               <div style={{ fontSize: 12, color: '#fca5a5' }}>
                 {error.message} {error.actionHint && `— ${error.actionHint}`}
               </div>
@@ -187,9 +193,13 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <FileText size={18} color="#60a5fa" />
-              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Total Questions</span>
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>
+                Total Questions
+              </span>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>{totalQuestions}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>
+              {totalQuestions}
+            </span>
           </div>
 
           <div
@@ -205,9 +215,13 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Clock size={18} color="#34d399" />
-              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Total Duration</span>
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>
+                Total Duration
+              </span>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>{totalDuration} Minutes</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc' }}>
+              {totalDuration} Minutes
+            </span>
           </div>
 
           <div
@@ -223,9 +237,13 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Layers size={18} color="#fbbf24" />
-              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>Question Types</span>
+              <span style={{ fontSize: 14, color: '#cbd5e1', fontWeight: 500 }}>
+                Question Types
+              </span>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>MCQ, Coding, SQL</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
+              MCQ, Coding, SQL
+            </span>
           </div>
         </div>
 
@@ -293,7 +311,10 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
         >
           <Lock size={18} color="#60a5fa" style={{ flexShrink: 0, marginTop: 2 }} />
           <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5 }}>
-            <strong style={{ color: '#93c5fd' }}>BR-015 Policy Disclosure:</strong> This assessment operates in a secured lockdown environment. System focus loss, unauthorized shortcut key combinations, external display changes, or blacklisted background tools will generate audit events with server-validated timestamps.
+            <strong style={{ color: '#93c5fd' }}>BR-015 Policy Disclosure:</strong> This assessment
+            operates in a secured lockdown environment. System focus loss, unauthorized shortcut key
+            combinations, external display changes, or blacklisted background tools will generate
+            audit events with server-validated timestamps.
           </div>
         </div>
 
@@ -325,7 +346,9 @@ export const InstructionsScreen: React.FC<InstructionsScreenProps> = ({
                 accentColor: '#2563eb',
               }}
             />
-            <span style={{ fontSize: 14, fontWeight: 600, color: acknowledged ? '#f8fafc' : '#cbd5e1' }}>
+            <span
+              style={{ fontSize: 14, fontWeight: 600, color: acknowledged ? '#f8fafc' : '#cbd5e1' }}
+            >
               I have read and understood the instructions.
             </span>
           </label>

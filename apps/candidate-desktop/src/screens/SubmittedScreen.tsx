@@ -75,7 +75,8 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session 
           Test Submitted Successfully!
         </h2>
         <p style={{ margin: '0 0 28px 0', fontSize: 14, color: '#9ca3af', lineHeight: 1.5 }}>
-          Your responses have been securely recorded in the authoritative system of record. You can now close the application.
+          Your responses have been securely recorded in the authoritative system of record. You can
+          now close the application.
         </p>
 
         {/* Summary Details Card per UI Sample */}
@@ -112,7 +113,9 @@ export const SubmittedScreen: React.FC<SubmittedScreenProps> = ({ user, session 
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#9ca3af' }}>Submitted On:</span>
-            <span style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}>
+            <span
+              style={{ fontWeight: 600, color: '#34d399', fontSize: 12, fontFamily: 'monospace' }}
+            >
               {formattedTimestamp}
             </span>
           </div>

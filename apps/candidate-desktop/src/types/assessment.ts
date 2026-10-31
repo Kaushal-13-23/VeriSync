@@ -28,4 +28,3 @@ export interface CandidateAssignedAssessment {
   navigationMode: NavigationMode;
   serverTime: string;
 }
-

@@ -5,13 +5,7 @@ import { SubmitNextButton } from './SubmitNextButton';
 describe('SubmitNextButton (FR-UI-006, FR-ANS-009, Rule 3)', () => {
   it('renders idle state with Submit & Next text and handles submit', () => {
     const onSubmit = vi.fn();
-    render(
-      <SubmitNextButton
-        state="idle"
-        isLastQuestion={false}
-        onSubmit={onSubmit}
-      />
-    );
+    render(<SubmitNextButton state="idle" isLastQuestion={false} onSubmit={onSubmit} />);
 
     const button = screen.getByRole('button', { name: /Submit & Next/i });
     expect(button).toBeDefined();
@@ -23,26 +17,14 @@ describe('SubmitNextButton (FR-UI-006, FR-ANS-009, Rule 3)', () => {
 
   it('renders Submit Assessment text on the last question', () => {
     const onSubmit = vi.fn();
-    render(
-      <SubmitNextButton
-        state="idle"
-        isLastQuestion={true}
-        onSubmit={onSubmit}
-      />
-    );
+    render(<SubmitNextButton state="idle" isLastQuestion={true} onSubmit={onSubmit} />);
 
     expect(screen.getByRole('button', { name: /Submit Assessment/i })).toBeDefined();
   });
 
   it('prevents multiple clicks when in-flight (FR-UI-006 double click protection)', () => {
     const onSubmit = vi.fn();
-    render(
-      <SubmitNextButton
-        state="in-flight"
-        isLastQuestion={false}
-        onSubmit={onSubmit}
-      />
-    );
+    render(<SubmitNextButton state="in-flight" isLastQuestion={false} onSubmit={onSubmit} />);
 
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
@@ -61,7 +43,7 @@ describe('SubmitNextButton (FR-UI-006, FR-ANS-009, Rule 3)', () => {
         errorMessage="Network interruption"
         onSubmit={onSubmit}
         onRetry={onRetry}
-      />
+      />,
     );
 
     expect(screen.getByText(/Network interruption \(Idempotency Key preserved\)/i)).toBeDefined();

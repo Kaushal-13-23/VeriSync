@@ -1,5 +1,6 @@
-// VeriSync Database Schema
+// VeriSync Authoritative Database Schema
 // Source of truth: docs/SRS/srs.md (Section 9: Database Requirements and Logical Data Model)
+// Traceability: FR-AUTH, FR-AUD, FR-CAN, FR-QB, FR-ASMT, FR-TIME, FR-ANS, FR-SCORE, NFR-SEC
 
 generator client {
   provider = "prisma-client-js"
@@ -11,9 +12,7 @@ datasource db {
 }
 
 // -----------------------------------------------------------------------------
-// Phase 1 Schema Baseline (Tables defined in SRS Section 9.1)
-// Full relations, foreign keys, unique constraints, and enums will be implemented
-// in Phase 1 by Dev A per FR-AUTH, FR-AUD, and database specification.
+// Enums from SRS Section 3.3, 3.4, 5, and 9
 // -----------------------------------------------------------------------------
 
 enum UserRole {
@@ -68,38 +67,82 @@ enum AttemptState {
   EVALUATED
 }
 
-enum CodingStatus {
-  ACCEPTED
-  WRONG_ANSWER
-  COMPILATION_ERROR
-  RUNTIME_ERROR
-  TIME_LIMIT_EXCEEDED
-  MEMORY_LIMIT_EXCEEDED
-  INTERNAL_EVALUATION_ERROR
+enum AssignmentStatus {
+  ASSIGNED
+  STARTED
+  COMPLETED
+  REVOKED
+}
+
+enum EvaluationStatus {
+  PENDING
+  EVALUATED
+  FAILED
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum TestCaseVisibility {
+  SAMPLE
+  HIDDEN
+}
+
+enum ResultStatus {
+  PROVISIONAL
+  FINAL
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
 }
 
 enum DeviceStatus {
   ACTIVE
-  SUSPENDED
+  INACTIVE
   BLOCKED
 }
 
+// -----------------------------------------------------------------------------
+// 1. users: Login identity and access control (SRS 9.1, FR-AUTH-001..008)
+// -----------------------------------------------------------------------------
 model User {
-  id            String        @id @default(uuid()) @map("user_id")
-  username      String        @unique
-  passwordHash  String        @map("password_hash")
-  role          UserRole      @default(CANDIDATE)
-  accountStatus AccountStatus @default(ACTIVE) @map("account_status")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id                  String        @id @default(uuid()) @map("user_id")
+  username            String        @unique
+  passwordHash        String        @map("password_hash")
+  role                UserRole      @default(CANDIDATE)
+  accountStatus       AccountStatus @default(ACTIVE) @map("account_status")
+  failedLoginAttempts Int           @default(0) @map("failed_login_attempts")
+  lockoutUntil        DateTime?     @map("lockout_until")
+  totpSecret          String?       @map("totp_secret")
+  totpEnabled         Boolean       @default(false) @map("totp_enabled")
+  tokenVersion        Int           @default(0) @map("token_version")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
 
-  candidateProfile CandidateProfile?
+  // Relations
+  candidateProfile    CandidateProfile?
+  createdAssessments  Assessment[]          @relation("AssessmentCreator")
+  assignedCandidates  AssessmentAssignment[] @relation("AssignmentCreator")
+  scoreCorrections    ScoreCorrection[]     @relation("ScoreCorrector")
+  auditLogs           AuditLog[]            @relation("AuditActor")
+  revokedTokens       RevokedToken[]
 
   @@map("users")
 }
 
+// -----------------------------------------------------------------------------
+// 2. candidate_profiles: Recruitment information (SRS 9.1, FR-CAN-001..007)
+// -----------------------------------------------------------------------------
 model CandidateProfile {
   id                   String   @id @default(uuid()) @map("candidate_id")
+  candidateIdentifier String   @unique @map("candidate_identifier") // e.g. CAN-2026-081
   userId               String   @unique @map("user_id")
   fullName             String   @map("full_name")
   email                String   @unique
@@ -111,7 +154,348 @@ model CandidateProfile {
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments          AssessmentAssignment[]
 
+  @@index([candidateIdentifier])
+  @@index([email])
   @@map("candidate_profiles")
+}
+
+// -----------------------------------------------------------------------------
+// 3. assessments: Assessment configuration (SRS 9.1, FR-ASMT-001..008)
+// -----------------------------------------------------------------------------
+model Assessment {
+  id                   String           @id @default(uuid()) @map("assessment_id")
+  title                String
+  description          String?
+  instructions         String?
+  roleCategory         String           @map("role_category")
+  overallDuration      Int              @map("overall_duration") // in minutes
+  totalMarks           Decimal?         @map("total_marks") @db.Decimal(6, 2)
+  passingMarks         Decimal?         @map("passing_marks") @db.Decimal(6, 2)
+  negativeMarking      Boolean          @default(false) @map("negative_marking")
+  negativeMarkValue    Decimal?         @default(0.00) @map("negative_mark_value") @db.Decimal(5, 2)
+  randomizeQuestions   Boolean          @default(false) @map("randomize_questions")
+  randomizeOptions     Boolean          @default(false) @map("randomize_options")
+  navigationMode       String           @default("SEQUENTIAL") @map("navigation_mode")
+  resultVisibility     String           @default("ADMIN_RELEASE") @map("result_visibility")
+  startAt              DateTime         @map("start_at")
+  endAt                DateTime         @map("end_at")
+  status               AssessmentStatus @default(DRAFT)
+  attemptLimit         Int              @default(1) @map("attempt_limit")
+  configurationVersion Int              @default(1) @map("configuration_version")
+  publishedSnapshot    Json?            @map("published_snapshot")
+  createdBy            String           @map("created_by")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  creator              User                   @relation("AssessmentCreator", fields: [createdBy], references: [id])
+  assessmentQuestions  AssessmentQuestion[]
+  assignments          AssessmentAssignment[]
+
+  @@index([status])
+  @@index([startAt, endAt])
+  @@map("assessments")
+}
+
+// -----------------------------------------------------------------------------
+// 4. questions: Question content & metadata (SRS 9.1, FR-QB-001..010)
+// -----------------------------------------------------------------------------
+model Question {
+  id                  String               @id @default(uuid()) @map("question_id")
+  questionType        QuestionType         @map("question_type")
+  questionText        String               @map("question_text")
+  codeSnippet         String?              @map("code_snippet")
+  topic               String
+  difficulty          String
+  maximumMarks        Decimal              @map("maximum_marks") @db.Decimal(5, 2)
+  negativeMarks       Decimal              @default(0.00) @map("negative_marks") @db.Decimal(5, 2)
+  questionVersion     Int                  @default(1) @map("question_version")
+  status              String               @default("ACTIVE")
+  explanation         String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
+  options             QuestionOption[]
+  assessmentQuestions AssessmentQuestion[]
+  testCases           TestCase[]
+
+  @@index([topic])
+  @@index([difficulty])
+  @@index([questionType])
+  @@map("questions")
+}
+
+// -----------------------------------------------------------------------------
+// 5. question_options: Options for objective questions (SRS 9.1, FR-QB-004)
+// Correct-answer data is protected server-side, never exposed to candidate APIs.
+// -----------------------------------------------------------------------------
+model QuestionOption {
+  id           String   @id @default(uuid()) @map("option_id")
+  questionId   String   @map("question_id")
+  optionText   String   @map("option_text")
+  displayOrder Int      @map("display_order")
+  isCorrect    Boolean  @default(false) @map("is_correct")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+// -----------------------------------------------------------------------------
+// 6. assessment_questions: Questions mapped to an assessment (SRS 9.1)
+// -----------------------------------------------------------------------------
+model AssessmentQuestion {
+  id               String            @id @default(uuid()) @map("assessment_question_id")
+  assessmentId     String            @map("assessment_id")
+  questionId       String            @map("question_id")
+  sequenceNumber   Int               @map("sequence_number")
+  timeLimitSeconds Int?              @map("time_limit_seconds")
+  marksOverride    Decimal?          @map("marks_override") @db.Decimal(5, 2)
+  questionVersion  Int               @default(1) @map("question_version")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  assessment       Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question         Question          @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  questionAttempts QuestionAttempt[]
+
+  @@unique([assessmentId, sequenceNumber])
+  @@unique([assessmentId, questionId])
+  @@map("assessment_questions")
+}
+
+// -----------------------------------------------------------------------------
+// 7. assessment_assignments: Candidate assignments (SRS 9.1, FR-CAN-004..005)
+// -----------------------------------------------------------------------------
+model AssessmentAssignment {
+  id               String            @id @default(uuid()) @map("assignment_id")
+  assessmentId     String            @map("assessment_id")
+  candidateId      String            @map("candidate_id")
+  assignmentStatus AssignmentStatus  @default(ASSIGNED) @map("assignment_status")
+  assignedAt       DateTime          @default(now()) @map("assigned_at")
+  assignedBy       String            @map("assigned_by")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  assessment       Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidate        CandidateProfile  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  assigner         User              @relation("AssignmentCreator", fields: [assignedBy], references: [id])
+  sessions         AssessmentSession[]
+
+  @@unique([assessmentId, candidateId])
+  @@index([candidateId])
+  @@map("assessment_assignments")
+}
+
+// -----------------------------------------------------------------------------
+// 8. assessment_sessions: Attempt state (SRS 9.1, Section 3.3 State Machine)
+// -----------------------------------------------------------------------------
+model AssessmentSession {
+  id              String            @id @default(uuid()) @map("session_id")
+  assignmentId    String            @map("assignment_id")
+  attemptNumber   Int               @default(1) @map("attempt_number")
+  startedAt       DateTime?         @map("started_at")
+  overallDeadline DateTime?         @map("overall_deadline")
+  sessionStatus   SessionState      @default(NOT_STARTED) @map("session_status")
+  submittedAt     DateTime?         @map("submitted_at")
+  lastHeartbeatAt DateTime?         @map("last_heartbeat_at")
+  clientVersion   String?           @map("client_version")
+  deviceId        String?           @map("device_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  assignment       AssessmentAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  device           LabDevice?           @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  questionAttempts QuestionAttempt[]
+  result           Result?
+
+  @@unique([assignmentId, attemptNumber])
+  @@index([sessionStatus])
+  @@map("assessment_sessions")
+}
+
+// -----------------------------------------------------------------------------
+// 9. question_attempts: State & timing per question (SRS 9.1, Section 3.4)
+// -----------------------------------------------------------------------------
+model QuestionAttempt {
+  id                   String             @id @default(uuid()) @map("question_attempt_id")
+  sessionId            String             @map("session_id")
+  assessmentQuestionId String             @map("assessment_question_id")
+  startedAt            DateTime?          @map("started_at")
+  deadlineAt           DateTime?          @map("deadline_at")
+  submittedAt          DateTime?          @map("submitted_at")
+  attemptStatus        AttemptState       @default(PENDING) @map("attempt_status")
+  awardedMarks         Decimal?           @map("awarded_marks") @db.Decimal(5, 2)
+  draftPayload         Json?              @map("draft_payload")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  session              AssessmentSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  assessmentQuestion   AssessmentQuestion @relation(fields: [assessmentQuestionId], references: [id], onDelete: Restrict)
+  answers              Answer[]
+  codingSubmissions    CodingSubmission[]
+
+  @@unique([sessionId, assessmentQuestionId])
+  @@index([sessionId, attemptStatus])
+  @@map("question_attempts")
+}
+
+// -----------------------------------------------------------------------------
+// 10. answers: Submitted responses (SRS 9.1, FR-ANS-001..009)
+// -----------------------------------------------------------------------------
+model Answer {
+  id                String           @id @default(uuid()) @map("answer_id")
+  questionAttemptId String           @map("question_attempt_id")
+  answerPayload     Json             @map("answer_payload")
+  submittedAt       DateTime         @default(now()) @map("submitted_at")
+  evaluationStatus  EvaluationStatus @default(PENDING) @map("evaluation_status")
+  awardedMarks      Decimal?         @map("awarded_marks") @db.Decimal(5, 2)
+  idempotencyKey    String           @map("idempotency_key")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  questionAttempt   QuestionAttempt  @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+
+  @@unique([questionAttemptId, idempotencyKey])
+  @@map("answers")
+}
+
+// -----------------------------------------------------------------------------
+// 11. coding_submissions: Code & evaluation reference (SRS 9.1, FR-CODE-001..014)
+// -----------------------------------------------------------------------------
+model CodingSubmission {
+  id                 String           @id @default(uuid()) @map("coding_submission_id")
+  questionAttemptId  String           @map("question_attempt_id")
+  language           String
+  sourceCode         String           @map("source_code")
+  submissionStatus   SubmissionStatus @default(QUEUED) @map("submission_status")
+  executionReference String?          @map("execution_reference")
+  awardedMarks       Decimal?         @map("awarded_marks") @db.Decimal(5, 2)
+  idempotencyKey     String?          @map("idempotency_key")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  questionAttempt    QuestionAttempt  @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+
+  @@index([questionAttemptId])
+  @@map("coding_submissions")
+}
+
+// -----------------------------------------------------------------------------
+// 12. test_cases: Coding test cases (SRS 9.1, FR-QB-010)
+// Hidden cases are readable only by evaluation services & administrators
+// -----------------------------------------------------------------------------
+model TestCase {
+  id             String             @id @default(uuid()) @map("test_case_id")
+  questionId     String             @map("question_id")
+  inputData      String             @map("input_data")
+  expectedOutput String             @map("expected_output")
+  visibility     TestCaseVisibility @default(SAMPLE)
+  marks          Decimal            @default(0.00) @db.Decimal(5, 2)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  question       Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("test_cases")
+}
+
+// -----------------------------------------------------------------------------
+// 13. results: Finalized results (SRS 9.1, FR-SCORE-001..010)
+// -----------------------------------------------------------------------------
+model Result {
+  id               String            @id @default(uuid()) @map("result_id")
+  sessionId        String            @unique @map("session_id")
+  totalScore       Decimal           @map("total_score") @db.Decimal(6, 2)
+  maximumScore     Decimal           @map("maximum_score") @db.Decimal(6, 2)
+  resultStatus     ResultStatus      @default(PROVISIONAL) @map("result_status")
+  finalizedAt      DateTime          @default(now()) @map("finalized_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  scoreCorrections ScoreCorrection[]
+
+  @@map("results")
+}
+
+// -----------------------------------------------------------------------------
+// 14. audit_logs: Security & administrative history (SRS 9.1, FR-AUD-001..007)
+// -----------------------------------------------------------------------------
+model AuditLog {
+  id             String       @id @default(uuid()) @map("audit_id")
+  actorUserId    String?      @map("actor_user_id")
+  eventType      String       @map("event_type")
+  affectedEntity String       @map("affected_entity")
+  eventTimestamp DateTime     @default(now()) @map("event_timestamp")
+  outcome        AuditOutcome
+  correlationId  String       @map("correlation_id")
+  metadata       Json         @default("{}")
+
+  actor          User?        @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([eventType])
+  @@index([correlationId])
+  @@index([eventTimestamp])
+  @@map("audit_logs")
+}
+
+// -----------------------------------------------------------------------------
+// 15. lab_devices: Authorized candidate computers (SRS 9.1, FR-LAB-001..004)
+// -----------------------------------------------------------------------------
+model LabDevice {
+  id                    String              @id @default(uuid()) @map("device_id")
+  deviceReference       String              @unique @map("device_reference")
+  deviceStatus          DeviceStatus        @default(ACTIVE) @map("device_status")
+  approvedClientVersion String              @map("approved_client_version")
+  lastSeenAt            DateTime?           @map("last_seen_at")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  sessions              AssessmentSession[]
+
+  @@map("lab_devices")
+}
+
+// -----------------------------------------------------------------------------
+// 16. score_corrections: History of authorized score changes (SRS 9.1, FR-SCORE-010)
+// -----------------------------------------------------------------------------
+model ScoreCorrection {
+  id            String   @id @default(uuid()) @map("correction_id")
+  resultId      String   @map("result_id")
+  originalValue Decimal  @map("original_value") @db.Decimal(6, 2)
+  revisedValue  Decimal  @map("revised_value") @db.Decimal(6, 2)
+  reason        String
+  correctedBy   String   @map("corrected_by")
+  correctedAt   DateTime @default(now()) @map("corrected_at")
+
+  result        Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  corrector     User     @relation("ScoreCorrector", fields: [correctedBy], references: [id])
+
+  @@index([resultId])
+  @@map("score_corrections")
+}
+
+// -----------------------------------------------------------------------------
+// 17. revoked_tokens: Server-side token revocation & session termination (FR-AUTH-006, 007)
+// -----------------------------------------------------------------------------
+model RevokedToken {
+  id        String   @id @default(uuid()) @map("token_id")
+  jti       String   @unique
+  userId    String   @map("user_id")
+  revokedAt DateTime @default(now()) @map("revoked_at")
+  expiresAt DateTime @map("expires_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("revoked_tokens")
 }

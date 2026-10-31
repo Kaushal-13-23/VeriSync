@@ -39,7 +39,7 @@ Status Legend:
 
 - [ ] `FR-QB-001`: Question creation with text, type, category, difficulty, marks, and explanation (Must)
 - [ ] `FR-QB-002`: Question categorization by topic, skill, and difficulty (Must)
-- [ ] `FR-QB-003`: Support for question formats: Single MCQ, Multi MCQ, True/False, Short Answer, Descriptive, Scenario (Must)
+- [/] `FR-QB-003`: Support for question formats: Single MCQ, Multi MCQ, True/False, Short Answer, Descriptive, Scenario (Must)
 - [ ] `FR-QB-004`: Option management for objective questions with server-side protected correct answer storage (Must)
 - [ ] `FR-QB-005`: Configurable question time limits (Must)
 - [ ] `FR-QB-006`: Rich-text/formatted code snippets in question statements (Must)
@@ -126,13 +126,13 @@ Status Legend:
 ### 5.10 Lab Device Registry and Lockdown (FR-LAB)
 
 - [ ] `FR-LAB-001`: Registry of authorized lab devices (device ID, hostname, IP, MAC, location, status) (Should)
-- [ ] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
-- [ ] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
+- [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
+- [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [ ] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
-- [ ] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
-- [ ] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
+- [/] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
+- [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
 - [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
-- [ ] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
+- [/] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
@@ -158,15 +158,15 @@ Status Legend:
 
 ### 5.13 Candidate User Interface (FR-UI)
 
-- [ ] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must)
-- [ ] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must)
-- [ ] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must)
-- [ ] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must)
-- [ ] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must)
-- [ ] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must)
-- [ ] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
-- [ ] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must)
-- [ ] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must)
+- [x] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must)
+- [x] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must)
+- [x] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must)
+- [x] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must)
+- [x] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must)
+- [x] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must)
+- [x] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
+- [x] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must)
+- [x] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must)
 
 ### 5.14 System Configuration Management (FR-CONF)
 
@@ -184,8 +184,8 @@ Status Legend:
 - [ ] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
 - [ ] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
 - [ ] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
-- [ ] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
-- [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
+- [/] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
+- [x] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
 - [ ] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [ ] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
 - [ ] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
@@ -237,7 +237,7 @@ Status Legend:
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
 - [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [ ] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [/] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 

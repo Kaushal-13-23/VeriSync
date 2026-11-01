@@ -100,8 +100,11 @@ Status Legend:
 
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
+
+### 5.9 SQL Assessment (FR-SQL)
+
 - [x] `FR-CODE-001`: Support for C, C++, Java, Python, JavaScript with pinned versions in execution images (Must)
-- [ ] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
+- [x] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
 - [x] `FR-CODE-003`: Support for visible sample test cases and execution testing (Must)
 - [x] `FR-CODE-004`: Hidden test case configuration; hidden inputs and expected outputs never sent to client (Must)
 - [x] `FR-CODE-005`: Code evaluation delegated to dedicated, isolated coding execution service (Must)
@@ -114,9 +117,6 @@ Status Legend:
 - [x] `FR-CODE-012`: Distinction between infrastructure failure and candidate code error; infra errors re-queued (Must)
 - [x] `FR-CODE-013`: Coding execution service denied unrestricted access to DB or production secrets (Must)
 - [x] `FR-CODE-014`: Configured source code and evaluation result retention policy (Must)
-
-### 5.9 SQL Assessment (FR-SQL)
-
 - [x] `FR-SQL-001`: SQL question authoring with schema, seed data, reference query, and expected output (Must)
 - [x] `FR-SQL-002`: SQL execution against isolated ephemeral database instances with read-only roles (Must)
 - [x] `FR-SQL-003`: Blocking of dangerous SQL commands (DROP, ALTER, CREATE, TRUNCATE, admin functions) (Must)

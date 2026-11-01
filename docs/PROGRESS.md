@@ -14,16 +14,16 @@ Status Legend:
 
 ### 5.1 Authentication and Account Management (FR-AUTH)
 
-- [/] `FR-AUTH-001`: Secure Super Admin login with server-side credential validation (Must)
-- [ ] `FR-AUTH-002`: Candidate login requiring administrator-issued credentials; no self-registration (Must)
-- [ ] `FR-AUTH-003`: Passwords stored using Argon2id; no plaintext passwords in DB or logs (Must)
-- [/] `FR-AUTH-004`: Rate-limiting on login endpoints with temporary lockout on repeated failures (Must)
+- [x] `FR-AUTH-001`: Secure Super Admin login with server-side credential validation (Must)
+- [x] `FR-AUTH-002`: Candidate login requiring administrator-issued credentials; no self-registration (Must)
+- [x] `FR-AUTH-003`: Passwords stored using Argon2id; no plaintext passwords in DB or logs (Must)
+- [x] `FR-AUTH-004`: Rate-limiting on login endpoints with temporary lockout on repeated failures (Must)
 - [x] `FR-AUTH-005`: Super Admin initiated candidate password reset workflow without exposing old password (Must)
 - [x] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Must)
 - [x] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
 - [x] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
 - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Must)
-- [ ] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
+- [x] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
 
 ### 5.2 Candidate Management (FR-CAN)
 
@@ -46,7 +46,7 @@ Status Legend:
 - [x] `FR-QB-007`: Question search and filter by keyword, topic, difficulty, and type (Must)
 - [x] `FR-QB-008`: Question editing before assignment with immutability for active sessions (Must)
 - [x] `FR-QB-009`: Question deactivation/archival preventing new usage without altering existing records (Must)
-- [ ] `FR-QB-010`: Test case configuration for programming questions with sample and hidden designations (Must)
+- [x] `FR-QB-010`: Test case configuration for programming questions with sample and hidden designations (Must)
 
 ### 5.4 Assessment Management (FR-ASMT)
 
@@ -61,29 +61,29 @@ Status Legend:
 
 ### 5.5 Timing, Deadline, and Session Expiry (FR-TIME)
 
-- [ ] `FR-TIME-001`: Authoritative backend timing; client clock never trusted for deadline decisions (Must)
-- [ ] `FR-TIME-002`: Server-recorded start timestamp for assessment sessions and question attempts (Must)
-- [ ] `FR-TIME-003`: Authoritative question deadline computation capped by overall assessment deadline (Must)
-- [ ] `FR-TIME-004`: Immediate rejection of answers arriving after the server-computed deadline (Must)
-- [ ] `FR-TIME-005`: Automatic question finalization upon timeout with configured auto-advance policy (Must)
-- [ ] `FR-TIME-006`: Background expiry worker handling timed-out questions and expired sessions (Must)
-- [ ] `FR-TIME-007`: Overall assessment deadline precedence over remaining question time (Must)
-- [ ] `FR-TIME-008`: Authoritative remaining-time synchronization API endpoint (Must)
-- [ ] `FR-TIME-009`: Enforcement of sequential question progression without revisiting past questions by default (Must)
-- [ ] `FR-TIME-010`: Continuous deadline progression during candidate disconnection; no deadline pauses (Must)
-- [ ] `FR-TIME-011`: Audited administrative session extension/reopening overrides with mandatory reason (Must)
+- [x] `FR-TIME-001`: Authoritative backend timing; client clock never trusted for deadline decisions (Must)
+- [x] `FR-TIME-002`: Server-recorded start timestamp for assessment sessions and question attempts (Must)
+- [x] `FR-TIME-003`: Authoritative question deadline computation capped by overall assessment deadline (Must)
+- [x] `FR-TIME-004`: Immediate rejection of answers arriving after the server-computed deadline (Must)
+- [x] `FR-TIME-005`: Automatic question finalization upon timeout with configured auto-advance policy (Must)
+- [x] `FR-TIME-006`: Background expiry worker handling timed-out questions and expired sessions (Must)
+- [x] `FR-TIME-007`: Overall assessment deadline precedence over remaining question time (Must)
+- [x] `FR-TIME-008`: Authoritative remaining-time synchronization API endpoint (Must)
+- [x] `FR-TIME-009`: Enforcement of sequential question progression without revisiting past questions by default (Must)
+- [x] `FR-TIME-010`: Continuous deadline progression during candidate disconnection; no deadline pauses (Must)
+- [x] `FR-TIME-011`: Audited administrative session extension/reopening overrides with mandatory reason (Must)
 
 ### 5.6 Answer Submission and Processing (FR-ANS)
 
-- [ ] `FR-ANS-001`: Answer acceptance only for the candidate's currently active question attempt (Must)
-- [ ] `FR-ANS-002`: Verification of session, question attempt state, deadline, and payload structure (Must)
-- [ ] `FR-ANS-003`: Durable database persistence of accepted answers before sending acknowledgement (Must)
-- [ ] `FR-ANS-004`: Invalidation of subsequent answer modifications once an answer is accepted (Must)
-- [ ] `FR-ANS-005`: Local draft autosave for long-form answers without extending deadlines or submitting (Must)
-- [ ] `FR-ANS-006`: Authoritative server acknowledgement; client displays success only upon receipt (Must)
-- [ ] `FR-ANS-007`: Safe connection recovery without duplicating accepted submissions (Must)
-- [ ] `FR-ANS-008`: Assessment completion marking with prevention of further changes (Must)
-- [ ] `FR-ANS-009`: Mandatory client-generated Idempotency-Key on all submissions; duplicate keys return original result (Must)
+- [x] `FR-ANS-001`: Answer acceptance only for the candidate's currently active question attempt (Must)
+- [x] `FR-ANS-002`: Verification of session, question attempt state, deadline, and payload structure (Must)
+- [x] `FR-ANS-003`: Durable database persistence of accepted answers before sending acknowledgement (Must)
+- [x] `FR-ANS-004`: Invalidation of subsequent answer modifications once an answer is accepted (Must)
+- [x] `FR-ANS-005`: Local draft autosave for long-form answers without extending deadlines or submitting (Must)
+- [x] `FR-ANS-006`: Authoritative server acknowledgement; client displays success only upon receipt (Must)
+- [x] `FR-ANS-007`: Safe connection recovery without duplicating accepted submissions (Must)
+- [x] `FR-ANS-008`: Assessment completion marking with prevention of further changes (Must)
+- [x] `FR-ANS-009`: Mandatory client-generated Idempotency-Key on all submissions; duplicate keys return original result (Must)
 
 ### 5.7 Scoring and Evaluation (FR-SCORE)
 
@@ -138,11 +138,11 @@ Status Legend:
 
 - [x] `FR-AUD-001`: Immutable audit logging for administrative actions (overrides, publishes, edits, status) (Must)
 - [x] `FR-AUD-002`: Audit logging for candidate session events (start, submit, timeout, disconnect) (Must)
-- [ ] `FR-AUD-003`: Logging of auth events (successes, failures, lockouts, token revocations) (Must)
+- [x] `FR-AUD-003`: Logging of auth events (successes, failures, lockouts, token revocations) (Must)
 - [x] `FR-AUD-004`: Standardized audit schema: event_id, timestamp (UTC), actor, event_type, entity, outcome, IP (Must)
-- [ ] `FR-AUD-005`: Write-only / append-only audit log protection; DB role prevented from UPDATE/DELETE (Must)
+- [x] `FR-AUD-005`: Write-only / append-only audit log protection; DB role prevented from UPDATE/DELETE (Must)
 - [x] `FR-AUD-006`: Audit log search and filter by actor, event type, date range, entity, correlation ID (Must)
-- [ ] `FR-AUD-007`: Audit metadata sanitization: passwords, tokens, and secrets strictly excluded (Must)
+- [x] `FR-AUD-007`: Audit metadata sanitization: passwords, tokens, and secrets strictly excluded (Must)
 
 ### 5.12 Administration and Monitoring (FR-ADMIN)
 
@@ -171,9 +171,9 @@ Status Legend:
 ### 5.14 System Configuration Management (FR-CONF)
 
 - [x] `FR-CONF-001`: Administrative management of approved client versions and compatibility thresholds (Must)
-- [ ] `FR-CONF-002`: Server-side validation of runtime configuration parameters (Must)
+- [x] `FR-CONF-002`: Server-side validation of runtime configuration parameters (Must)
 - [x] `FR-CONF-003`: Audit logging of configuration changes with reason and actor (Must)
-- [ ] `FR-CONF-004`: Dynamic retrieval of system operational policies by clients (Must)
+- [x] `FR-CONF-004`: Dynamic retrieval of system operational policies by clients (Must)
 
 ---
 
@@ -182,33 +182,33 @@ Status Legend:
 ### 6.1 Security Requirements (NFR-SEC)
 
 - [ ] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
-- [ ] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
-- [ ] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
+- [x] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
+- [x] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
 - [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
 - [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
-- [ ] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
-- [ ] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
+- [x] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
+- [x] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
 - [x] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
 - [x] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Must)
-- [ ] `NFR-SEC-010`: Tamper-evident audit storage with append-only access controls (Must)
-- [ ] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
-- [ ] `NFR-SEC-012`: Secrets managed exclusively via environment variables or secret managers (Must)
+- [x] `NFR-SEC-010`: Tamper-evident audit storage with append-only access controls (Must)
+- [x] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
+- [x] `NFR-SEC-012`: Secrets managed exclusively via environment variables or secret managers (Must)
 
 ### 6.2 Performance Requirements (NFR-PERF)
 
 - [ ] `NFR-PERF-001`: API p95 response time under 500ms for read requests at approved load (Must)
 - [ ] `NFR-PERF-002`: p95 question delivery response time under 300ms (Must)
 - [ ] `NFR-PERF-003`: p95 answer submission commit and ack time under 500ms (Must)
-- [ ] `NFR-PERF-004`: Background expiry worker latency under 1000ms from scheduled deadline (Must)
+- [x] `NFR-PERF-004`: Background expiry worker latency under 1000ms from scheduled deadline (Must)
 - [ ] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must)
 
 ### 6.3 Reliability & Availability (NFR-REL)
 
 - [ ] `NFR-REL-001`: Target 99.5% availability during examination windows (Must)
-- [ ] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
-- [ ] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
-- [ ] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
-- [ ] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
+- [x] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
+- [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
+- [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
+- [x] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
 - [ ] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
 
 ### 6.4 Scalability Requirements (NFR-SCALE)

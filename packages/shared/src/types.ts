@@ -24,6 +24,19 @@ export enum AssessmentStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export enum AssignmentStatus {
+  ASSIGNED = 'ASSIGNED',
+  STARTED = 'STARTED',
+  COMPLETED = 'COMPLETED',
+  REVOKED = 'REVOKED',
+}
+
+export enum AuditOutcome {
+  SUCCESS = 'SUCCESS',
+  DENIED = 'DENIED',
+  FAILURE = 'FAILURE',
+}
+
 export enum QuestionType {
   MCQ_SINGLE = 'MCQ_SINGLE',
   MCQ_MULTIPLE = 'MCQ_MULTIPLE',
@@ -61,6 +74,39 @@ export enum AttemptState {
   EVALUATED = 'EVALUATED',
 }
 
+export enum NavigationMode {
+  SEQUENTIAL = 'SEQUENTIAL',
+  FREE = 'FREE',
+}
+
+export enum ResultVisibility {
+  IMMEDIATE = 'IMMEDIATE',
+  SCHEDULED = 'SCHEDULED',
+  ADMIN_RELEASE = 'ADMIN_RELEASE',
+}
+
+export enum TestCaseVisibility {
+  SAMPLE = 'SAMPLE',
+  HIDDEN = 'HIDDEN',
+}
+
+export enum SubmissionStatus {
+  QUEUED = 'QUEUED',
+  RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+export enum ExecutionStatus {
+  ACCEPTED = 'ACCEPTED',
+  WRONG_ANSWER = 'WRONG_ANSWER',
+  COMPILATION_ERROR = 'COMPILATION_ERROR',
+  RUNTIME_ERROR = 'RUNTIME_ERROR',
+  TIME_LIMIT_EXCEEDED = 'TIME_LIMIT_EXCEEDED',
+  MEMORY_LIMIT_EXCEEDED = 'MEMORY_LIMIT_EXCEEDED',
+  INTERNAL_EVALUATION_ERROR = 'INTERNAL_EVALUATION_ERROR',
+}
+
 /**
  * Health check response
  */
@@ -68,6 +114,161 @@ export interface HealthStatusResponse {
   status: 'ok' | 'degraded';
   serverTime: string; // UTC ISO-8601 (Rule 9)
   version: string;
+}
+
+/**
+ * Candidate Management Types (FR-CAN-001..007, FR-AUTH-009)
+ */
+export interface CandidateProfileDto {
+  id: string;
+  candidateIdentifier: string;
+  userId: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string | null;
+  institution: string;
+  qualification: string;
+  graduationYear: number;
+  recruitmentReference: string;
+  accountStatus: AccountStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCandidateResponse {
+  candidate: CandidateProfileDto;
+  temporaryPassword?: string; // Provisioned once; never logged or exported (FR-AUTH-009)
+}
+
+export interface CandidateCsvRow {
+  candidateId: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string;
+  institution: string;
+  qualification: string;
+  graduationYear: number | string;
+  recruitmentReference: string;
+}
+
+export interface CandidateCsvImportError {
+  row: number;
+  candidateId?: string;
+  field?: string;
+  error: string;
+}
+
+export interface CandidateCsvImportResult {
+  totalRows: number;
+  importedCount: number;
+  errorCount: number;
+  errors: CandidateCsvImportError[];
+  importedCandidates: Array<{
+    candidateId: string;
+    username: string;
+    email: string;
+    temporaryPassword?: string;
+  }>;
+}
+
+/**
+ * Question Bank Types (FR-QB-001..010)
+ */
+export interface QuestionOptionDto {
+  id?: string;
+  optionText: string;
+  displayOrder: number;
+  isCorrect?: boolean; // Strictly omitted from candidate-facing representations (TC09, BR-009)
+}
+
+export interface TestCaseDto {
+  id?: string;
+  inputData: string;
+  expectedOutput?: string; // Hidden test expected output omitted from candidate representations
+  visibility: TestCaseVisibility;
+  marks: number;
+}
+
+export interface QuestionDto {
+  id: string;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  topic: string;
+  difficulty: string;
+  maximumMarks: number;
+  negativeMarks: number;
+  questionVersion: number;
+  status: string;
+  explanation?: string | null;
+  options: QuestionOptionDto[];
+  testCases?: TestCaseDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Assessment Management Types (FR-ASMT-001..008)
+ */
+export interface AssessmentQuestionMappingDto {
+  questionId: string;
+  sequenceNumber: number;
+  timeLimitSeconds?: number | null;
+  marksOverride?: number | null;
+}
+
+export interface AssessmentDto {
+  id: string;
+  title: string;
+  description?: string | null;
+  instructions?: string | null;
+  roleCategory: string;
+  overallDuration: number;
+  totalMarks?: number | null;
+  passingMarks?: number | null;
+  negativeMarking: boolean;
+  negativeMarkValue?: number | null;
+  randomizeQuestions: boolean;
+  randomizeOptions: boolean;
+  navigationMode: NavigationMode;
+  resultVisibility: ResultVisibility;
+  startAt: string;
+  endAt: string;
+  status: AssessmentStatus;
+  attemptLimit: number;
+  configurationVersion: number;
+  publishedSnapshot?: unknown | null;
+  createdBy: string;
+  questionCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Candidate Assigned Assessment (FR-UI-001)
+ * Strips all internal question answer keys, correct indicators, and hidden test cases (TC09).
+ */
+export interface CandidateAssignedAssessmentDto {
+  assignmentId: string;
+  assessmentId: string;
+  title: string;
+  description?: string | null;
+  instructions?: string | null;
+  roleCategory: string;
+  overallDuration: number;
+  totalMarks?: number | null;
+  startAt: string;
+  endAt: string;
+  status: AssessmentStatus;
+  attemptLimit: number;
+  attemptsUsed: number;
+  attemptsRemaining: number;
+  isEligible: boolean;
+  eligibilityReason?: string;
+  navigationMode: NavigationMode;
+  serverTime: string; // UTC ISO-8601
 }
 
 /**
@@ -90,4 +291,450 @@ export interface SubmitAnswerResponse {
     deadlineAt: string; // UTC ISO-8601
   };
   serverTime: string; // UTC ISO-8601
+}
+
+/**
+ * Exam Runtime & Session Types (SRS 3.2, 3.3, 3.4, FR-TIME-001..011, FR-ANS-001..009)
+ */
+
+export interface CandidateQuestionOptionDto {
+  id: string;
+  optionText: string;
+  displayOrder: number;
+  // Strict non-negotiable rule 2 & TC-09: zero isCorrect or answer key exposure
+}
+
+export interface CandidateSampleTestCaseDto {
+  id: string;
+  inputData: string;
+  expectedOutput: string;
+  // Hidden test cases are strictly excluded (FR-CODE-004, TC-10)
+}
+
+export interface CandidateQuestionDto {
+  questionAttemptId: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  maximumMarks: number;
+  timeLimitSeconds?: number | null;
+  startedAt?: string | null;
+  deadlineAt: string; // UTC ISO-8601
+  remainingSeconds: number;
+  options?: CandidateQuestionOptionDto[];
+  sampleTestCases?: CandidateSampleTestCaseDto[];
+  draftPayload?: unknown | null;
+}
+
+export type PaletteItemStatus = 'ANSWERED' | 'CURRENT' | 'NOT_ANSWERED';
+
+export interface PaletteItemDto {
+  sequenceNumber: number;
+  questionAttemptId: string;
+  status: PaletteItemStatus;
+}
+
+export interface StartSessionDto {
+  clientVersion: string;
+  deviceId?: string;
+  acknowledgedInstructions: boolean;
+}
+
+export interface StartSessionResponseDto {
+  sessionId: string;
+  assignmentId: string;
+  attemptNumber: number;
+  startedAt: string;
+  overallDeadline: string;
+  overallRemainingSeconds: number;
+  currentQuestion: CandidateQuestionDto;
+  palette: PaletteItemDto[];
+  serverTime: string;
+}
+
+export interface SessionStatusDto {
+  sessionId: string;
+  sessionStatus: SessionState;
+  startedAt: string;
+  overallDeadline: string;
+  overallRemainingSeconds: number;
+  currentQuestion?: CandidateQuestionDto | null;
+  palette: PaletteItemDto[];
+  serverTime: string;
+}
+
+export interface SubmitAnswerDto {
+  questionAttemptId: string;
+  answer: unknown;
+}
+
+export interface SubmitAnswerAckDto {
+  status: 'accepted';
+  questionAttemptId: string;
+  submittedAt: string;
+  next?: {
+    questionAttemptId: string;
+    sequenceNumber: number;
+    deadlineAt: string;
+  } | null;
+  serverTime: string;
+}
+
+export interface SaveDraftDto {
+  questionAttemptId: string;
+  draftPayload: unknown;
+}
+
+export interface FinalSubmitResponseDto {
+  status: 'submitted';
+  sessionId: string;
+  candidateIdentifier: string;
+  assessmentTitle: string;
+  totalQuestions: number;
+  answeredCount: number;
+  submittedAt: string;
+  serverTime: string;
+}
+
+export type AdminSessionOverrideAction = 'EXTEND' | 'REOPEN' | 'PAUSE' | 'RESUME' | 'CANCEL';
+
+export interface AdminSessionOverrideDto {
+  action: AdminSessionOverrideAction;
+  reason: string;
+  extensionMinutes?: number;
+}
+
+export interface AdminSessionOverrideResponseDto {
+  sessionId: string;
+  previousStatus: SessionState;
+  newStatus: SessionState;
+  overallDeadline: string;
+  overrideReason: string;
+  performedBy: string;
+  serverTime: string;
+}
+
+export interface SessionHeartbeatDto {
+  deviceId?: string;
+  clientVersion?: string;
+}
+
+export interface SessionHeartbeatResponseDto {
+  status: 'ok';
+  sessionStatus: SessionState;
+  serverTime: string;
+}
+
+/**
+ * Results and Evaluation Types (SRS 5.10, 5.11, FR-SCORE, FR-ADMIN, UC-14, UC-15)
+ */
+
+export enum ResultStatus {
+  PROVISIONAL = 'PROVISIONAL',
+  FINAL = 'FINAL',
+}
+
+export interface ManualEvaluationQueueItemDto {
+  questionAttemptId: string;
+  sessionId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  maximumMarks: number;
+  candidateAnswer: unknown;
+  submittedAt: string;
+}
+
+export interface EvaluateQuestionDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+}
+
+export interface EvaluateQuestionResponseDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+  evaluatedBy: string;
+  evaluatedAt: string;
+  sessionResultStatus: ResultStatus;
+}
+
+export interface ScoreCorrectionDto {
+  sessionId: string;
+  questionAttemptId?: string;
+  revisedScore: number;
+  reason: string;
+}
+
+export interface ScoreCorrectionRecordDto {
+  id: string;
+  resultId: string;
+  questionAttemptId?: string | null;
+  originalValue: number;
+  revisedValue: number;
+  reason: string;
+  correctedBy: string;
+  correctedAt: string;
+}
+
+export interface ScoreCorrectionResponseDto {
+  correction: ScoreCorrectionRecordDto;
+  newTotalScore: number;
+  newPercentage: number;
+  newRank?: number | null;
+  resultStatus: ResultStatus;
+}
+
+export interface ResultFilterDto {
+  assessmentId?: string;
+  candidateIdentifier?: string;
+  status?: 'PASS' | 'FAIL' | 'ALL';
+  resultStatus?: ResultStatus;
+  institution?: string;
+  minScore?: number;
+  maxScore?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AssessmentResultDto {
+  id: string;
+  sessionId: string;
+  assignmentId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  totalScore: number;
+  maximumScore: number;
+  percentage: number;
+  resultStatus: ResultStatus;
+  passed?: boolean | null;
+  rank?: number | null;
+  submittedAt: string;
+  finalizedAt?: string | null;
+}
+
+export interface QuestionAttemptResultDto {
+  questionAttemptId: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  negativeMarks: number;
+  marksAwarded: number;
+  candidateResponse: unknown;
+  attemptStatus: AttemptState;
+  evaluatorFeedback?: string | null;
+  evaluatedBy?: string | null;
+  evaluatedAt?: string | null;
+}
+
+export interface DetailedResultResponseDto {
+  result: AssessmentResultDto;
+  breakdown: QuestionAttemptResultDto[];
+  corrections: ScoreCorrectionRecordDto[];
+}
+
+export interface QuestionStatisticsDto {
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  totalAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+  unansweredAttempts: number;
+  averageScore: number;
+  difficultyIndex: number; // 0.0 - 1.0 (proportion of correct answers)
+  discriminationIndex?: number;
+}
+
+export interface AssessmentStatisticsDto {
+  assessmentId: string;
+  assessmentTitle: string;
+  totalCandidates: number;
+  completedSessions: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+  passingPercentage: number;
+  questions: QuestionStatisticsDto[];
+}
+
+export interface CandidateResultViewDto {
+  assessmentTitle: string;
+  resultStatus: ResultStatus;
+  canViewScore: boolean;
+  visibilityNotice?: string;
+  totalScore?: number;
+  maximumScore?: number;
+  percentage?: number;
+  passed?: boolean | null;
+  rank?: number | null;
+}
+
+/**
+ * Technical Assessment & Coding Evaluation DTOs (FR-CODE-001..014, SRS 8.5)
+ */
+export interface CreateCodeSubmissionDto {
+  questionAttemptId: string;
+  language: string; // c | cpp | java | python | javascript | sql
+  sourceCode: string;
+}
+
+export interface CodeSubmissionResponseDto {
+  submissionId: string;
+  questionAttemptId: string;
+  status: SubmissionStatus;
+  submittedAt: string;
+}
+
+export interface TestCaseSampleResultDto {
+  testCaseId: string;
+  passed: boolean;
+  inputData?: string;
+  expectedOutput?: string;
+  actualOutput?: string;
+  executionTimeMs?: number;
+  memoryKb?: number;
+  errorMessage?: string;
+}
+
+export interface CodeSubmissionStatusDto {
+  submissionId: string;
+  questionAttemptId: string;
+  submissionStatus: SubmissionStatus;
+  executionStatus?: ExecutionStatus | null;
+  awardedMarks?: number | null;
+  totalMarks?: number | null;
+  compilerOutput?: string | null;
+  executionTimeMs?: number | null;
+  memoryUsedKb?: number | null;
+  sampleTestResults?: TestCaseSampleResultDto[];
+  isInfrastructureError?: boolean;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * SQL Sandbox Execution DTOs (FR-SQL-001..005)
+ */
+export interface SqlExecutionRequestDto {
+  questionAttemptId: string;
+  query: string;
+}
+
+export interface SqlExecutionResultDto {
+  passed: boolean;
+  executionStatus: ExecutionStatus;
+  rows?: Record<string, unknown>[];
+  rowCount?: number;
+  executionTimeMs?: number;
+  errorMessage?: string;
+}
+
+/**
+ * Retention Policy DTOs (FR-CODE-014, SRS 9.3)
+ */
+export interface RetentionSettingsDto {
+  sourceCodeRetentionDays: number;
+  resultRetentionDays: number;
+  autoPurgeEnabled: boolean;
+}
+
+export interface PurgeRetentionResultDto {
+  purgedSubmissionsCount: number;
+  purgedAt: string;
+}
+
+/**
+ * Lab Device & Lockdown Types (FR-LAB-001..006, FR-AUTH-010)
+ */
+export type DeviceStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOCKED';
+
+export interface LabDeviceDto {
+  id: string;
+  deviceReference: string;
+  deviceStatus: DeviceStatus;
+  approvedClientVersion: string;
+  hostname?: string | null;
+  ipAddress?: string | null;
+  macAddress?: string | null;
+  location?: string | null;
+  notes?: string | null;
+  lastSeenAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegisterLabDeviceDto {
+  deviceReference: string;
+  approvedClientVersion: string;
+  hostname?: string;
+  ipAddress?: string;
+  macAddress?: string;
+  location?: string;
+  notes?: string;
+}
+
+export interface UpdateDeviceStatusDto {
+  status: DeviceStatus;
+  reason: string;
+}
+
+export interface UpdateDeviceVersionDto {
+  approvedClientVersion: string;
+  reason: string;
+}
+
+export type LockdownEventType =
+  | 'FOCUS_LOST'
+  | 'EXIT_ATTEMPT'
+  | 'PROHIBITED_PROCESS_DETECTED'
+  | 'SHORTCUT_TRIPPED'
+  | 'WINDOW_BLUR'
+  | 'FULLSCREEN_EXIT'
+  | 'CLIPBOARD_ACCESSED';
+
+export interface LockdownEventDto {
+  eventType: LockdownEventType;
+  clientTimestamp: string;
+  details?: Record<string, unknown>;
+  windowTitle?: string;
+  processName?: string;
+}
+
+export interface LockdownEventResponseDto {
+  recorded: boolean;
+  eventId: string;
+  serverTime: string;
+}
+
+export interface SystemPoliciesDto {
+  approvedClientVersion: string;
+  minimumClientVersion: string;
+  lockdownEnabled: boolean;
+  serverTime: string;
+}
+
+export interface AuditChainVerificationResultDto {
+  valid: boolean;
+  totalEntries: number;
+  brokenEntryId?: string;
+  verifiedAt: string;
 }

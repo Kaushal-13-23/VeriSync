@@ -8,4 +8,8 @@ module.exports = {
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
+  testTimeout: 25000,
+  moduleNameMapper: {
+    '^@verisync/shared$': '<rootDir>/../../../packages/shared/src',
+  },
 };

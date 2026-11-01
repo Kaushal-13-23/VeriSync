@@ -164,7 +164,7 @@ Status Legend:
 - [x] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must)
 - [x] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must)
 - [x] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must)
-- [/] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
+- [x] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
 - [x] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must)
 - [x] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must)
 
@@ -237,7 +237,7 @@ Status Legend:
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
 - [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [ ] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [/] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 

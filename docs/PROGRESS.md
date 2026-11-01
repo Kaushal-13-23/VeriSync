@@ -253,7 +253,7 @@ Status Legend:
 ### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
 
 - **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
-- **Branch**: `phase-3/B-sessions-monitoring-audit`
+- **Branch**: `phase-4/B-scoring-results-reports`
 - **Phase 1 Completion Status**:
   - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
   - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)
@@ -315,4 +315,25 @@ Status Legend:
   - [x] `FR-AUD-006`: Multi-dimensional audit log search, filter, and CSV export (Done)
   - [x] `Rule 1`: Untrusted client clocks; server-authoritative timer display (Done)
   - [x] `Rule 7`: Mandatory justification reason and actor attribution for overrides, score changes, publishes, status transitions (Done)
+  - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)
+
+- **Phase 4 Completion Status**:
+  - [x] `FR-SCORE-001`: Automated scoring of objective questions against published assessment snapshot key (Done)
+  - [x] `FR-SCORE-002`: Configurable negative marking deduction for incorrect objective responses (Done)
+  - [x] `FR-SCORE-003`: Configurable partial credit for multi-select questions (Done)
+  - [x] `FR-SCORE-004`: Evaluation queue and scoring rubric for subjective/descriptive questions (`UC-14`) (Done)
+  - [x] `FR-SCORE-005`: Manual score entry and evaluator feedback comments (`UC-14`) (Done)
+  - [x] `FR-SCORE-006`: Configured scoring policy for timed-out or unanswered questions (Done)
+  - [x] `FR-SCORE-007`: Candidate and assessment-level aggregate score calculations (Done)
+  - [x] `FR-SCORE-008`: Provisional vs. Final result status handling with pending subjective count (Done)
+  - [x] `FR-SCORE-009`: Result ranking calculation with deterministic tie-break criteria (Score ↓, Time ↑, ID ↑) (Done)
+  - [x] `FR-SCORE-010`: Audited score correction workflow requiring original value, new value, reason, actor (`UC-15`) (Done)
+  - [x] `FR-ADMIN-001`: Admin dashboard overview metrics and operational status cards with real data (Done)
+  - [x] `FR-ADMIN-003`: Candidate profile, score breakdown, and completion rate breakdown chart (Done)
+  - [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Done)
+  - [x] `FR-ADMIN-006`: Export of results in CSV format with ISO-8601 UTC timestamps (Done)
+  - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination index, option distribution) (Done)
+  - [x] `FR-ADMIN-009`: Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) (Done)
+  - [x] `BR-012`: Mandatory justification reason required for every administrative override and score adjustment (Done)
+  - [x] `Rule 7`: All score adjustments, overrides, and status transitions audited with reason and actor (Done)
   - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)

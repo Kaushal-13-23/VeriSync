@@ -15,6 +15,8 @@ import { CandidatesView } from './components/candidates/CandidatesView';
 import { QuestionBankView } from './components/questions/QuestionBankView';
 import { AssessmentsView } from './components/assessments/AssessmentsView';
 import { LiveSessionsView } from './components/sessions/LiveSessionsView';
+import { ResultsView } from './components/results/ResultsView';
+import { ReportsView } from './components/reports/ReportsView';
 import { AuditLogsView } from './components/audit/AuditLogsView';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ToastContainer } from './components/ui/ToastContainer';
@@ -43,6 +45,10 @@ export const AppContent: React.FC = () => {
         return <QuestionBankView />;
       case 'assessments':
         return <AssessmentsView />;
+      case 'results':
+        return <ResultsView />;
+      case 'reports':
+        return <ReportsView />;
       case 'audit-logs':
         return <AuditLogsView />;
       default:

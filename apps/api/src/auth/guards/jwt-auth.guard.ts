@@ -58,6 +58,35 @@ export class JwtAuthGuard implements CanActivate {
         );
       }
 
+      // Device and Client Version Binding Enforcement (FR-AUTH-010, TC-08, TC-16)
+      if (payload.role === 'CANDIDATE' && payload.deviceId) {
+        const headerDeviceId =
+          (request.headers['x-device-id'] as string) ||
+          (request.headers['device-id'] as string) ||
+          (request.query?.deviceId as string) ||
+          (request.body as any)?.deviceId;
+
+        if (headerDeviceId && headerDeviceId !== payload.deviceId) {
+          throw new ApiErrorException(
+            ApiErrorCode.FORBIDDEN,
+            'Cross-device access forbidden: session token is bound to a different registered lab device (FR-AUTH-010, TC-08)',
+          );
+        }
+      }
+
+      if (payload.role === 'CANDIDATE' && payload.clientVersion) {
+        const headerClientVersion =
+          (request.headers['x-client-version'] as string) ||
+          (request.headers['client-version'] as string);
+
+        if (headerClientVersion && headerClientVersion !== payload.clientVersion) {
+          throw new ApiErrorException(
+            ApiErrorCode.UNSUPPORTED_CLIENT,
+            `Client version (${headerClientVersion}) does not match session binding (${payload.clientVersion}) (FR-AUTH-010, FR-LAB-003, TC-16)`,
+          );
+        }
+      }
+
       request.user = payload;
       return true;
     } catch (err: any) {

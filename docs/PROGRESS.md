@@ -23,7 +23,7 @@ Status Legend:
 - [x] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
 - [x] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
 - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Must)
-- [ ] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
+- [x] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
 
 ### 5.2 Candidate Management (FR-CAN)
 
@@ -125,12 +125,12 @@ Status Legend:
 
 ### 5.10 Lab Device Registry and Lockdown (FR-LAB)
 
-- [ ] `FR-LAB-001`: Registry of authorized lab devices (device ID, hostname, IP, MAC, location, status) (Should)
-- [ ] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
+- [x] `FR-LAB-001`: Registry of authorized lab devices (device ID, hostname, IP, MAC, location, status) (Should)
+- [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
 - [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
 - [ ] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
-- [ ] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
+- [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
 - [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
 - [ ] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
@@ -170,10 +170,10 @@ Status Legend:
 
 ### 5.14 System Configuration Management (FR-CONF)
 
-- [ ] `FR-CONF-001`: Administrative management of approved client versions and compatibility thresholds (Must)
-- [ ] `FR-CONF-002`: Server-side validation of runtime configuration parameters (Must)
-- [ ] `FR-CONF-003`: Audit logging of configuration changes with reason and actor (Must)
-- [ ] `FR-CONF-004`: Dynamic retrieval of system operational policies by clients (Must)
+- [x] `FR-CONF-001`: Administrative management of approved client versions and compatibility thresholds (Must)
+- [x] `FR-CONF-002`: Server-side validation of runtime configuration parameters (Must)
+- [x] `FR-CONF-003`: Audit logging of configuration changes with reason and actor (Must)
+- [x] `FR-CONF-004`: Dynamic retrieval of system operational policies by clients (Must)
 
 ---
 
@@ -186,12 +186,12 @@ Status Legend:
 - [x] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
 - [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
 - [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
-- [ ] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
+- [x] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [x] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
 - [ ] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
-- [ ] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Must)
+- [x] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Must)
 - [x] `NFR-SEC-010`: Tamper-evident audit storage with append-only access controls (Must)
-- [ ] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
+- [x] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
 - [x] `NFR-SEC-012`: Secrets managed exclusively via environment variables or secret managers (Must)
 
 ### 6.2 Performance Requirements (NFR-PERF)
@@ -208,7 +208,7 @@ Status Legend:
 - [x] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
 - [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
 - [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
-- [ ] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
+- [x] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
 - [ ] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
 
 ### 6.4 Scalability Requirements (NFR-SCALE)

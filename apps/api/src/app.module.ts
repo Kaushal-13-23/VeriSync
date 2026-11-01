@@ -18,6 +18,7 @@ import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     SqlModule,
     CodingModule,
     RetentionModule,
+    DevicesModule,
   ],
   controllers: [AppController],
   providers: [

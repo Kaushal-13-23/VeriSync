@@ -113,36 +113,40 @@ export class SessionsService {
       );
     }
 
-    // 2. Lab device verification (FR-LAB-001..004)
+    // 2. Lab device verification (FR-LAB-001..004, FR-AUTH-010)
     let matchedDeviceId: string | undefined = undefined;
     if (dto.deviceId) {
       const device = await this.prisma.labDevice.findUnique({
         where: { deviceReference: dto.deviceId },
       });
-      if (device) {
-        if (device.deviceStatus === 'BLOCKED') {
-          throw new ApiErrorException(
-            ApiErrorCode.FORBIDDEN,
-            'This lab device has been blocked by administrators.',
-          );
-        }
-        if (
-          device.approvedClientVersion &&
-          dto.clientVersion !== device.approvedClientVersion &&
-          !this.isVersionApproved(dto.clientVersion)
-        ) {
-          throw new ApiErrorException(
-            ApiErrorCode.UNSUPPORTED_CLIENT,
-            `Client version does not match approved version for this lab computer.`,
-          );
-        }
-        matchedDeviceId = device.id;
-        // update last seen
-        await this.prisma.labDevice.update({
-          where: { id: device.id },
-          data: { lastSeenAt: now },
-        });
+      if (!device) {
+        throw new ApiErrorException(
+          ApiErrorCode.FORBIDDEN,
+          `Device '${dto.deviceId}' is not registered in the authorized lab device registry (FR-LAB-001, FR-AUTH-010)`,
+        );
       }
+      if (device.deviceStatus === 'BLOCKED' || device.deviceStatus === 'SUSPENDED') {
+        throw new ApiErrorException(
+          ApiErrorCode.FORBIDDEN,
+          `This lab device status is ${device.deviceStatus}. Assessments cannot be started on suspended/blocked devices (FR-LAB-004).`,
+        );
+      }
+      if (
+        device.approvedClientVersion &&
+        dto.clientVersion !== device.approvedClientVersion &&
+        !this.isVersionApproved(dto.clientVersion)
+      ) {
+        throw new ApiErrorException(
+          ApiErrorCode.UNSUPPORTED_CLIENT,
+          `Client version does not match approved version for this lab computer.`,
+        );
+      }
+      matchedDeviceId = device.id;
+      // update last seen
+      await this.prisma.labDevice.update({
+        where: { id: device.id },
+        data: { lastSeenAt: now },
+      });
     }
 
     // 3. Instruction acknowledgment check (FR-UI-002)

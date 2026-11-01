@@ -47,3 +47,12 @@ jobs:
 
       - name: Build packages and apps
         run: pnpm build
+
+      - name: Run security dependency audit (NFR-SEC-011)
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Scan repository for secrets and credentials (NFR-SEC-005, Rule 5)
+        run: |
+          echo "Scanning for hardcoded secrets, private keys, and passwords..."
+          ! git grep -nEI "(AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|AIza[0-9A-Za-z\\-_]{35}|ghp_[0-9a-zA-Z]{36}|-----BEGIN (RSA |EC )?PRIVATE KEY-----)" -- ':!.env.example' ':!*test*' ':!*.spec.*'

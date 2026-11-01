@@ -11,6 +11,8 @@ export interface JwtPayload {
   tokenVersion: number;
   jti?: string;
   type: 'access' | 'refresh' | 'mfa';
+  deviceId?: string;
+  clientVersion?: string;
 }
 
 @Injectable()
@@ -31,13 +33,15 @@ export class TokenService {
   ) {}
 
   /**
-   * Generates short-lived access token (default 15 minutes) per FR-AUTH-007.
+   * Generates short-lived access token (default 15 minutes) per FR-AUTH-007, FR-AUTH-010.
    */
   async generateAccessToken(user: {
     id: string;
     username: string;
     role: UserRole;
     tokenVersion: number;
+    deviceId?: string;
+    clientVersion?: string;
   }): Promise<string> {
     const payload: JwtPayload = {
       sub: user.id,
@@ -45,6 +49,8 @@ export class TokenService {
       role: user.role,
       tokenVersion: user.tokenVersion,
       type: 'access',
+      ...(user.deviceId ? { deviceId: user.deviceId } : {}),
+      ...(user.clientVersion ? { clientVersion: user.clientVersion } : {}),
     };
 
     return this.jwt.signAsync(payload, {

@@ -1110,6 +1110,212 @@ paths:
         '200':
           description: Purge completed with count of purged records.
 
+  /admin/devices:
+    post:
+      summary: Register Authorized Lab Device
+      description: Registers an authorized lab computer with application-managed identifier and approved client version (FR-LAB-001, FR-LAB-002).
+      operationId: registerLabDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceReference
+                - approvedClientVersion
+              properties:
+                deviceReference:
+                  type: string
+                  example: 'DEV-LAB-101'
+                approvedClientVersion:
+                  type: string
+                  example: '1.1.0'
+                hostname:
+                  type: string
+                  example: 'LAB-PC-101'
+                ipAddress:
+                  type: string
+                  example: '192.168.1.101'
+                macAddress:
+                  type: string
+                  example: 'AA:BB:CC:DD:EE:01'
+                location:
+                  type: string
+                  example: 'Lab 3, Station 12'
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Lab device registered successfully.
+        '409':
+          description: Device reference already registered.
+
+    get:
+      summary: List Registered Lab Devices
+      description: Retrieves list of registered lab devices with filtering by status and search terms (FR-LAB-001).
+      operationId: listLabDevices
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, SUSPENDED, BLOCKED]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of registered lab devices.
+
+  /admin/devices/{id}:
+    get:
+      summary: Get Device Details
+      description: Returns device metadata and active sessions (FR-LAB-001).
+      operationId: getLabDevice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lab device record.
+
+  /admin/devices/{id}/status:
+    patch:
+      summary: Update Device Status
+      description: Updates device status (ACTIVE, SUSPENDED, BLOCKED) with audit trail and mandatory reason (FR-LAB-004, Rule 7).
+      operationId: updateDeviceStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+                - reason
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE, SUSPENDED, BLOCKED]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Device status updated.
+
+  /admin/devices/{id}/version:
+    patch:
+      summary: Update Device Approved Client Version
+      description: Updates approved client version for a specific lab device (FR-LAB-003, FR-CONF-001).
+      operationId: updateDeviceVersion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - approvedClientVersion
+                - reason
+              properties:
+                approvedClientVersion:
+                  type: string
+                  example: '1.2.0'
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Device approved client version updated.
+
+  /candidate/lockdown-events:
+    post:
+      summary: Ingest Client Lockdown Security Event
+      description: Records client lockdown integrity event (focus loss, exit attempt, prohibited process, window blur) into audit logs without automatic candidate disqualification (FR-LAB-006, BR-015, SRS 11.4).
+      operationId: recordLockdownEvent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventType
+                - clientTimestamp
+              properties:
+                eventType:
+                  type: string
+                  enum:
+                    [
+                      FOCUS_LOST,
+                      EXIT_ATTEMPT,
+                      PROHIBITED_PROCESS_DETECTED,
+                      SHORTCUT_TRIPPED,
+                      WINDOW_BLUR,
+                      FULLSCREEN_EXIT,
+                      CLIPBOARD_ACCESSED,
+                    ]
+                clientTimestamp:
+                  type: string
+                  format: date-time
+                details:
+                  type: object
+                windowTitle:
+                  type: string
+                processName:
+                  type: string
+      responses:
+        '201':
+          description: Lockdown event ingested into audit log.
+
+  /system/policies:
+    get:
+      summary: Retrieve System Operational Policies
+      description: Dynamic retrieval of client compatibility thresholds and runtime security policies (FR-CONF-004, FR-LAB-003).
+      operationId: getSystemPolicies
+      responses:
+        '200':
+          description: Current system policies.
+
+  /admin/audit/verify-chain:
+    get:
+      summary: Verify Cryptographic Audit Hash Chain Integrity
+      description: Validates SHA-256 hash chaining across all stored audit entries to detect external database alteration or tampering (NFR-SEC-009, FR-AUD-004).
+      operationId: verifyAuditChainIntegrity
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Audit chain verification outcome.
+
 components:
   securitySchemes:
     BearerAuth:

@@ -209,8 +209,57 @@ export class AuthService {
       };
     }
 
-    // 8. Generate Authoritative Access & Refresh Tokens (FR-AUTH-007)
-    const accessToken = await this.tokenService.generateAccessToken(user);
+    // 7.5 Lab Device and Client Version Validation (FR-AUTH-010, FR-LAB-001..004, TC-16)
+    let boundDeviceId: string | undefined = undefined;
+    let boundClientVersion: string | undefined = undefined;
+
+    if (user.role === UserRole.CANDIDATE && dto.deviceId) {
+      if (this.prisma && this.prisma.labDevice) {
+        const device = await this.prisma.labDevice.findUnique({
+          where: { deviceReference: dto.deviceId },
+        });
+
+        if (!device) {
+          throw new ApiErrorException(
+            ApiErrorCode.FORBIDDEN,
+            `Device '${dto.deviceId}' is not registered in the authorized lab device registry (FR-LAB-001, FR-AUTH-010)`,
+          );
+        }
+
+        if (device.deviceStatus !== 'ACTIVE') {
+          throw new ApiErrorException(
+            ApiErrorCode.FORBIDDEN,
+            `Lab device '${dto.deviceId}' is ${device.deviceStatus}. Login not permitted on suspended/blocked devices (FR-LAB-004).`,
+          );
+        }
+
+        if (dto.clientVersion && dto.clientVersion !== device.approvedClientVersion) {
+          throw new ApiErrorException(
+            ApiErrorCode.UNSUPPORTED_CLIENT,
+            `Installed client version (${dto.clientVersion}) does not match approved version (${device.approvedClientVersion}). Update client before connecting (FR-LAB-003, TC-16).`,
+            {
+              approvedClientVersion: device.approvedClientVersion,
+              reportedClientVersion: dto.clientVersion,
+            },
+          );
+        }
+
+        await this.prisma.labDevice.update({
+          where: { id: device.id },
+          data: { lastSeenAt: new Date() },
+        });
+
+        boundDeviceId = device.deviceReference;
+        boundClientVersion = dto.clientVersion || device.approvedClientVersion;
+      }
+    }
+
+    // 8. Generate Authoritative Access & Refresh Tokens (FR-AUTH-007, FR-AUTH-010)
+    const accessToken = await this.tokenService.generateAccessToken({
+      ...user,
+      deviceId: boundDeviceId,
+      clientVersion: boundClientVersion,
+    });
     const { token: refreshToken } = await this.tokenService.generateRefreshToken(user);
 
     await this.auditService.log({

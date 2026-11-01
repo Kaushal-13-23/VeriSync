@@ -106,6 +106,7 @@ enum AuditOutcome {
 enum DeviceStatus {
   ACTIVE
   INACTIVE
+  SUSPENDED
   BLOCKED
 }
 
@@ -463,6 +464,8 @@ model AuditLog {
   outcome        AuditOutcome
   correlationId  String       @map("correlation_id")
   metadata       Json         @default("{}")
+  previousHash   String?      @map("previous_hash")
+  currentHash    String?      @map("current_hash")
 
   actor          User?        @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
 
@@ -481,6 +484,11 @@ model LabDevice {
   deviceReference       String              @unique @map("device_reference")
   deviceStatus          DeviceStatus        @default(ACTIVE) @map("device_status")
   approvedClientVersion String              @map("approved_client_version")
+  hostname              String?
+  ipAddress             String?             @map("ip_address")
+  macAddress            String?             @map("mac_address")
+  location              String?
+  notes                 String?
   lastSeenAt            DateTime?           @map("last_seen_at")
   createdAt             DateTime            @default(now()) @map("created_at")
   updatedAt             DateTime            @updatedAt @map("updated_at")

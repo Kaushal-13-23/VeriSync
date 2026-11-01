@@ -661,3 +661,80 @@ export interface PurgeRetentionResultDto {
   purgedSubmissionsCount: number;
   purgedAt: string;
 }
+
+/**
+ * Lab Device & Lockdown Types (FR-LAB-001..006, FR-AUTH-010)
+ */
+export type DeviceStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOCKED';
+
+export interface LabDeviceDto {
+  id: string;
+  deviceReference: string;
+  deviceStatus: DeviceStatus;
+  approvedClientVersion: string;
+  hostname?: string | null;
+  ipAddress?: string | null;
+  macAddress?: string | null;
+  location?: string | null;
+  notes?: string | null;
+  lastSeenAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegisterLabDeviceDto {
+  deviceReference: string;
+  approvedClientVersion: string;
+  hostname?: string;
+  ipAddress?: string;
+  macAddress?: string;
+  location?: string;
+  notes?: string;
+}
+
+export interface UpdateDeviceStatusDto {
+  status: DeviceStatus;
+  reason: string;
+}
+
+export interface UpdateDeviceVersionDto {
+  approvedClientVersion: string;
+  reason: string;
+}
+
+export type LockdownEventType =
+  | 'FOCUS_LOST'
+  | 'EXIT_ATTEMPT'
+  | 'PROHIBITED_PROCESS_DETECTED'
+  | 'SHORTCUT_TRIPPED'
+  | 'WINDOW_BLUR'
+  | 'FULLSCREEN_EXIT'
+  | 'CLIPBOARD_ACCESSED';
+
+export interface LockdownEventDto {
+  eventType: LockdownEventType;
+  clientTimestamp: string;
+  details?: Record<string, unknown>;
+  windowTitle?: string;
+  processName?: string;
+}
+
+export interface LockdownEventResponseDto {
+  recorded: boolean;
+  eventId: string;
+  serverTime: string;
+}
+
+export interface SystemPoliciesDto {
+  approvedClientVersion: string;
+  minimumClientVersion: string;
+  lockdownEnabled: boolean;
+  serverTime: string;
+}
+
+export interface AuditChainVerificationResultDto {
+  valid: boolean;
+  totalEntries: number;
+  brokenEntryId?: string;
+  verifiedAt: string;
+}

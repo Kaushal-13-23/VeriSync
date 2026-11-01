@@ -22,6 +22,7 @@ export interface VeriSyncBridge {
     correlationId?: string;
     metadata?: Record<string, unknown>;
   }) => Promise<boolean>;
+  verifyIntegrity: () => Promise<{ isTampered: boolean; reason?: string }>;
   closeApp: () => Promise<void>;
 }
 
@@ -35,6 +36,7 @@ const bridge: VeriSyncBridge = {
   checkProhibitedApps: () => ipcRenderer.invoke('verisync:checkProhibitedApps'),
   getSystemInfo: () => ipcRenderer.invoke('verisync:getSystemInfo'),
   writeLog: (entry) => ipcRenderer.invoke('verisync:writeLog', entry),
+  verifyIntegrity: () => ipcRenderer.invoke('verisync:verifyIntegrity'),
   closeApp: () => ipcRenderer.invoke('verisync:closeApp'),
 };
 

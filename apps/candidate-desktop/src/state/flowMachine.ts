@@ -10,8 +10,7 @@
  */
 
 import { MockAssessmentSession, MockUser } from '../services/mockApi';
-import { CandidateAssignedAssessment } from '../types/assessment';
-import { FinalSubmitResponseDto } from '@verisync/shared';
+import { CandidateAssignedAssessment, CandidateFinalSubmitResponse } from '../types/assessment';
 
 export type ScreenState =
   'LOGIN' | 'SYSTEM_CHECK' | 'ASSIGNED_ASSESSMENTS' | 'INSTRUCTIONS' | 'EXAM' | 'SUBMITTED';
@@ -23,7 +22,7 @@ export interface FlowState {
   selectedAssessment: CandidateAssignedAssessment | null;
   instructionsAcknowledged: boolean;
   session: MockAssessmentSession | null;
-  finalResult: FinalSubmitResponseDto | null;
+  finalResult: CandidateFinalSubmitResponse | null;
   currentQuestionIndex: number;
   markedForReview: Record<string, boolean>; // Local visual aid (Decision 4)
   savedAnswers: Record<string, unknown>;
@@ -38,12 +37,13 @@ export type FlowAction =
   | { type: 'BACK_TO_ASSESSMENTS' }
   | { type: 'TOGGLE_INSTRUCTIONS_ACK'; payload: { acknowledged: boolean } }
   | { type: 'START_EXAM'; payload: { session: MockAssessmentSession } }
+  | { type: 'RESUME_SESSION'; payload: { session: MockAssessmentSession; user: MockUser } }
   | { type: 'NEXT_QUESTION' }
   | { type: 'SET_QUESTION_INDEX'; payload: { index: number } }
   | { type: 'RECORD_ANSWER'; payload: { questionAttemptId: string; response: unknown } }
   | { type: 'TOGGLE_MARK_REVIEW'; payload: { questionAttemptId: string } }
   | { type: 'SET_SUBMITTING'; payload: { isSubmitting: boolean } }
-  | { type: 'EXAM_SUBMITTED'; payload?: { finalResult?: FinalSubmitResponseDto } }
+  | { type: 'EXAM_SUBMITTED'; payload?: { finalResult?: CandidateFinalSubmitResponse } }
   | { type: 'RESET_TO_LOGIN' }
   | { type: 'SET_ERROR'; payload: { error: string | null } };
 
@@ -121,6 +121,18 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         session: action.payload.session,
         currentScreen: 'EXAM',
         currentQuestionIndex: 0,
+        error: null,
+      };
+
+    case 'RESUME_SESSION':
+      return {
+        ...state,
+        user: action.payload.user,
+        session: action.payload.session,
+        currentScreen: 'EXAM',
+        systemCheckCompleted: true,
+        instructionsAcknowledged: true,
+        currentQuestionIndex: action.payload.session.currentQuestionIndex || 0,
         error: null,
       };
 

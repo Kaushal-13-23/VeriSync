@@ -129,10 +129,10 @@ Status Legend:
 - [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
 - [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
-- [/] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
+- [x] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
 - [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
 - [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
-- [/] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
+- [x] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
@@ -220,16 +220,16 @@ Status Legend:
 ### 6.5 Usability Requirements (NFR-USE)
 
 - [x] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
-- [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
-- [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
-- [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
-- [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
-- [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
+- [x] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
+- [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
+- [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
+- [x] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
+- [x] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
 - [x] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
-- [ ] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
+- [x] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
 
@@ -237,14 +237,13 @@ Status Legend:
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
 - [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [/] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [x] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 
 - [ ] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must)
 - [ ] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
 - [ ] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
-- [ ] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
 
 ---
 
@@ -255,8 +254,15 @@ Status Legend:
 - **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
 - **Branch**: `phase-4/B-scoring-results-reports`
 - **Phase 1 Completion Status**:
-  - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
-  - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)
+
+- **Phase 2 Completion Status**:
+
+- **Phase 3 Completion Status**:
+
+- **Phase 4 Completion Status**:
+- [x] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
+  - [x] `FR-ADMIN-001`: Admin dashboard overview metrics and operational status cards with real data (Done)
+  - [x] `FR-ADMIN-009`: Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) (Done)
   - [x] `NFR-USE-001`: Navy sidebar and responsive layout matching `UI_Sample.jpeg` (Done)
   - [x] `NFR-USE-003`: Transparent toast error messaging with correlation IDs (Done)
   - [x] `NFR-COMP-002`: Evergreen browser compatibility (Chrome, Edge, Firefox) (Done)
@@ -264,16 +270,14 @@ Status Legend:
   - [/] `FR-AUTH-004`: Rate-limiting error toast handling (Partial - client complete)
   - [/] `FR-AUTH-007`: Token refresh interceptor and session store (Partial - client complete)
   - [/] `FR-AUTH-008`: 6-digit TOTP MFA verification screen (Partial - client complete)
-  - [/] `FR-ADMIN-002`: Active candidate counter and monitoring overview (Partial - client complete)
-  - [/] `FR-ADMIN-003`: Completion donut chart breakdown (Partial - client complete)
-
-- **Phase 2 Completion Status**:
+  - [x] `FR-ADMIN-002`: Real-time session monitoring table with auto-refresh polling (Off, 10s, 30s, 60s) and manual refresh (Done)
+  - [x] `FR-ADMIN-003`: Candidate profile, score breakdown, and completion rate breakdown chart (Done)
   - [x] `FR-CAN-001`: Candidate record creation with complete profile fields and account status (Done)
   - [x] `FR-CAN-002`: Profile modification and search/filter by candidate ID, name, email, institution, drive (Done)
   - [x] `FR-CAN-003`: Bulk candidate import via CSV with validated template and per-row error reporting (Done)
   - [x] `FR-CAN-004`: Candidate assignment to one or more assessments individually or by cohort/group (Done)
   - [x] `FR-CAN-005`: Removal/revocation of candidate assignments before assessment start and account deactivation (Done)
-  - [x] `FR-CAN-006`: Candidate login and activity history logging inspection in slide-out drawer (Done)
+  - [x] `FR-CAN-006`: Candidate detail drawer attempt and submission telemetry tracking (Done)
   - [x] `FR-CAN-007`: Enforcement of unique candidate IDs and usernames in UI/forms (Done)
   - [x] `FR-QB-001`: Question creation with text, type, category, difficulty, marks, and explanation (Done)
   - [x] `FR-QB-002`: Question categorization by topic, skill, and difficulty (Done)
@@ -296,28 +300,21 @@ Status Legend:
   - [x] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Done)
   - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Done)
   - [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must) (Done)
-
-- **Phase 3 Completion Status**:
-  - [x] `FR-ADMIN-001`: Live sessions monitoring with real-time candidate session telemetry cards (Done)
-  - [x] `FR-ADMIN-002`: Real-time session monitoring table with auto-refresh polling (Off, 10s, 30s, 60s) and manual refresh (Done)
   - [x] `FR-ADMIN-004`: Assessment operational lifecycle controls (Suspend, Resume, Archive) with confirmation dialogs (Done)
-  - [x] `FR-ADMIN-005`: Assessment status state transitions (`SUSPENDED`, `ACTIVE`, `ARCHIVED`) with mandatory reason input (Done)
-  - [x] `FR-ADMIN-007`: Operational audit logs search and multi-parameter filtering with correlation ID lookup (Done)
+  - [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Done)
+  - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination index, option distribution) (Done)
   - [x] `FR-ADMIN-008`: Incident log view for technical evaluators and lab supervisors (SRS 11.4) (Done)
   - [x] `FR-TIME-001`: Server-authoritative timer countdown with visual low-time warning when < 5 mins (Done)
   - [x] `FR-TIME-002`: Real-time session state telemetry tracking (`ACTIVE`, `INTERRUPTED`, `PAUSED`, `SUBMITTED`, `EXPIRED`) (Done)
   - [x] `FR-TIME-011`: Server-authoritative administrative session overrides (`EXTEND`, `REOPEN`, `PAUSE`, `RESUME`, `CANCEL`) (Done)
-  - [x] `BR-012`: Mandatory justification reason enforcement on every administrative override dialog (Done)
-  - [x] `FR-CAN-006`: Candidate detail drawer attempt and submission telemetry tracking (Done)
+  - [x] `BR-012`: Mandatory justification reason required for every administrative override and score adjustment (Done)
   - [x] `FR-AUD-001`: Immutable audit logging for administrative actions (overrides, publishes, edits, status) (Done)
   - [x] `FR-AUD-002`: Candidate session lifecycle audit event tracking (Done)
   - [x] `FR-AUD-004`: Standardized audit schema: timestamp (UTC), actor, event_type, entity, outcome, correlation ID, IP (Done)
   - [x] `FR-AUD-006`: Multi-dimensional audit log search, filter, and CSV export (Done)
   - [x] `Rule 1`: Untrusted client clocks; server-authoritative timer display (Done)
-  - [x] `Rule 7`: Mandatory justification reason and actor attribution for overrides, score changes, publishes, status transitions (Done)
+  - [x] `Rule 7`: All score adjustments, overrides, and status transitions audited with reason and actor (Done)
   - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)
-
-- **Phase 4 Completion Status**:
   - [x] `FR-SCORE-001`: Automated scoring of objective questions against published assessment snapshot key (Done)
   - [x] `FR-SCORE-002`: Configurable negative marking deduction for incorrect objective responses (Done)
   - [x] `FR-SCORE-003`: Configurable partial credit for multi-select questions (Done)
@@ -328,12 +325,4 @@ Status Legend:
   - [x] `FR-SCORE-008`: Provisional vs. Final result status handling with pending subjective count (Done)
   - [x] `FR-SCORE-009`: Result ranking calculation with deterministic tie-break criteria (Score ↓, Time ↑, ID ↑) (Done)
   - [x] `FR-SCORE-010`: Audited score correction workflow requiring original value, new value, reason, actor (`UC-15`) (Done)
-  - [x] `FR-ADMIN-001`: Admin dashboard overview metrics and operational status cards with real data (Done)
-  - [x] `FR-ADMIN-003`: Candidate profile, score breakdown, and completion rate breakdown chart (Done)
-  - [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Done)
   - [x] `FR-ADMIN-006`: Export of results in CSV format with ISO-8601 UTC timestamps (Done)
-  - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination index, option distribution) (Done)
-  - [x] `FR-ADMIN-009`: Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) (Done)
-  - [x] `BR-012`: Mandatory justification reason required for every administrative override and score adjustment (Done)
-  - [x] `Rule 7`: All score adjustments, overrides, and status transitions audited with reason and actor (Done)
-  - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)

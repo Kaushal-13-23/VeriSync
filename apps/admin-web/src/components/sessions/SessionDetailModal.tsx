@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
-import { X, Monitor, AlertCircle, FileText, Sliders } from 'lucide-react';
+import { X, Monitor, AlertCircle, FileText, Sliders, ShieldAlert } from 'lucide-react';
 import { LiveSessionRecord } from '../../types/api';
+import { IntegrityEventsPanel } from './IntegrityEventsPanel';
 
 interface SessionDetailModalProps {
   isOpen: boolean;
@@ -180,6 +181,15 @@ export const SessionDetailModal: React.FC<SessionDetailModalProps> = ({
               )}
             </div>
           )}
+
+          {/* Session Integrity Telemetry Stream (FR-LAB-006, SRS 10.3) */}
+          <div className="pt-2 border-t border-slate-200">
+            <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600" aria-hidden="true" />
+              <span>Session Lockdown & Integrity Telemetry</span>
+            </h4>
+            <IntegrityEventsPanel sessionId={session.id} compact={true} />
+          </div>
         </div>
 
         {/* Footer */}

@@ -36,6 +36,7 @@ describe('AppLayout & Sidebar Navigation', () => {
     expect(screen.getByRole('button', { name: /^Results$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Reports$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Audit Logs$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Lab Devices$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Settings$/i })).toBeInTheDocument();
   });
 

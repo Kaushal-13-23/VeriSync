@@ -15,6 +15,8 @@ export interface AuthUser {
   email?: string;
   role: UserRole;
   fullName?: string;
+  mfaEnrolled?: boolean;
+  mfaSetupRequired?: boolean;
 }
 
 export interface LoginPayload {
@@ -397,7 +399,12 @@ export type AuditEventType =
   | 'CANDIDATE_STATUS'
   | 'PASSWORD_RESET'
   | 'SECURITY_ALERT'
-  | 'SCORE_CORRECTION';
+  | 'SCORE_CORRECTION'
+  | 'DEVICE_REGISTERED'
+  | 'DEVICE_STATUS_CHANGED'
+  | 'DEVICE_VERSION_UPDATED'
+  | 'CONFIGURATION_UPDATED'
+  | 'AUTH_MFA_ENABLED';
 
 export type AuditOutcome = 'SUCCESS' | 'FAILED' | 'BLOCKED';
 
@@ -653,4 +660,141 @@ export interface QuestionPerformanceStats {
   difficultyIndex: 'EASY' | 'MEDIUM' | 'HARD';
   discriminationIndex: number;
   responseDistribution?: McqOptionDistribution[];
+}
+
+// ==========================================
+// Lab Device Registry Domain Types (FR-LAB-001..004, UC-17, FR-CONF-001)
+// ==========================================
+
+export type DeviceStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLOCKED';
+
+export interface LabDeviceRecord {
+  id: string;
+  deviceReference: string; // e.g. LAB-PC-101
+  hostname: string;
+  ipAddress: string;
+  macAddress: string;
+  location: string;
+  approvedClientVersion: string;
+  deviceStatus: DeviceStatus;
+  lastSeenAt: string; // UTC ISO-8601 (Rule 9)
+  registeredAt: string; // UTC ISO-8601
+  activeSessionId?: string | null;
+  activeCandidateName?: string | null;
+  notes?: string;
+  statusReason?: string;
+}
+
+export interface RegisterLabDevicePayload {
+  deviceReference: string;
+  hostname: string;
+  ipAddress: string;
+  macAddress: string;
+  location: string;
+  approvedClientVersion: string;
+  notes?: string;
+}
+
+export interface UpdateDeviceStatusPayload {
+  status: DeviceStatus;
+  reason: string; // Mandatory per Rule 7 and BR-012
+}
+
+export interface UpdateDeviceVersionPayload {
+  approvedClientVersion: string;
+  reason: string; // Mandatory per Rule 7
+}
+
+export interface LabDevicesFilterParams {
+  status?: string;
+  search?: string;
+  location?: string;
+}
+
+export interface LabDevicesSummaryStats {
+  total: number;
+  activeCount: number;
+  suspendedCount: number;
+  blockedCount: number;
+  outdatedVersionCount: number;
+}
+
+export interface LabDevicesResponse {
+  devices: LabDeviceRecord[];
+  stats: LabDevicesSummaryStats;
+  total: number;
+}
+
+// ==========================================
+// Integrity & Lockdown Telemetry Types (FR-LAB-006, SRS 10.3, SRS 11.4)
+// ==========================================
+
+export type LockdownEventType =
+  | 'FOCUS_LOST'
+  | 'EXIT_ATTEMPT'
+  | 'PROHIBITED_PROCESS_DETECTED'
+  | 'SHORTCUT_TRIPPED'
+  | 'WINDOW_BLUR'
+  | 'FULLSCREEN_EXIT'
+  | 'CLIPBOARD_ACCESSED';
+
+export type IntegritySeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface IntegrityEventRecord {
+  id: string;
+  sessionId: string;
+  candidateId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  eventType: LockdownEventType;
+  severity: IntegritySeverity;
+  timestamp: string; // UTC ISO-8601 (Rule 9)
+  details: {
+    processName?: string;
+    windowTitle?: string;
+    shortcutKey?: string;
+    blurDurationMs?: number;
+    description: string;
+  };
+  supervisorReviewed?: boolean;
+  correlationId: string;
+}
+
+// ==========================================
+// Security Settings & MFA Policies (FR-AUTH-007, FR-AUTH-008, NFR-SEC-004, FR-CONF-001)
+// ==========================================
+
+export interface SecuritySettingsPolicies {
+  sessionTimeoutMinutes: number; // default: 15
+  warningCountdownSeconds: number; // default: 60
+  mfaEnforcedForAdmins: boolean;
+  approvedClientVersion: string; // e.g. "1.1.0"
+  minimumClientVersion: string; // e.g. "1.0.0"
+  strictVersionEnforcement: boolean;
+  kioskEnforcementMode: 'STRICT' | 'AUDIT_ONLY';
+  auditLogRetentionDays: number; // default: 365
+}
+
+export interface MfaEnrollmentResponse {
+  secretKey: string;
+  qrCodeUrl: string;
+  backupCodes: string[];
+}
+
+export interface MfaSetupConfirmPayload {
+  secretKey: string;
+  code: string;
+  backupCodes: string[];
+}
+
+export interface UpdateSecurityPoliciesPayload {
+  sessionTimeoutMinutes?: number;
+  warningCountdownSeconds?: number;
+  approvedClientVersion?: string;
+  strictVersionEnforcement?: boolean;
+  kioskEnforcementMode?: 'STRICT' | 'AUDIT_ONLY';
+  auditLogRetentionDays?: number;
+  reason: string; // Mandatory per Rule 7
 }

@@ -47,9 +47,13 @@ const TAB_TITLES: Record<NavigationTab, { title: string; subtitle: string }> = {
     title: 'Audit Logs',
     subtitle: 'Authoritative audit trail inspection (FR-AUD-001)',
   },
+  'lab-devices': {
+    title: 'Lab Devices',
+    subtitle: 'Authorized workstation registry and lockdown management (UC-17, FR-LAB)',
+  },
   settings: {
-    title: 'Settings',
-    subtitle: 'System security and platform configuration',
+    title: 'Security Settings',
+    subtitle: 'MFA enforcement, session timeout policies, and client compatibility (NFR-SEC)',
   },
 };
 
@@ -58,6 +62,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ activeTab, onSelectTab, ch
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900 font-sans antialiased">
+      {/* Skip to Main Content Link (NFR-USE-005) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:p-3 focus:bg-blue-600 focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white text-xs font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Sidebar navigation */}
       <Sidebar activeTab={activeTab} onSelectTab={onSelectTab} />
 
@@ -65,7 +77,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ activeTab, onSelectTab, ch
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <TopBar title={currentTabInfo.title} subtitle={currentTabInfo.subtitle} />
 
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">{children}</main>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 focus:outline-none"
+          role="main"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

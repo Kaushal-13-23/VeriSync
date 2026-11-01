@@ -42,6 +42,8 @@ export const CandidateFormModal: React.FC<CandidateFormModalProps> = ({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (candidateToEdit) {
       setFormData({
         candidateIdentifier: candidateToEdit.candidateIdentifier,
@@ -70,7 +72,7 @@ export const CandidateFormModal: React.FC<CandidateFormModalProps> = ({
     setErrors({});
     setCreatedTempPassword(null);
     setCopied(false);
-  }, [candidateToEdit, isOpen, driveOptions]);
+  }, [candidateToEdit, isOpen]);
 
   if (!isOpen) return null;
 

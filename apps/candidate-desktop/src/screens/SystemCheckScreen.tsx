@@ -100,11 +100,12 @@ export const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({
     // 2. Real server handshake & version check (FR-LAB-003, SRS 8.3.3)
     const handshake = await apiClient.checkServerHandshake();
 
-    // 3. Prohibited Apps check via Bridge (FR-LAB-006)
+    // 3. Prohibited Apps check via Bridge against API policy (FR-LAB-006)
     let prohibitedResult = { hasProhibitedApps: false, apps: [] as string[] };
     if (typeof window !== 'undefined' && window.verisyncBridge) {
       try {
-        prohibitedResult = await window.verisyncBridge.checkProhibitedApps();
+        const policy = await apiClient.getProhibitedProcessesPolicy();
+        prohibitedResult = await window.verisyncBridge.checkProhibitedApps(policy.denylist);
       } catch {
         // ignore
       }

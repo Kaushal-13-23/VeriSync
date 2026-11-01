@@ -582,6 +582,113 @@ class ApiClient {
   }
 
   /**
+   * Retrieves server-authoritative process denylist/allowlist policy (FR-LAB-006)
+   * Falls back to hardened default security denylist if offline or during simulation.
+   */
+  public async getProhibitedProcessesPolicy(): Promise<{
+    denylist: string[];
+    allowlist?: string[];
+  }> {
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/system-check/prohibited-processes`,
+          {
+            method: 'GET',
+            headers: await this.buildHeaders(),
+          },
+        );
+        if (response.ok) {
+          return (await response.json()) as { denylist: string[]; allowlist?: string[] };
+        }
+      } catch {
+        // Fall back to robust baseline below
+      }
+    }
+
+    return {
+      denylist: [
+        'teamviewer.exe',
+        'anydesk.exe',
+        'vncviewer.exe',
+        'vncserver.exe',
+        'mstsc.exe',
+        'rustdesk.exe',
+        'parsec.exe',
+        'obs64.exe',
+        'obs32.exe',
+        'camtasia.exe',
+        'bandicam.exe',
+        'fraps.exe',
+        'discord.exe',
+        'zoom.exe',
+        'teams.exe',
+        'slack.exe',
+        'wireshark.exe',
+        'fiddler.exe',
+        'cheatengine-x86_64.exe',
+        'cheatengine.exe',
+        'x64dbg.exe',
+        'processhacker.exe',
+      ],
+      allowlist: ['verisync-candidate.exe'],
+    };
+  }
+
+  /**
+   * Reports security integrity event (focus loss, minimize, disallowed shortcut, prohibited app)
+   * to backend audit telemetry and writes to local rotating log (FR-LAB-006, FR-AUD-002, Rule 5).
+   */
+  public async reportIntegrityEvent(
+    sessionId: string,
+    event: {
+      eventType: string;
+      timestamp: string;
+      details?: Record<string, unknown>;
+    },
+  ): Promise<boolean> {
+    const deviceId = await this.getDeviceId();
+    const payload = {
+      sessionId,
+      deviceId,
+      ...event,
+      timestamp: event.timestamp || new Date().toISOString(),
+    };
+
+    // 1. Durably write to local rotating audit log via Electron bridge (Rule 5 - secrets scrubbed)
+    if (typeof window !== 'undefined' && window.verisyncBridge) {
+      try {
+        await window.verisyncBridge.writeLog({
+          level: 'warn',
+          message: `Candidate Integrity Event: ${event.eventType}`,
+          metadata: payload,
+        });
+      } catch {
+        // Ignore local log error
+      }
+    }
+
+    // 2. Report to backend API
+    if (!this.config.forceMock && this.isServerReachable) {
+      try {
+        const response = await fetch(
+          `${this.config.baseUrl}/candidate/sessions/${encodeURIComponent(sessionId)}/events`,
+          {
+            method: 'POST',
+            headers: await this.buildHeaders(),
+            body: JSON.stringify(payload),
+          },
+        );
+        if (response.ok) return true;
+      } catch {
+        // Best effort
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Logout and clear local tokens
    */
   public async logout(): Promise<void> {

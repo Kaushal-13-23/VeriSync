@@ -131,7 +131,7 @@ Status Legend:
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
 - [x] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
 - [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
-- [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
+- [x] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
 - [x] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)

@@ -97,6 +97,48 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({ session, onFinishExam })
     };
   }, [session.sessionId, qAttemptId]);
 
+  // FR-LAB-005, FR-LAB-006, FR-LAB-008, TC18: Electron Lockdown & Security Telemetry
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.verisyncBridge) {
+      void window.verisyncBridge.setExamActive(true);
+
+      const unbindBlur = window.verisyncBridge.onWindowBlur(() => {
+        setErrorMessage(
+          'Security Warning: Application lost focus (blur). Focus changes are logged and monitored (FR-LAB-006).',
+        );
+        void apiClient.reportIntegrityEvent(session.sessionId, {
+          eventType: 'FOCUS_LOST',
+          timestamp: new Date().toISOString(),
+          details: { questionAttemptId: qAttemptId },
+        });
+      });
+
+      const unbindMinimize = window.verisyncBridge.onWindowMinimize(() => {
+        setErrorMessage(
+          'Security Warning: Application minimization is prohibited during an active assessment (FR-LAB-006, TC18).',
+        );
+        void apiClient.reportIntegrityEvent(session.sessionId, {
+          eventType: 'WINDOW_MINIMIZE',
+          timestamp: new Date().toISOString(),
+          details: { questionAttemptId: qAttemptId },
+        });
+      });
+
+      const unbindExit = window.verisyncBridge.onExitAttempted(() => {
+        setErrorMessage(
+          'Application exit is blocked by examination lockdown policy. Please finish the assessment to submit (FR-LAB-008).',
+        );
+      });
+
+      return () => {
+        unbindBlur();
+        unbindMinimize();
+        unbindExit();
+        void window.verisyncBridge?.setExamActive(false);
+      };
+    }
+  }, [session.sessionId, qAttemptId]);
+
   // Map questions to QuestionStatusItem for read-only palette
   const statusItems: QuestionStatusItem[] = session.questions.map((q, idx) => ({
     id: q.id,

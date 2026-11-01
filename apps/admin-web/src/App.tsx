@@ -14,6 +14,8 @@ import { DashboardOverview } from './components/dashboard/DashboardOverview';
 import { CandidatesView } from './components/candidates/CandidatesView';
 import { QuestionBankView } from './components/questions/QuestionBankView';
 import { AssessmentsView } from './components/assessments/AssessmentsView';
+import { LiveSessionsView } from './components/sessions/LiveSessionsView';
+import { AuditLogsView } from './components/audit/AuditLogsView';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ToastContainer } from './components/ui/ToastContainer';
 
@@ -33,12 +35,16 @@ export const AppContent: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardOverview onNavigateTab={(tab) => setActiveTab(tab as NavigationTab)} />;
+      case 'live-sessions':
+        return <LiveSessionsView />;
       case 'candidates':
         return <CandidatesView />;
       case 'question-bank':
         return <QuestionBankView />;
       case 'assessments':
         return <AssessmentsView />;
+      case 'audit-logs':
+        return <AuditLogsView />;
       default:
         return (
           <TabPlaceholder tab={activeTab} onReturnToDashboard={() => setActiveTab('dashboard')} />

@@ -19,6 +19,10 @@ const TAB_TITLES: Record<NavigationTab, { title: string; subtitle: string }> = {
     title: 'Dashboard',
     subtitle: 'Welcome back, Admin',
   },
+  'live-sessions': {
+    title: 'Live Sessions Monitoring',
+    subtitle: 'Real-time candidate telemetry and authoritative overrides',
+  },
   candidates: {
     title: 'Candidates',
     subtitle: 'Manage candidate accounts and details',

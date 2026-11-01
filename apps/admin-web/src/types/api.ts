@@ -131,6 +131,10 @@ export interface CandidateAssignmentItem {
   assignedAt: string;
   scheduleWindow: string;
   status: 'READY' | 'ACTIVE' | 'SUBMITTED' | 'EXPIRED' | 'NOT_STARTED';
+  attemptStatus?: 'NOT_ATTEMPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'DISQUALIFIED';
+  submissionStatus?: 'SUBMITTED' | 'UNSUBMITTED' | 'AUTO_SUBMITTED';
+  submittedAt?: string;
+  sessionId?: string;
   score?: number | null;
 }
 
@@ -306,4 +310,127 @@ export interface AssignmentResult {
   assignedCount: number;
   alreadyAssignedCount: number;
   message: string;
+}
+
+// ==========================================
+// Live Sessions & Overrides Domain Types (FR-ADMIN-001..004, FR-TIME, BR-012)
+// ==========================================
+
+export type SessionStatus =
+  'ACTIVE' | 'INTERRUPTED' | 'SUBMITTED' | 'EXPIRED' | 'PAUSED' | 'CANCELLED';
+
+export type SessionOverrideType = 'EXTEND' | 'REOPEN' | 'PAUSE' | 'RESUME' | 'CANCEL';
+
+export interface LiveSessionRecord {
+  id: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  candidateId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  candidateEmail: string;
+  status: SessionStatus;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  currentQuestionId?: string;
+  startedAt: string; // UTC ISO-8601
+  lastHeartbeatAt: string; // UTC ISO-8601
+  overallRemainingSeconds: number;
+  questionRemainingSeconds?: number | null;
+  clientIp: string;
+  clientVersion: string;
+  extensionMinutesApplied?: number;
+  overrideReason?: string;
+  notes?: string;
+}
+
+export interface SessionOverridePayload {
+  overrideType: SessionOverrideType;
+  reason: string; // Mandatory per BR-012 and Rule 7
+  extensionMinutes?: number;
+  notes?: string;
+}
+
+export interface SessionOverrideResult {
+  success: boolean;
+  session: LiveSessionRecord;
+  auditLogId: string;
+  correlationId: string;
+  message: string;
+}
+
+// ==========================================
+// Audit Logs & Incident Domain Types (FR-ADMIN-007, FR-ADMIN-008, SRS 11.4)
+// ==========================================
+
+export type AuditEventType =
+  | 'AUTH_LOGIN'
+  | 'AUTH_LOGOUT'
+  | 'SESSION_START'
+  | 'SESSION_SUBMIT'
+  | 'SESSION_OVERRIDE'
+  | 'ASSESSMENT_PUBLISH'
+  | 'ASSESSMENT_STATUS'
+  | 'CANDIDATE_CREATE'
+  | 'CANDIDATE_UPDATE'
+  | 'CANDIDATE_STATUS'
+  | 'PASSWORD_RESET'
+  | 'SECURITY_ALERT';
+
+export type AuditOutcome = 'SUCCESS' | 'FAILED' | 'BLOCKED';
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string; // UTC ISO-8601
+  eventType: AuditEventType;
+  actorId: string;
+  actorName: string;
+  actorRole: string;
+  entityType: string;
+  entityId: string;
+  outcome: AuditOutcome;
+  reason?: string | null;
+  correlationId: string;
+  ipAddress: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AuditLogFilterParams {
+  eventType?: string;
+  actor?: string;
+  entityType?: string;
+  outcome?: string;
+  startDate?: string;
+  endDate?: string;
+  correlationId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetAuditLogsResponse {
+  entries: AuditLogEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type IncidentSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface IncidentRecord {
+  id: string;
+  timestamp: string; // UTC ISO-8601
+  sessionId?: string;
+  assessmentId?: string;
+  assessmentTitle?: string;
+  candidateId?: string;
+  candidateIdentifier?: string;
+  candidateName?: string;
+  title: string;
+  description: string;
+  severity: IncidentSeverity;
+  overrideAction?: SessionOverrideType;
+  actor: string;
+  resolutionNotes?: string;
+  correlationId: string;
 }

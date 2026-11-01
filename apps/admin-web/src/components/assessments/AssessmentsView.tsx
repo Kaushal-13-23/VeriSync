@@ -7,12 +7,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assessmentsApi } from '../../api/assessments';
+import { sessionsApi } from '../../api/sessions';
 import { questionsApi } from '../../api/questions';
 import { candidatesApi } from '../../api/candidates';
-import { AssessmentRecord, CreateAssessmentPayload } from '../../types/api';
+import { AssessmentRecord, AssessmentStatus, CreateAssessmentPayload } from '../../types/api';
 import { AssessmentsList } from './AssessmentsList';
 import { AssessmentWizard } from './AssessmentWizard';
 import { AssignAssessmentModal } from './AssignAssessmentModal';
+import { AssessmentStatusModal } from './AssessmentStatusModal';
 import { toastManager } from '../../lib/toast';
 import { AlertCircle } from 'lucide-react';
 
@@ -23,6 +25,10 @@ export const AssessmentsView: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [assignmentAssessment, setAssignmentAssessment] = useState<AssessmentRecord | null>(null);
+  const [statusTargetAssessment, setStatusTargetAssessment] = useState<AssessmentRecord | null>(
+    null,
+  );
+  const [statusTargetValue, setStatusTargetValue] = useState<AssessmentStatus | null>(null);
 
   // Fetch assessments query
   const { data, isLoading, error } = useQuery({
@@ -111,6 +117,43 @@ export const AssessmentsView: React.FC = () => {
     },
   });
 
+  // Status change mutation (FR-ADMIN-005, Rule 7)
+  const statusMutation = useMutation({
+    mutationFn: ({
+      assessmentId,
+      status,
+      reason,
+    }: {
+      assessmentId: string;
+      status: AssessmentStatus;
+      reason: string;
+    }) => sessionsApi.setAssessmentStatus(assessmentId, status, reason),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+      toastManager.show({
+        type: 'success',
+        title: 'Status Updated',
+        message: `Assessment ${result.assessment.title} status updated to ${result.assessment.status}.`,
+      });
+    },
+    onError: (err: Error) => {
+      toastManager.show({
+        type: 'error',
+        title: 'Status Update Failed',
+        message: err.message || 'Failed to update assessment status.',
+      });
+    },
+  });
+
+  const handleStatusSubmit = async (
+    assessmentId: string,
+    status: AssessmentStatus,
+    reason: string,
+  ) => {
+    await statusMutation.mutateAsync({ assessmentId, status, reason });
+  };
+
   const handleWizardSubmit = async (
     payload: CreateAssessmentPayload,
     publishImmediately: boolean,
@@ -163,6 +206,10 @@ export const AssessmentsView: React.FC = () => {
           onOpenCreateWizard={() => setIsCreating(true)}
           onOpenAssignModal={(asmt) => setAssignmentAssessment(asmt)}
           onPublishAssessment={(id) => publishMutation.mutate(id)}
+          onRequestStatusChange={(asmt, status) => {
+            setStatusTargetAssessment(asmt);
+            setStatusTargetValue(status);
+          }}
         />
       )}
 
@@ -173,6 +220,19 @@ export const AssessmentsView: React.FC = () => {
         assessment={assignmentAssessment}
         candidates={candidatesData?.candidates || []}
         onAssign={handleAssignSubmit}
+      />
+
+      {/* Assessment Lifecycle Status Modal (FR-ADMIN-005) */}
+      <AssessmentStatusModal
+        isOpen={Boolean(statusTargetAssessment && statusTargetValue)}
+        onClose={() => {
+          setStatusTargetAssessment(null);
+          setStatusTargetValue(null);
+        }}
+        assessment={statusTargetAssessment}
+        targetStatus={statusTargetValue}
+        onSubmit={handleStatusSubmit}
+        isSubmitting={statusMutation.isPending}
       />
     </div>
   );

@@ -1,14 +1,54 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
 import App from './App';
+import { mockApi } from './services/mockApi';
+import { apiClient } from './services/apiClient';
 
-describe('CandidateDesktop App component', () => {
-  it('renders welcome screen and kiosk indicator', () => {
+/**
+ * Candidate Desktop App Integration Tests
+ * SRS Requirements:
+ * - FR-AUTH-002: Candidate login screen mounting
+ * - FR-CAN-007: Candidate ID / Username input acceptance
+ * - FR-UI-001: Transition to System Check screen upon login
+ */
+
+describe('CandidateDesktop App Component (FR-AUTH-002, FR-CAN-007, FR-UI-001)', () => {
+  beforeEach(() => {
+    mockApi.resetStore();
+    apiClient.setConfig({ forceMock: true });
+  });
+
+  it('renders login screen split view matching UI Sample', () => {
     render(<App />);
 
-    expect(screen.getByText('VeriSync')).toBeInTheDocument();
-    expect(screen.getByText('Secure Candidate Client')).toBeInTheDocument();
-    expect(screen.getByText('Welcome to VeriSync')).toBeInTheDocument();
-    expect(screen.getByText('Kiosk Shell Initialized')).toBeInTheDocument();
+    // Brand Hero elements
+    expect(screen.getAllByText(/VeriSync/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Secure Assessments. Fair Opportunities.')).toBeInTheDocument();
+    expect(screen.getByText(/Welcome to/i)).toBeInTheDocument();
+    expect(screen.getByText('Candidate Login')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Candidate ID/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Login/i })).toBeInTheDocument();
+  });
+
+  it('advances from Login to System Check upon successful authentication', async () => {
+    render(<App />);
+
+    const idInput = screen.getByLabelText(/Candidate ID/i);
+    const passInput = screen.getByLabelText(/Password/i);
+    const loginBtn = screen.getByRole('button', { name: /Login/i });
+
+    fireEvent.change(idInput, { target: { value: 'CAN-2026-081' } });
+    fireEvent.change(passInput, { target: { value: 'CandidatePass123' } });
+    fireEvent.click(loginBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('System Check')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Please ensure your system meets all requirements before starting the test.',
+        ),
+      ).toBeInTheDocument();
+    });
   });
 });

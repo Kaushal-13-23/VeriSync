@@ -1,0 +1,302 @@
+{
+  "driveMetadata": {
+    "driveId": "DRIVE-2026-TCS-NQT",
+    "driveName": "TCS Campus Placement Drive 2026",
+    "targetRole": "Associate Software Engineer / Systems Engineer",
+    "scheduledDate": "2026-11-05T09:00:00Z",
+    "proctoringMode": "LAB_KIOSK_STRICT",
+    "approvedClientVersion": "1.1.0",
+    "coordinator": "Dr. Ashlin Siddharth (Super Admin)"
+  },
+  "candidates": [
+    {
+      "id": "can-uat-001",
+      "candidateIdentifier": "CAN-2026-001",
+      "fullName": "Rohan Mehta",
+      "username": "rohan.mehta",
+      "email": "rohan.mehta@nitk.edu.in",
+      "phone": "+91 9845012345",
+      "institution": "National Institute of Technology Karnataka",
+      "qualification": "B.Tech Computer Science and Engineering",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-002",
+      "candidateIdentifier": "CAN-2026-002",
+      "fullName": "Aisha Khan",
+      "username": "aisha.khan",
+      "email": "aisha.khan@iitb.ac.in",
+      "phone": "+91 9876543210",
+      "institution": "Indian Institute of Technology Bombay",
+      "qualification": "B.Tech Electrical Engineering",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-003",
+      "candidateIdentifier": "CAN-2026-003",
+      "fullName": "Priya Sharma",
+      "username": "priya.sharma",
+      "email": "priya.sharma@bits-pilani.ac.in",
+      "phone": "+91 9722334455",
+      "institution": "BITS Pilani",
+      "qualification": "B.E. Information Systems",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-004",
+      "candidateIdentifier": "CAN-2026-004",
+      "fullName": "Kavya Iyer",
+      "username": "kavya.iyer",
+      "email": "kavya.iyer@nitt.edu",
+      "phone": "+91 9655443322",
+      "institution": "National Institute of Technology Tiruchirappalli",
+      "qualification": "B.Tech Information Technology",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-005",
+      "candidateIdentifier": "CAN-2026-005",
+      "fullName": "Vikram Patel",
+      "username": "vikram.patel",
+      "email": "vikram.patel@iiit.ac.in",
+      "phone": "+91 9633445566",
+      "institution": "IIIT Hyderabad",
+      "qualification": "B.Tech CSE",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-006",
+      "candidateIdentifier": "CAN-2026-006",
+      "fullName": "Ananya Reddy",
+      "username": "ananya.reddy",
+      "email": "ananya.reddy@dtu.ac.in",
+      "phone": "+91 9544556677",
+      "institution": "Delhi Technological University",
+      "qualification": "B.Tech Software Engineering",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-007",
+      "candidateIdentifier": "CAN-2026-007",
+      "fullName": "Suresh Nair",
+      "username": "suresh.nair",
+      "email": "suresh.nair@coep.ac.in",
+      "phone": "+91 9455667788",
+      "institution": "COEP Technological University",
+      "qualification": "B.Tech IT",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "ACTIVE",
+      "testsAssignedCount": 1
+    },
+    {
+      "id": "can-uat-008",
+      "candidateIdentifier": "CAN-2026-008",
+      "fullName": "Karan Singh",
+      "username": "karan.singh",
+      "email": "karan.singh@thapar.edu",
+      "phone": "+91 9366778899",
+      "institution": "Thapar Institute of Engineering and Technology",
+      "qualification": "B.E. Computer Science",
+      "graduationYear": 2026,
+      "recruitmentReference": "TCS Campus Placement Drive 2026",
+      "accountStatus": "INACTIVE",
+      "testsAssignedCount": 0
+    }
+  ],
+  "questions": [
+    {
+      "id": "q-uat-101",
+      "questionType": "MCQ_SINGLE",
+      "topic": "Data Structures",
+      "difficulty": "Easy",
+      "maximumMarks": 2,
+      "negativeMarks": 0.5,
+      "questionText": "What is the asymptotic time complexity of searching for a key in a balanced AVL tree with N nodes?",
+      "explanation": "AVL trees maintain strict height balance factor between -1 and +1, guaranteeing O(log N) lookup.",
+      "options": [
+        { "id": "opt-1", "optionText": "O(1)", "displayOrder": 1, "isCorrect": false },
+        { "id": "opt-2", "optionText": "O(log N)", "displayOrder": 2, "isCorrect": true },
+        { "id": "opt-3", "optionText": "O(N)", "displayOrder": 3, "isCorrect": false },
+        { "id": "opt-4", "optionText": "O(N log N)", "displayOrder": 4, "isCorrect": false }
+      ]
+    },
+    {
+      "id": "q-uat-102",
+      "questionType": "MCQ_MULTIPLE",
+      "topic": "Algorithms",
+      "difficulty": "Medium",
+      "maximumMarks": 4,
+      "negativeMarks": 1.0,
+      "questionText": "Which of the following sorting algorithms exhibit O(N log N) average-case time complexity? (Select all that apply)",
+      "explanation": "Merge sort and Quick sort operate with average O(N log N) runtime.",
+      "options": [
+        { "id": "opt-5", "optionText": "Merge Sort", "displayOrder": 1, "isCorrect": true },
+        { "id": "opt-6", "optionText": "Bubble Sort", "displayOrder": 2, "isCorrect": false },
+        { "id": "opt-7", "optionText": "Quick Sort", "displayOrder": 3, "isCorrect": true },
+        { "id": "opt-8", "optionText": "Insertion Sort", "displayOrder": 4, "isCorrect": false }
+      ]
+    },
+    {
+      "id": "q-uat-103",
+      "questionType": "SQL",
+      "topic": "Databases",
+      "difficulty": "Medium",
+      "maximumMarks": 10,
+      "negativeMarks": 0,
+      "questionText": "Write an SQL query to retrieve employee names and department names where the salary exceeds the department average salary.",
+      "sqlConfig": {
+        "schemaDdl": "CREATE TABLE employees (id INT PRIMARY KEY, name TEXT, department_id INT, salary INT); CREATE TABLE departments (id INT PRIMARY KEY, name TEXT);",
+        "seedDataSql": "INSERT INTO departments VALUES (1, 'Engineering'), (2, 'Sales'); INSERT INTO employees VALUES (1, 'Rohan', 1, 95000), (2, 'Kavya', 1, 75000), (3, 'Aisha', 2, 85000), (4, 'Vikram', 2, 60000);",
+        "referenceQuery": "SELECT e.name, d.name FROM employees e JOIN departments d ON e.department_id = d.id WHERE e.salary > (SELECT AVG(salary) FROM employees WHERE department_id = e.department_id) ORDER BY e.name ASC;",
+        "comparisonMode": "EXACT_MATCH"
+      }
+    },
+    {
+      "id": "q-uat-104",
+      "questionType": "CODING",
+      "topic": "Algorithms",
+      "difficulty": "Medium",
+      "maximumMarks": 15,
+      "negativeMarks": 0,
+      "questionText": "Given an array of integers and a target sum, output the two distinct indices whose elements sum to target.",
+      "codingConfig": {
+        "allowedLanguages": ["python", "javascript", "cpp", "java"],
+        "defaultLanguage": "python",
+        "timeLimitMs": 2000,
+        "memoryLimitMb": 128,
+        "testCases": [
+          {
+            "id": "tc-1",
+            "inputData": "2 7 11 15\n9",
+            "expectedOutput": "0 1",
+            "visibility": "SAMPLE",
+            "marks": 5
+          },
+          {
+            "id": "tc-2",
+            "inputData": "3 2 4\n6",
+            "expectedOutput": "1 2",
+            "visibility": "HIDDEN",
+            "marks": 5
+          },
+          {
+            "id": "tc-3",
+            "inputData": "3 3\n6",
+            "expectedOutput": "0 1",
+            "visibility": "HIDDEN",
+            "marks": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "q-uat-105",
+      "questionType": "DESCRIPTIVE",
+      "topic": "System Design",
+      "difficulty": "Hard",
+      "maximumMarks": 10,
+      "negativeMarks": 0,
+      "questionText": "Explain the architectural differences between Optimistic Concurrency Control (OCC) and Two-Phase Locking (2PL). When is OCC preferred in distributed systems?",
+      "rubricCriteria": [
+        {
+          "id": "rub-1",
+          "name": "Core Principles",
+          "description": "Differentiates version validation vs lock holding",
+          "maxMarks": 5
+        },
+        {
+          "id": "rub-2",
+          "name": "Distributed Scalability",
+          "description": "Analyzes throughput under low vs high contention",
+          "maxMarks": 5
+        }
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "id": "asmt-tcs-2026",
+      "title": "TCS National Qualifier Test 2026 (Core Technical)",
+      "roleCategory": "Software Engineering",
+      "status": "SCHEDULED",
+      "overallDuration": 60,
+      "passingMarks": 25,
+      "maxMarks": 41,
+      "totalQuestions": 5,
+      "navigationMode": "FREE",
+      "resultVisibility": "ADMIN_RELEASE",
+      "randomizeQuestions": false,
+      "randomizeOptions": true,
+      "negativeMarking": true,
+      "negativeMarkValue": 0.25,
+      "assignedCandidateCount": 7,
+      "windowStart": "2026-11-05T09:00:00Z",
+      "windowEnd": "2026-11-05T12:00:00Z"
+    }
+  ],
+  "labDevices": [
+    {
+      "id": "dev-uat-101",
+      "labIdentifier": "LAB-B-W01",
+      "hostname": "LAB-B-PC01.internal",
+      "ipAddress": "192.168.10.101",
+      "macAddress": "00:1B:44:11:3A:B7",
+      "deviceStatus": "ACTIVE",
+      "approvedClientVersion": "1.1.0",
+      "lastHeartbeat": "2026-11-01T11:45:00Z",
+      "assignedCandidateIdentifier": "CAN-2026-001"
+    },
+    {
+      "id": "dev-uat-102",
+      "labIdentifier": "LAB-B-W02",
+      "hostname": "LAB-B-PC02.internal",
+      "ipAddress": "192.168.10.102",
+      "macAddress": "00:1B:44:11:3A:B8",
+      "deviceStatus": "ACTIVE",
+      "approvedClientVersion": "1.1.0",
+      "lastHeartbeat": "2026-11-01T11:45:12Z",
+      "assignedCandidateIdentifier": "CAN-2026-002"
+    },
+    {
+      "id": "dev-uat-103",
+      "labIdentifier": "LAB-B-W03",
+      "hostname": "LAB-B-PC03.internal",
+      "ipAddress": "192.168.10.103",
+      "macAddress": "00:1B:44:11:3A:B9",
+      "deviceStatus": "ACTIVE",
+      "approvedClientVersion": "1.1.0",
+      "lastHeartbeat": "2026-11-01T11:44:50Z",
+      "assignedCandidateIdentifier": "CAN-2026-003"
+    },
+    {
+      "id": "dev-uat-104",
+      "labIdentifier": "LAB-B-W04",
+      "hostname": "LAB-B-PC04.internal",
+      "ipAddress": "192.168.10.104",
+      "macAddress": "00:1B:44:11:3A:C0",
+      "deviceStatus": "BLOCKED",
+      "approvedClientVersion": "1.0.8",
+      "statusReason": "Workstation client version outdated (1.0.8); fails minimum baseline security requirements.",
+      "lastHeartbeat": "2026-11-01T10:12:00Z"
+    }
+  ]
+}

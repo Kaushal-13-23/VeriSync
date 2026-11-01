@@ -98,6 +98,10 @@ describe('Question Bank View', () => {
     const archiveBtn = await screen.findByTestId('btn-archive-question-q-101');
     fireEvent.click(archiveBtn);
 
+    // Confirm archive in modal (NFR-USE-004)
+    const confirmBtn = await screen.findByTestId('btn-confirm-archive-question');
+    fireEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(screen.getByText('ARCHIVED')).toBeInTheDocument();
     });

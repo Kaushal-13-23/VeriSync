@@ -12,6 +12,10 @@ export const config = {
   maxTimeLimitMs: 10000,
   defaultMemoryLimitMb: 256,
   maxMemoryLimitMb: 512,
+  costSafeMemoryLimitMb: parseInt(process.env.COST_SAFE_MEMORY_LIMIT_MB || '128', 10),
+  maxConcurrentExecutions: parseInt(process.env.MAX_CONCURRENT_EXECUTIONS || '10', 10),
+  maxQueueDepth: parseInt(process.env.MAX_QUEUE_DEPTH || '100', 10),
+  queueTimeoutMs: parseInt(process.env.QUEUE_TIMEOUT_MS || '15000', 10),
   pidsLimit: 64, // Mitigates fork bombs
   dockerImages: {
     c: 'verisync-runner-c:13.2.0',

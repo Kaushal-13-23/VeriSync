@@ -67,7 +67,10 @@ export const EvaluationCard: React.FC<EvaluationCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden hover:border-slate-300 transition-colors">
+    <div
+      className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden hover:border-slate-300 transition-colors"
+      data-testid={`eval-card-${item.id}`}
+    >
       {/* Top Banner */}
       <div className="px-5 py-3.5 bg-slate-50/75 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">

@@ -8,6 +8,11 @@ import { CandidatesModule } from './candidates/candidates.module';
 import { QuestionsModule } from './questions/questions.module';
 import { AssessmentsModule } from './assessments/assessments.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { EvaluationModule } from './evaluation/evaluation.module';
+import { ResultsModule } from './results/results.module';
+import { SqlModule } from './sql/sql.module';
+import { CodingModule } from './coding/coding.module';
+import { RetentionModule } from './retention/retention.module';
 import { PrismaService } from './common/prisma.service';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
@@ -22,6 +27,11 @@ import { RolesGuard } from './auth/guards/roles.guard';
     QuestionsModule,
     AssessmentsModule,
     SessionsModule,
+    EvaluationModule,
+    ResultsModule,
+    SqlModule,
+    CodingModule,
+    RetentionModule,
   ],
   controllers: [AppController],
   providers: [

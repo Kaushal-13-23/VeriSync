@@ -221,6 +221,11 @@ model Question {
   assessmentQuestions AssessmentQuestion[]
   testCases           TestCase[]
 
+  // Technical & SQL authoring (FR-SQL-001, FR-CODE-010)
+  schemaDefinition    String?              @map("schema_definition")
+  referenceSolution   String?              @map("reference_solution")
+  maxSubmissions      Int?                 @default(10) @map("max_submissions")
+
   @@index([topic])
   @@index([difficulty])
   @@index([questionType])
@@ -256,6 +261,7 @@ model AssessmentQuestion {
   sequenceNumber   Int               @map("sequence_number")
   timeLimitSeconds Int?              @map("time_limit_seconds")
   marksOverride    Decimal?          @map("marks_override") @db.Decimal(5, 2)
+  maxSubmissions   Int?              @map("max_submissions")
   questionVersion  Int               @default(1) @map("question_version")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
@@ -332,6 +338,9 @@ model QuestionAttempt {
   attemptStatus        AttemptState       @default(PENDING) @map("attempt_status")
   awardedMarks         Decimal?           @map("awarded_marks") @db.Decimal(5, 2)
   draftPayload         Json?              @map("draft_payload")
+  evaluatorFeedback    String?            @map("evaluator_feedback")
+  evaluatedAt          DateTime?          @map("evaluated_at")
+  evaluatedBy          String?            @map("evaluated_by")
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
 
@@ -369,20 +378,33 @@ model Answer {
 // 11. coding_submissions: Code & evaluation reference (SRS 9.1, FR-CODE-001..014)
 // -----------------------------------------------------------------------------
 model CodingSubmission {
-  id                 String           @id @default(uuid()) @map("coding_submission_id")
-  questionAttemptId  String           @map("question_attempt_id")
-  language           String
-  sourceCode         String           @map("source_code")
-  submissionStatus   SubmissionStatus @default(QUEUED) @map("submission_status")
-  executionReference String?          @map("execution_reference")
-  awardedMarks       Decimal?         @map("awarded_marks") @db.Decimal(5, 2)
-  idempotencyKey     String?          @map("idempotency_key")
-  createdAt          DateTime         @default(now()) @map("created_at")
-  updatedAt          DateTime         @updatedAt @map("updated_at")
+  id                    String           @id @default(uuid()) @map("coding_submission_id")
+  questionAttemptId     String           @map("question_attempt_id")
+  language              String
+  sourceCode            String           @map("source_code")
+  submissionStatus      SubmissionStatus @default(QUEUED) @map("submission_status")
+  executionStatus       String?          @map("execution_status") // ACCEPTED, WRONG_ANSWER, COMPILATION_ERROR, etc.
+  executionReference    String?          @map("execution_reference")
+  awardedMarks          Decimal?         @map("awarded_marks") @db.Decimal(5, 2)
+  totalMarks            Decimal?         @map("total_marks") @db.Decimal(5, 2)
+  compilerOutput        String?          @map("compiler_output")
+  executionTimeMs       Int?             @map("execution_time_ms")
+  memoryUsedKb          Int?             @map("memory_used_kb")
+  sampleTestResults     Json?            @map("sample_test_results")
+  hiddenTestResults     Json?            @map("hidden_test_results")
+  isInfrastructureError Boolean          @default(false) @map("is_infrastructure_error")
+  retryCount            Int              @default(0) @map("retry_count")
+  errorMessage          String?          @map("error_message")
+  retainedUntil         DateTime?        @map("retained_until")
+  idempotencyKey        String?          @map("idempotency_key")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
-  questionAttempt    QuestionAttempt  @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+  questionAttempt       QuestionAttempt  @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
 
+  @@unique([questionAttemptId, idempotencyKey])
   @@index([questionAttemptId])
+  @@index([submissionStatus])
   @@map("coding_submissions")
 }
 
@@ -414,14 +436,18 @@ model Result {
   sessionId        String            @unique @map("session_id")
   totalScore       Decimal           @map("total_score") @db.Decimal(6, 2)
   maximumScore     Decimal           @map("maximum_score") @db.Decimal(6, 2)
+  percentage       Decimal?          @map("percentage") @db.Decimal(5, 2)
+  passed           Boolean?          @map("passed")
+  rank             Int?              @map("rank")
   resultStatus     ResultStatus      @default(PROVISIONAL) @map("result_status")
-  finalizedAt      DateTime          @default(now()) @map("finalized_at")
+  finalizedAt      DateTime?         @map("finalized_at")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
   session          AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   scoreCorrections ScoreCorrection[]
 
+  @@index([resultStatus])
   @@map("results")
 }
 
@@ -468,16 +494,17 @@ model LabDevice {
 // 16. score_corrections: History of authorized score changes (SRS 9.1, FR-SCORE-010)
 // -----------------------------------------------------------------------------
 model ScoreCorrection {
-  id            String   @id @default(uuid()) @map("correction_id")
-  resultId      String   @map("result_id")
-  originalValue Decimal  @map("original_value") @db.Decimal(6, 2)
-  revisedValue  Decimal  @map("revised_value") @db.Decimal(6, 2)
-  reason        String
-  correctedBy   String   @map("corrected_by")
-  correctedAt   DateTime @default(now()) @map("corrected_at")
+  id                String   @id @default(uuid()) @map("correction_id")
+  resultId          String   @map("result_id")
+  questionAttemptId String?  @map("question_attempt_id")
+  originalValue     Decimal  @map("original_value") @db.Decimal(6, 2)
+  revisedValue      Decimal  @map("revised_value") @db.Decimal(6, 2)
+  reason            String
+  correctedBy       String   @map("corrected_by")
+  correctedAt       DateTime @default(now()) @map("corrected_at")
 
-  result        Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
-  corrector     User     @relation("ScoreCorrector", fields: [correctedBy], references: [id])
+  result            Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  corrector         User     @relation("ScoreCorrector", fields: [correctedBy], references: [id])
 
   @@index([resultId])
   @@map("score_corrections")
@@ -499,3 +526,17 @@ model RevokedToken {
   @@index([expiresAt])
   @@map("revoked_tokens")
 }
+
+// -----------------------------------------------------------------------------
+// 18. system_settings: System configuration & retention policies (SRS 9.3, FR-CODE-014)
+// -----------------------------------------------------------------------------
+model SystemSetting {
+  id        String   @id @default(uuid()) @map("setting_id")
+  key       String   @unique
+  value     String
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+

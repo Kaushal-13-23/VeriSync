@@ -758,6 +758,83 @@ paths:
         '200':
           description: Draft persisted.
 
+  /candidate/sessions/{id}/code-submissions:
+    post:
+      summary: Submit Code or SQL Query for Technical Evaluation
+      description: >
+        Submits candidate source code or SQL query for execution and evaluation (FR-CODE-001..014, FR-SQL-001..005, UC-11).
+        Validates session status, question attempt state, server deadline, and per-question submission limits (FR-CODE-010).
+        Enforces Idempotency-Key header; duplicate keys return original submission (FR-ANS-009).
+      operationId: submitCode
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - language
+                - sourceCode
+              properties:
+                questionAttemptId:
+                  type: string
+                language:
+                  type: string
+                  enum: [c, cpp, java, python, javascript, sql]
+                sourceCode:
+                  type: string
+      responses:
+        '200':
+          description: Duplicate request processed; existing submission returned.
+        '201':
+          description: Code submission accepted and enqueued for evaluation.
+        '403':
+          description: Access denied or attempt does not belong to session.
+        '409':
+          description: Session/question expired or maximum submissions exceeded (FR-CODE-010).
+
+  /candidate/sessions/{id}/code-submissions/{submissionId}/status:
+    get:
+      summary: Get Code Submission Status and Sample Test Results
+      description: >
+        Polls execution status of submitted code (QUEUED, RUNNING, COMPLETED, FAILED) with execution metrics and permitted sample outputs.
+        Zero disclosure of hidden test cases or expected outputs (FR-CODE-008, FR-CODE-009, TC-10).
+      operationId: getCodeSubmissionStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current execution status and candidate-visible sample results.
+        '403':
+          description: Access denied.
+        '404':
+          description: Submission not found.
+
   /candidate/sessions/{id}/final-submit:
     post:
       summary: Final Assessment Submission
@@ -808,6 +885,230 @@ paths:
       responses:
         '200':
           description: Override executed and audited.
+
+  /admin/evaluation/queue:
+    get:
+      summary: Get Manual Evaluation Queue
+      description: Returns questions requiring manual grading by Technical Evaluators or Super Admins (FR-SCORE-004, FR-SCORE-005, UC-14).
+      operationId: getEvaluationQueue
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of items pending manual evaluation.
+
+  /admin/evaluation/evaluate:
+    post:
+      summary: Submit Manual Question Evaluation
+      description: Evaluates a candidate question attempt with marks and rubric feedback, updating result status to FINAL if all attempts completed (FR-SCORE-004, FR-SCORE-005, FR-SCORE-008, UC-14).
+      operationId: evaluateQuestionAttempt
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - marksAwarded
+              properties:
+                questionAttemptId:
+                  type: string
+                marksAwarded:
+                  type: number
+                evaluatorFeedback:
+                  type: string
+      responses:
+        '200':
+          description: Question evaluated successfully.
+
+  /admin/results:
+    get:
+      summary: List Filterable Assessment Results
+      description: Returns candidate assessment results with filters, scores, pass/fail status, and rankings (FR-ADMIN-003, FR-SCORE-008).
+      operationId: listResults
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: assessmentId
+          in: query
+          schema:
+            type: string
+        - name: candidateIdentifier
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PASS, FAIL, ALL]
+        - name: resultStatus
+          in: query
+          schema:
+            type: string
+            enum: [PROVISIONAL, FINAL]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of candidate results.
+
+  /admin/results/{id}:
+    get:
+      summary: Get Detailed Candidate Result Breakdown
+      description: Detailed result with per-question responses, awarded marks, evaluator comments, and score corrections (FR-ADMIN-005).
+      operationId: getResultDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed result breakdown.
+
+  /admin/results/corrections:
+    post:
+      summary: Audited Score Correction
+      description: Correct a candidate score with mandatory justification, recording original, revised, admin, and recalculating totals and rankings (FR-SCORE-010, UC-15, TC-14).
+      operationId: correctScore
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - revisedScore
+                - reason
+              properties:
+                sessionId:
+                  type: string
+                questionAttemptId:
+                  type: string
+                revisedScore:
+                  type: number
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Score corrected and audited.
+
+  /admin/results/export/csv:
+    get:
+      summary: Export Assessment Results CSV
+      description: Restricted and audited export of assessment results in CSV format (FR-ADMIN-004, FR-ADMIN-008).
+      operationId: exportResultsCsv
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: assessmentId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CSV file content.
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /admin/results/assessments/{assessmentId}/statistics:
+    get:
+      summary: Assessment and Question Level Analytics
+      description: Returns cohort statistics and per-question analytics (difficulty index, discrimination index, average score) (FR-ADMIN-006, FR-ADMIN-009).
+      operationId: getAssessmentStatistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assessment analytics and question breakdown.
+
+  /candidate/assessments/{assessmentId}/result:
+    get:
+      summary: Candidate Result View
+      description: Candidate retrieves their own assessment result according to assessment result visibility policy (FR-ADMIN-007, BR-009).
+      operationId: getCandidateResult
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: assessmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidate result view or visibility notice.
+
+  /admin/retention/settings:
+    get:
+      summary: Get Source Code and Results Retention Settings
+      description: Returns configured retention periods for source code and evaluation results (FR-CODE-014, SRS 9.3).
+      operationId: getRetentionSettings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current retention settings.
+    patch:
+      summary: Update Retention Settings
+      description: SuperAdmin updates retention durations for source code and results (FR-CODE-014).
+      operationId: updateRetentionSettings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceCodeRetentionDays:
+                  type: integer
+                resultRetentionDays:
+                  type: integer
+                autoPurgeEnabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Retention settings updated.
+
+  /admin/retention/purge:
+    post:
+      summary: Purge Expired Source Code and Submissions
+      description: Manually triggers purge of expired code submissions beyond configured retention period (FR-CODE-014).
+      operationId: purgeExpiredSubmissions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Purge completed with count of purged records.
 
 components:
   securitySchemes:

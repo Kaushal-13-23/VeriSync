@@ -3,6 +3,7 @@ import { SessionsService } from './sessions.service';
 import { SessionExpiryWorker } from './session-expiry.worker';
 import { PrismaService } from '../common/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { EvaluationService } from '../evaluation/evaluation.service';
 import {
   AccountStatus,
   AssessmentStatus,
@@ -13,7 +14,6 @@ import {
   QuestionType,
   ApiErrorCode,
 } from '@verisync/shared';
-import { ApiErrorException } from '../common/api-error.exception';
 
 describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC15, TC16)', () => {
   let service: SessionsService;
@@ -238,12 +238,18 @@ describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC
       sanitizeMetadata: jest.fn().mockImplementation((meta) => meta),
     };
 
+    const mockEvaluationService = {
+      evaluateSession: jest.fn().mockResolvedValue({ id: 'res_1' }),
+      recalculateAssessmentRankings: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SessionsService,
         SessionExpiryWorker,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: EvaluationService, useValue: mockEvaluationService },
       ],
     }).compile();
 
@@ -810,7 +816,6 @@ describe('SessionsService & Exam Runtime (FR-TIME, FR-ANS, FR-UI, TC01..TC07, TC
     });
 
     it('SessionExpiryWorker should scan and process expired sessions and heartbeats', async () => {
-      const past = new Date(Date.now() - 5000);
       mockPrisma.assessmentSession.findMany.mockImplementation(({ where }: any) => {
         if (where.overallDeadline) {
           return Promise.resolve([{ id: 'sess_expired_1' }]);

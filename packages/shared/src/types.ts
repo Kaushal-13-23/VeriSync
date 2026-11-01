@@ -90,6 +90,23 @@ export enum TestCaseVisibility {
   HIDDEN = 'HIDDEN',
 }
 
+export enum SubmissionStatus {
+  QUEUED = 'QUEUED',
+  RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+export enum ExecutionStatus {
+  ACCEPTED = 'ACCEPTED',
+  WRONG_ANSWER = 'WRONG_ANSWER',
+  COMPILATION_ERROR = 'COMPILATION_ERROR',
+  RUNTIME_ERROR = 'RUNTIME_ERROR',
+  TIME_LIMIT_EXCEEDED = 'TIME_LIMIT_EXCEEDED',
+  MEMORY_LIMIT_EXCEEDED = 'MEMORY_LIMIT_EXCEEDED',
+  INTERNAL_EVALUATION_ERROR = 'INTERNAL_EVALUATION_ERROR',
+}
+
 /**
  * Health check response
  */
@@ -408,4 +425,239 @@ export interface SessionHeartbeatResponseDto {
   status: 'ok';
   sessionStatus: SessionState;
   serverTime: string;
+}
+
+/**
+ * Results and Evaluation Types (SRS 5.10, 5.11, FR-SCORE, FR-ADMIN, UC-14, UC-15)
+ */
+
+export enum ResultStatus {
+  PROVISIONAL = 'PROVISIONAL',
+  FINAL = 'FINAL',
+}
+
+export interface ManualEvaluationQueueItemDto {
+  questionAttemptId: string;
+  sessionId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  codeSnippet?: string | null;
+  maximumMarks: number;
+  candidateAnswer: unknown;
+  submittedAt: string;
+}
+
+export interface EvaluateQuestionDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+}
+
+export interface EvaluateQuestionResponseDto {
+  questionAttemptId: string;
+  marksAwarded: number;
+  evaluatorFeedback?: string;
+  evaluatedBy: string;
+  evaluatedAt: string;
+  sessionResultStatus: ResultStatus;
+}
+
+export interface ScoreCorrectionDto {
+  sessionId: string;
+  questionAttemptId?: string;
+  revisedScore: number;
+  reason: string;
+}
+
+export interface ScoreCorrectionRecordDto {
+  id: string;
+  resultId: string;
+  questionAttemptId?: string | null;
+  originalValue: number;
+  revisedValue: number;
+  reason: string;
+  correctedBy: string;
+  correctedAt: string;
+}
+
+export interface ScoreCorrectionResponseDto {
+  correction: ScoreCorrectionRecordDto;
+  newTotalScore: number;
+  newPercentage: number;
+  newRank?: number | null;
+  resultStatus: ResultStatus;
+}
+
+export interface ResultFilterDto {
+  assessmentId?: string;
+  candidateIdentifier?: string;
+  status?: 'PASS' | 'FAIL' | 'ALL';
+  resultStatus?: ResultStatus;
+  institution?: string;
+  minScore?: number;
+  maxScore?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AssessmentResultDto {
+  id: string;
+  sessionId: string;
+  assignmentId: string;
+  candidateIdentifier: string;
+  candidateName: string;
+  institution: string;
+  assessmentId: string;
+  assessmentTitle: string;
+  totalScore: number;
+  maximumScore: number;
+  percentage: number;
+  resultStatus: ResultStatus;
+  passed?: boolean | null;
+  rank?: number | null;
+  submittedAt: string;
+  finalizedAt?: string | null;
+}
+
+export interface QuestionAttemptResultDto {
+  questionAttemptId: string;
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  negativeMarks: number;
+  marksAwarded: number;
+  candidateResponse: unknown;
+  attemptStatus: AttemptState;
+  evaluatorFeedback?: string | null;
+  evaluatedBy?: string | null;
+  evaluatedAt?: string | null;
+}
+
+export interface DetailedResultResponseDto {
+  result: AssessmentResultDto;
+  breakdown: QuestionAttemptResultDto[];
+  corrections: ScoreCorrectionRecordDto[];
+}
+
+export interface QuestionStatisticsDto {
+  questionId: string;
+  sequenceNumber: number;
+  questionType: QuestionType;
+  questionText: string;
+  maximumMarks: number;
+  totalAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+  unansweredAttempts: number;
+  averageScore: number;
+  difficultyIndex: number; // 0.0 - 1.0 (proportion of correct answers)
+  discriminationIndex?: number;
+}
+
+export interface AssessmentStatisticsDto {
+  assessmentId: string;
+  assessmentTitle: string;
+  totalCandidates: number;
+  completedSessions: number;
+  averageScore: number;
+  highestScore: number;
+  lowestScore: number;
+  passingPercentage: number;
+  questions: QuestionStatisticsDto[];
+}
+
+export interface CandidateResultViewDto {
+  assessmentTitle: string;
+  resultStatus: ResultStatus;
+  canViewScore: boolean;
+  visibilityNotice?: string;
+  totalScore?: number;
+  maximumScore?: number;
+  percentage?: number;
+  passed?: boolean | null;
+  rank?: number | null;
+}
+
+/**
+ * Technical Assessment & Coding Evaluation DTOs (FR-CODE-001..014, SRS 8.5)
+ */
+export interface CreateCodeSubmissionDto {
+  questionAttemptId: string;
+  language: string; // c | cpp | java | python | javascript | sql
+  sourceCode: string;
+}
+
+export interface CodeSubmissionResponseDto {
+  submissionId: string;
+  questionAttemptId: string;
+  status: SubmissionStatus;
+  submittedAt: string;
+}
+
+export interface TestCaseSampleResultDto {
+  testCaseId: string;
+  passed: boolean;
+  inputData?: string;
+  expectedOutput?: string;
+  actualOutput?: string;
+  executionTimeMs?: number;
+  memoryKb?: number;
+  errorMessage?: string;
+}
+
+export interface CodeSubmissionStatusDto {
+  submissionId: string;
+  questionAttemptId: string;
+  submissionStatus: SubmissionStatus;
+  executionStatus?: ExecutionStatus | null;
+  awardedMarks?: number | null;
+  totalMarks?: number | null;
+  compilerOutput?: string | null;
+  executionTimeMs?: number | null;
+  memoryUsedKb?: number | null;
+  sampleTestResults?: TestCaseSampleResultDto[];
+  isInfrastructureError?: boolean;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * SQL Sandbox Execution DTOs (FR-SQL-001..005)
+ */
+export interface SqlExecutionRequestDto {
+  questionAttemptId: string;
+  query: string;
+}
+
+export interface SqlExecutionResultDto {
+  passed: boolean;
+  executionStatus: ExecutionStatus;
+  rows?: Record<string, unknown>[];
+  rowCount?: number;
+  executionTimeMs?: number;
+  errorMessage?: string;
+}
+
+/**
+ * Retention Policy DTOs (FR-CODE-014, SRS 9.3)
+ */
+export interface RetentionSettingsDto {
+  sourceCodeRetentionDays: number;
+  resultRetentionDays: number;
+  autoPurgeEnabled: boolean;
+}
+
+export interface PurgeRetentionResultDto {
+  purgedSubmissionsCount: number;
+  purgedAt: string;
 }

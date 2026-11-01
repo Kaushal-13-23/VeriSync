@@ -222,7 +222,7 @@ Status Legend:
 - [x] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
 - [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
 - [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
-- [ ] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
+- [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
 - [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
@@ -252,8 +252,8 @@ Status Legend:
 
 ### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
 
-- **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3).
-- **Branch**: `phase-1/ashlin-admin-shell`
+- **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
+- **Branch**: `phase-2/B-admin-management`
 - **Phase 1 Completion Status**:
   - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
   - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)
@@ -262,10 +262,37 @@ Status Legend:
   - [x] `NFR-COMP-002`: Evergreen browser compatibility (Chrome, Edge, Firefox) (Done)
   - [/] `FR-AUTH-001`: Super Admin login screen and client validation (Partial - client complete, awaiting Dev A API merge)
   - [/] `FR-AUTH-004`: Rate-limiting error toast handling (Partial - client complete)
-  - [/] `FR-AUTH-005`: Password recovery policy modal (Partial - client complete)
-  - [/] `FR-AUTH-006`: Session sign-out and client revocation (Partial - client complete)
   - [/] `FR-AUTH-007`: Token refresh interceptor and session store (Partial - client complete)
   - [/] `FR-AUTH-008`: 6-digit TOTP MFA verification screen (Partial - client complete)
   - [/] `FR-ADMIN-002`: Active candidate counter and monitoring overview (Partial - client complete)
   - [/] `FR-ADMIN-003`: Completion donut chart breakdown (Partial - client complete)
-  - [/] `FR-ASMT-006`: Scheduled assessments calendar display (Partial - client complete)
+
+- **Phase 2 Completion Status**:
+  - [x] `FR-CAN-001`: Candidate record creation with complete profile fields and account status (Done)
+  - [x] `FR-CAN-002`: Profile modification and search/filter by candidate ID, name, email, institution, drive (Done)
+  - [x] `FR-CAN-003`: Bulk candidate import via CSV with validated template and per-row error reporting (Done)
+  - [x] `FR-CAN-004`: Candidate assignment to one or more assessments individually or by cohort/group (Done)
+  - [x] `FR-CAN-005`: Removal/revocation of candidate assignments before assessment start and account deactivation (Done)
+  - [x] `FR-CAN-006`: Candidate login and activity history logging inspection in slide-out drawer (Done)
+  - [x] `FR-CAN-007`: Enforcement of unique candidate IDs and usernames in UI/forms (Done)
+  - [x] `FR-QB-001`: Question creation with text, type, category, difficulty, marks, and explanation (Done)
+  - [x] `FR-QB-002`: Question categorization by topic, skill, and difficulty (Done)
+  - [x] `FR-QB-003`: Support for question formats: Single MCQ, Multi MCQ, True/False, Short Answer, Descriptive, Scenario (Done)
+  - [x] `FR-QB-004`: Option management for objective questions with server-side protected correct answer storage (Done)
+  - [x] `FR-QB-005`: Configurable question time limits in seconds (Done)
+  - [x] `FR-QB-006`: Rich-text/formatted code snippets in question statements (Done)
+  - [x] `FR-QB-007`: Question search and filter by keyword, topic, difficulty, and type (Done)
+  - [x] `FR-QB-008`: Question editing before assignment with immutability for active sessions (Done)
+  - [x] `FR-QB-009`: Question deactivation/archival preventing new usage without altering existing records (Done)
+  - [x] `FR-ASMT-001`: Assessment creation with title, role category, instructions, schedule, duration, attempt limit (Done)
+  - [x] `FR-ASMT-002`: Configuration of per-question limits, overall limits, marking rules, negative marking, randomization (Done)
+  - [x] `FR-ASMT-003`: Assessment editing before candidate commencement with versioned snapshot on publish (Done)
+  - [x] `FR-ASMT-004`: Validation ensuring sum of question limits do not exceed overall duration (Done)
+  - [x] `FR-ASMT-005`: Assessment status state machine: Draft, Scheduled, Active, Completed, Suspended, Archived (Done)
+  - [x] `FR-ASMT-006`: Assessment scheduling with enforced start/end availability windows (Done)
+  - [x] `FR-ASMT-007`: Assessment attempt limit enforcement per candidate (default: 1) (Done)
+  - [x] `FR-ASMT-008`: Result visibility policy configuration (immediate, scheduled, or administrator release) (Done)
+  - [x] `FR-AUTH-005`: Super Admin candidate password reset with temporary credential generation (Done)
+  - [x] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Done)
+  - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Done)
+  - [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must) (Done)

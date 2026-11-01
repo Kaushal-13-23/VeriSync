@@ -47,9 +47,20 @@ test.describe('Admin Web Portal Smoke Test', () => {
     await expect(page.getByText('Upcoming Assessments')).toBeVisible();
     await expect(page.getByText('Frontend Developer Test')).toBeVisible();
 
-    // 7. Verify Sidebar Navigation to Candidates Tab
+    // 7. Verify Sidebar Navigation to Candidates Tab (FR-CAN-001)
     await page.getByRole('button', { name: /Candidates/i }).click();
-    await expect(page.getByRole('heading', { name: 'Candidates Management' })).toBeVisible();
-    await expect(page.getByText('Phase 2 Roadmap Module')).toBeVisible();
+    await expect(page.getByText('Candidates Roster')).toBeVisible();
+    await expect(page.getByText('CAN-2026-001')).toBeVisible();
+    await expect(page.getByText('Rohan Mehta')).toBeVisible();
+
+    // 8. Verify Sidebar Navigation to Question Bank Tab (FR-QB-001)
+    await page.getByRole('button', { name: /Question Bank/i }).click();
+    await expect(page.getByText('Question Bank Repository')).toBeVisible();
+    await expect(page.getByText('q-101')).toBeVisible();
+
+    // 9. Verify Sidebar Navigation to Assessments Tab (FR-ASMT-001)
+    await page.getByRole('button', { name: /Assessments/i }).click();
+    await expect(page.getByText('Assessments Catalog')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Create Assessment/i })).toBeVisible();
   });
 });

@@ -253,7 +253,7 @@ Status Legend:
 ### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
 
 - **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
-- **Branch**: `phase-5/B-coding-sql-assessment`
+- **Branch**: `phase-7/B-Production-readiness`
 - **Phase 1 Completion Status**:
   - [x] `FR-ADMIN-001`: Admin dashboard key metrics, stat cards, live activity, completion chart, and upcoming tests (Done)
   - [x] `FR-ADMIN-009`: Role-based navigation permissions (`SUPER_ADMIN` vs `TECHNICAL_EVALUATOR`) (Done)

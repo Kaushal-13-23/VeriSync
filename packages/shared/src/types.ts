@@ -90,6 +90,23 @@ export enum TestCaseVisibility {
   HIDDEN = 'HIDDEN',
 }
 
+export enum SubmissionStatus {
+  QUEUED = 'QUEUED',
+  RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+export enum ExecutionStatus {
+  ACCEPTED = 'ACCEPTED',
+  WRONG_ANSWER = 'WRONG_ANSWER',
+  COMPILATION_ERROR = 'COMPILATION_ERROR',
+  RUNTIME_ERROR = 'RUNTIME_ERROR',
+  TIME_LIMIT_EXCEEDED = 'TIME_LIMIT_EXCEEDED',
+  MEMORY_LIMIT_EXCEEDED = 'MEMORY_LIMIT_EXCEEDED',
+  INTERNAL_EVALUATION_ERROR = 'INTERNAL_EVALUATION_ERROR',
+}
+
 /**
  * Health check response
  */
@@ -568,4 +585,79 @@ export interface CandidateResultViewDto {
   percentage?: number;
   passed?: boolean | null;
   rank?: number | null;
+}
+
+/**
+ * Technical Assessment & Coding Evaluation DTOs (FR-CODE-001..014, SRS 8.5)
+ */
+export interface CreateCodeSubmissionDto {
+  questionAttemptId: string;
+  language: string; // c | cpp | java | python | javascript | sql
+  sourceCode: string;
+}
+
+export interface CodeSubmissionResponseDto {
+  submissionId: string;
+  questionAttemptId: string;
+  status: SubmissionStatus;
+  submittedAt: string;
+}
+
+export interface TestCaseSampleResultDto {
+  testCaseId: string;
+  passed: boolean;
+  inputData?: string;
+  expectedOutput?: string;
+  actualOutput?: string;
+  executionTimeMs?: number;
+  memoryKb?: number;
+  errorMessage?: string;
+}
+
+export interface CodeSubmissionStatusDto {
+  submissionId: string;
+  questionAttemptId: string;
+  submissionStatus: SubmissionStatus;
+  executionStatus?: ExecutionStatus | null;
+  awardedMarks?: number | null;
+  totalMarks?: number | null;
+  compilerOutput?: string | null;
+  executionTimeMs?: number | null;
+  memoryUsedKb?: number | null;
+  sampleTestResults?: TestCaseSampleResultDto[];
+  isInfrastructureError?: boolean;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * SQL Sandbox Execution DTOs (FR-SQL-001..005)
+ */
+export interface SqlExecutionRequestDto {
+  questionAttemptId: string;
+  query: string;
+}
+
+export interface SqlExecutionResultDto {
+  passed: boolean;
+  executionStatus: ExecutionStatus;
+  rows?: Record<string, unknown>[];
+  rowCount?: number;
+  executionTimeMs?: number;
+  errorMessage?: string;
+}
+
+/**
+ * Retention Policy DTOs (FR-CODE-014, SRS 9.3)
+ */
+export interface RetentionSettingsDto {
+  sourceCodeRetentionDays: number;
+  resultRetentionDays: number;
+  autoPurgeEnabled: boolean;
+}
+
+export interface PurgeRetentionResultDto {
+  purgedSubmissionsCount: number;
+  purgedAt: string;
 }

@@ -758,6 +758,83 @@ paths:
         '200':
           description: Draft persisted.
 
+  /candidate/sessions/{id}/code-submissions:
+    post:
+      summary: Submit Code or SQL Query for Technical Evaluation
+      description: >
+        Submits candidate source code or SQL query for execution and evaluation (FR-CODE-001..014, FR-SQL-001..005, UC-11).
+        Validates session status, question attempt state, server deadline, and per-question submission limits (FR-CODE-010).
+        Enforces Idempotency-Key header; duplicate keys return original submission (FR-ANS-009).
+      operationId: submitCode
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionAttemptId
+                - language
+                - sourceCode
+              properties:
+                questionAttemptId:
+                  type: string
+                language:
+                  type: string
+                  enum: [c, cpp, java, python, javascript, sql]
+                sourceCode:
+                  type: string
+      responses:
+        '200':
+          description: Duplicate request processed; existing submission returned.
+        '201':
+          description: Code submission accepted and enqueued for evaluation.
+        '403':
+          description: Access denied or attempt does not belong to session.
+        '409':
+          description: Session/question expired or maximum submissions exceeded (FR-CODE-010).
+
+  /candidate/sessions/{id}/code-submissions/{submissionId}/status:
+    get:
+      summary: Get Code Submission Status and Sample Test Results
+      description: >
+        Polls execution status of submitted code (QUEUED, RUNNING, COMPLETED, FAILED) with execution metrics and permitted sample outputs.
+        Zero disclosure of hidden test cases or expected outputs (FR-CODE-008, FR-CODE-009, TC-10).
+      operationId: getCodeSubmissionStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current execution status and candidate-visible sample results.
+        '403':
+          description: Access denied.
+        '404':
+          description: Submission not found.
+
   /candidate/sessions/{id}/final-submit:
     post:
       summary: Final Assessment Submission
@@ -988,6 +1065,50 @@ paths:
       responses:
         '200':
           description: Candidate result view or visibility notice.
+
+  /admin/retention/settings:
+    get:
+      summary: Get Source Code and Results Retention Settings
+      description: Returns configured retention periods for source code and evaluation results (FR-CODE-014, SRS 9.3).
+      operationId: getRetentionSettings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current retention settings.
+    patch:
+      summary: Update Retention Settings
+      description: SuperAdmin updates retention durations for source code and results (FR-CODE-014).
+      operationId: updateRetentionSettings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sourceCodeRetentionDays:
+                  type: integer
+                resultRetentionDays:
+                  type: integer
+                autoPurgeEnabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Retention settings updated.
+
+  /admin/retention/purge:
+    post:
+      summary: Purge Expired Source Code and Submissions
+      description: Manually triggers purge of expired code submissions beyond configured retention period (FR-CODE-014).
+      operationId: purgeExpiredSubmissions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Purge completed with count of purged records.
 
 components:
   securitySchemes:

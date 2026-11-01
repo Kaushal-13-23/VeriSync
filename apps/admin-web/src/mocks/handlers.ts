@@ -13,6 +13,7 @@ import {
   AssessmentRecord,
   AssessmentStatus,
   LiveSessionRecord,
+  SessionStatus,
   SessionOverrideType,
   AuditLogEntry,
   IncidentRecord,
@@ -1204,6 +1205,152 @@ export const handlers = [
     });
   }),
 
+  // POST /api/v1/candidate/sessions/simulate-attempt (Candidate Attempt E2E Harness)
+  http.post(/\/api\/v1\/candidate\/sessions\/simulate-attempt$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      candidateId?: string;
+      candidateIdentifier?: string;
+      candidateName?: string;
+      candidateEmail?: string;
+      assessmentId?: string;
+      assessmentTitle?: string;
+      status?: SessionStatus;
+      totalScore?: number;
+      maxScore?: number;
+      requireEvaluation?: boolean;
+      questionTitle?: string;
+      candidateAnswer?: string;
+    };
+
+    const sessionId = `sess-sim-${Date.now().toString(36)}`;
+    const resultId = `res-sim-${Date.now().toString(36)}`;
+    const candidateId = body.candidateId || 'can-sim-01';
+    const candidateIdentifier = body.candidateIdentifier || 'CAN-2026-999';
+    const candidateName = body.candidateName || 'Simulated Candidate';
+    const candidateEmail = body.candidateEmail || 'simulated.candidate@campus.edu';
+    const assessmentId = body.assessmentId || 'asmt-01';
+    const assessmentTitle = body.assessmentTitle || 'Frontend Developer Test';
+
+    // 1. Ingest session record in mockLiveSessions
+    const newSession: LiveSessionRecord = {
+      id: sessionId,
+      assessmentId,
+      assessmentTitle,
+      candidateId,
+      candidateIdentifier,
+      candidateName,
+      candidateEmail,
+      status: body.status || 'SUBMITTED',
+      currentQuestionIndex: 4,
+      totalQuestions: 4,
+      currentQuestionId: 'q-106',
+      startedAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+      lastHeartbeatAt: new Date().toISOString(),
+      overallRemainingSeconds: 0,
+      questionRemainingSeconds: 0,
+      clientIp: '192.168.1.188',
+      clientVersion: '1.4.0',
+    };
+    mockLiveSessions.unshift(newSession);
+
+    // 2. If requireEvaluation is true, add item to manual evaluation queue
+    if (body.requireEvaluation) {
+      const evalItem: EvaluationQueueItem = {
+        id: `eval-sim-${Date.now().toString(36)}`,
+        resultId,
+        sessionId,
+        candidateId,
+        candidateIdentifier,
+        candidateName,
+        assessmentId,
+        assessmentTitle,
+        questionId: 'q-106',
+        questionTitle: body.questionTitle || 'Optimistic vs Pessimistic Concurrency',
+        questionPrompt:
+          'Explain the difference between optimistic concurrency control and pessimistic concurrency control in database transactions and describe a production scenario where optimistic locking is preferred.',
+        questionType: 'DESCRIPTIVE',
+        candidateAnswer:
+          body.candidateAnswer ||
+          'Optimistic locking verifies version counters on commit rather than holding locks; ideal for high-throughput reads with low contention.',
+        submittedAt: new Date().toISOString(),
+        maxMarks: 5,
+        rubricCriteria: [
+          {
+            id: 'rub-sim-1',
+            name: 'Core Concept Definition',
+            description: 'Accurately defines locking vs version checking principles',
+            maxMarks: 3,
+          },
+          {
+            id: 'rub-sim-2',
+            name: 'Production Scenario',
+            description: 'Provides valid realistic architecture scenario',
+            maxMarks: 2,
+          },
+        ],
+        referenceAnswer: 'OCC checks version on commit; preferred for read-heavy workloads.',
+      };
+      mockEvaluationQueue.unshift(evalItem);
+    }
+
+    // 3. Ingest Result in mockResults
+    const totalScore = body.totalScore !== undefined ? body.totalScore : 42;
+    const maxScore = body.maxScore !== undefined ? body.maxScore : 50;
+    const percentage = Math.round((totalScore / maxScore) * 100);
+
+    const newResult: AssessmentResultRecord = {
+      id: resultId,
+      sessionId,
+      candidateId,
+      candidateIdentifier,
+      candidateName,
+      candidateEmail,
+      assessmentId,
+      assessmentTitle,
+      totalScore,
+      maxScore,
+      scorePercentage: percentage,
+      passingScorePercentage: 60,
+      status: body.requireEvaluation ? 'PROVISIONAL' : 'FINAL',
+      passFailStatus: percentage >= 60 ? 'PASS' : 'FAIL',
+      completedOn: new Date().toISOString(),
+      timeTakenMinutes: 35,
+      pendingManualCount: body.requireEvaluation ? 1 : 0,
+      questions: [
+        {
+          questionId: 'q-101',
+          questionTitle: 'AVL Tree Search Time Complexity',
+          questionType: 'MCQ_SINGLE',
+          maxMarks: 2,
+          marksAwarded: 2,
+          evaluationStatus: 'AUTOMATED',
+          candidateAnswer: 'O(log N)',
+          correctAnswerText: 'O(log N)',
+        },
+        {
+          questionId: 'q-106',
+          questionTitle: 'Optimistic vs Pessimistic Concurrency',
+          questionType: 'DESCRIPTIVE',
+          maxMarks: 5,
+          marksAwarded: body.requireEvaluation ? 0 : 5,
+          evaluationStatus: body.requireEvaluation ? 'PENDING_EVALUATION' : 'EVALUATED',
+          candidateAnswer: body.candidateAnswer || 'OCC uses versioning without holding locks.',
+        },
+      ],
+      corrections: [],
+    };
+    mockResults.unshift(newResult);
+
+    return HttpResponse.json({
+      success: true,
+      sessionId,
+      resultId,
+      session: newSession,
+      result: newResult,
+      message: 'Candidate attempt ingested successfully.',
+    });
+  }),
+
   // ==========================================
   // AUDIT LOGS & INCIDENTS (FR-ADMIN-007, FR-ADMIN-008, SRS 11.4)
   // ==========================================
@@ -1401,6 +1548,9 @@ export const handlers = [
       correlationId,
     };
 
+    if (!result.corrections) {
+      result.corrections = [];
+    }
     result.corrections.unshift(correctionEntry);
 
     // Create Audit Log Entry (Rule 7, FR-SCORE-010)

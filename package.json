@@ -11,6 +11,7 @@
     "test": "pnpm -r run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "dev:api": "pnpm --filter @verisync/api dev",
     "dev:admin": "pnpm --filter @verisync/admin-web dev",
     "dev:candidate": "pnpm --filter @verisync/candidate-desktop dev"
@@ -18,10 +19,12 @@
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@prisma/client": "6.19.3",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
+    "prisma": "6.19.3",
     "typescript": "^5.4.5"
   }
 }

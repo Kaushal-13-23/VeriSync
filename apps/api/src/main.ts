@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -10,6 +11,15 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,
   });
+
+  // Strict input validation per Rule 6 and NFR-SEC-007
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   const port = process.env.API_PORT || 4000;
   await app.listen(port);

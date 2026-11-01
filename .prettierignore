@@ -5,3 +5,4 @@ coverage
 *.min.js
 *.tsbuildinfo
 pnpm-lock.yaml
+dist-electron

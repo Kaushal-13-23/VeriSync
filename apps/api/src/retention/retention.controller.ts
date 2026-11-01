@@ -26,12 +26,10 @@ export class RetentionController {
    */
   @Patch('settings')
   @Roles(UserRole.SUPER_ADMIN)
-  async updateSettings(
-    @Body() dto: UpdateRetentionSettingsDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
+  async updateSettings(@Body() dto: UpdateRetentionSettingsDto, @Req() req: AuthenticatedRequest) {
     const actorUserId = req.user.sub || req.user.id;
-    const correlationId = req.headers['x-correlation-id'] || `cid-${Date.now()}`;
+    const correlationId =
+      req.correlationId || (req.headers['x-correlation-id'] as string) || `cid-${Date.now()}`;
     const clientIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
 
     return this.retentionService.updateSettings(actorUserId, dto, correlationId, clientIp);
@@ -44,7 +42,8 @@ export class RetentionController {
   @Roles(UserRole.SUPER_ADMIN)
   async purgeExpiredSubmissions(@Req() req: AuthenticatedRequest) {
     const actorUserId = req.user.sub || req.user.id;
-    const correlationId = req.headers['x-correlation-id'] || `cid-${Date.now()}`;
+    const correlationId =
+      req.correlationId || (req.headers['x-correlation-id'] as string) || `cid-${Date.now()}`;
 
     return this.retentionService.purgeExpiredSubmissions(actorUserId, correlationId);
   }

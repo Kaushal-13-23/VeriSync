@@ -40,7 +40,8 @@ export class CodingController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CodeSubmissionResponseDto> {
     const userId = req.user.sub || req.user.id;
-    const correlationId = req.headers['x-correlation-id'] || `cid-${Date.now()}`;
+    const correlationId =
+      req.correlationId || (req.headers['x-correlation-id'] as string) || `cid-${Date.now()}`;
     const clientIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
 
     return this.codingService.submitCode(

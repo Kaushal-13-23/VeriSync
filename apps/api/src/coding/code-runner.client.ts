@@ -285,7 +285,7 @@ export class CodeRunnerClient {
     };
   }
 
-  private mapStatus(status: string): ExecutionStatus {
+  private mapStatus(status?: string): ExecutionStatus {
     switch (status?.toUpperCase()) {
       case 'ACCEPTED':
         return ExecutionStatus.ACCEPTED;

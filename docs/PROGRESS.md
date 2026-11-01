@@ -372,11 +372,10 @@ Status Legend:
   - [x] `FR-LAB-004`: Workstation heartbeat telemetry tracking with last-seen ISO-8601 UTC timestamp and active session binding (Done)
   - [x] `FR-LAB-005`: Bulk device deactivation and status overrides for compromised physical lab sectors (Done)
   - [x] `FR-LAB-006`: Lockdown integrity telemetry ingestion (`BLUR`, `SHORTCUT_ATTEMPT`, `PROHIBITED_PROCESS`, `EXIT_ATTEMPT`) (Done)
-  - [x] `SRS 10.3 / BR-015`: Mandatory proctoring advisory banner: *"A single integrity event is not conclusive proof of cheating"* (Done)
+  - [x] `SRS 10.3 / BR-015`: Mandatory proctoring advisory banner: _"A single integrity event is not conclusive proof of cheating"_ (Done)
   - [x] `FR-AUTH-007`: Automatic inactivity session timeout (15 mins) with 60-second warning countdown and secure logout (Done)
   - [x] `FR-AUTH-008`: Enforced MFA setup flow for administrators (QR code, 8 emergency backup codes, 6-digit TOTP verification) (Done)
   - [x] `NFR-SEC-004`: Cryptographic SHA-256 audit log hash-chain verification tool with tamper-detection visualization (Done)
   - [x] `NFR-USE-005`: Accessibility pass across admin-web (skip to main content, keyboard navigation, focus rings, high contrast, aria labels) (Done)
   - [x] `SRS 10.5`: Pre-release security penetration testing checklist (`docs/security/pentest-checklist.md`) covering all 11 security domains (Done)
   - [x] `Playwright E2E`: Automated end-to-end suites for Lab Device management, Security Settings, MFA setup flow, and Integrity telemetry stream (Done)
-

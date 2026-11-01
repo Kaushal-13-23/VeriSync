@@ -6,20 +6,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ShieldCheck,
-  Clock,
-  Laptop,
-  CheckCircle2,
-  Save,
-  Key,
-  FileCheck,
-} from 'lucide-react';
+import { ShieldCheck, Clock, Laptop, CheckCircle2, Save, Key, FileCheck } from 'lucide-react';
 import { securityApi } from '../../api/security';
 import { useAuth } from '../../store/authContext';
-import {
-  UpdateSecurityPoliciesPayload,
-} from '../../types/api';
+import { UpdateSecurityPoliciesPayload } from '../../types/api';
 import { MfaSetupModal } from '../auth/MfaSetupModal';
 import { toastManager } from '../../lib/toast';
 
@@ -144,8 +134,8 @@ export const SecuritySettingsView: React.FC = () => {
           <span>Security Hardening & Platform Policies</span>
         </h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Configure privileged access controls, MFA enrollment, session timeouts, and client lockdown
-          thresholds (FR-AUTH-007, FR-AUTH-008, NFR-SEC).
+          Configure privileged access controls, MFA enrollment, session timeouts, and client
+          lockdown thresholds (FR-AUTH-007, FR-AUTH-008, NFR-SEC).
         </p>
       </div>
 
@@ -173,9 +163,12 @@ export const SecuritySettingsView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-              <span className="font-semibold text-slate-800 block">Authenticated Admin Profile</span>
+              <span className="font-semibold text-slate-800 block">
+                Authenticated Admin Profile
+              </span>
               <p className="text-slate-600">
-                Logged in as: <strong className="text-slate-900">{user?.fullName || user?.username}</strong>
+                Logged in as:{' '}
+                <strong className="text-slate-900">{user?.fullName || user?.username}</strong>
               </p>
               <p className="text-slate-500 text-[11px] font-mono">
                 Role: {user?.role} • ID: {user?.id}
@@ -220,7 +213,10 @@ export const SecuritySettingsView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label htmlFor="select-session-timeout" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="select-session-timeout"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Inactivity Timeout Duration <span className="text-rose-500">*</span>
               </label>
               <select
@@ -240,7 +236,10 @@ export const SecuritySettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="select-warning-countdown" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="select-warning-countdown"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Countdown Warning Dialog Duration <span className="text-rose-500">*</span>
               </label>
               <select
@@ -277,7 +276,10 @@ export const SecuritySettingsView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label htmlFor="input-approved-version-policy" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="input-approved-version-policy"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Approved Client Version <span className="text-rose-500">*</span>
               </label>
               <input
@@ -296,7 +298,10 @@ export const SecuritySettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="select-kiosk-mode" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="select-kiosk-mode"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Lockdown Enforcement Mode
               </label>
               <select
@@ -321,7 +326,8 @@ export const SecuritySettingsView: React.FC = () => {
                   data-testid="checkbox-strict-version"
                 />
                 <span className="text-slate-800 font-semibold">
-                  Strict Version Handshake: Reject outdated candidate clients with HTTP 426 (Upgrade Required)
+                  Strict Version Handshake: Reject outdated candidate clients with HTTP 426 (Upgrade
+                  Required)
                 </span>
               </label>
             </div>
@@ -367,10 +373,16 @@ export const SecuritySettingsView: React.FC = () => {
               data-testid="audit-verification-banner"
             >
               <div className="space-y-0.5">
-                <span className="font-bold block">Audit Cryptographic Chain Verified (SHA-256)</span>
+                <span className="font-bold block">
+                  Audit Cryptographic Chain Verified (SHA-256)
+                </span>
                 <span className="text-[11px] text-emerald-800">
-                  Total Valid Entries: <strong>{auditVerification.totalEntries}</strong> • Verified at:{' '}
-                  {new Date(auditVerification.verifiedAt).toLocaleString('en-US', { timeZone: 'UTC' })} UTC
+                  Total Valid Entries: <strong>{auditVerification.totalEntries}</strong> • Verified
+                  at:{' '}
+                  {new Date(auditVerification.verifiedAt).toLocaleString('en-US', {
+                    timeZone: 'UTC',
+                  })}{' '}
+                  UTC
                 </span>
               </div>
               <span className="px-2.5 py-1 bg-emerald-600 text-white font-bold rounded-lg text-[10px]">
@@ -387,13 +399,18 @@ export const SecuritySettingsView: React.FC = () => {
               Save Security Policies (Rule 7 Compliance)
             </h3>
             <p className="text-xs text-slate-300 mt-0.5">
-              Every administrative configuration change requires a mandatory audit justification reason.
+              Every administrative configuration change requires a mandatory audit justification
+              reason.
             </p>
           </div>
 
           <div>
-            <label htmlFor="input-policy-reason" className="block text-xs font-semibold text-slate-200 mb-1">
-              Mandatory Justification Reason (Rule 7, FR-CONF-003) <span className="text-rose-400">*</span>
+            <label
+              htmlFor="input-policy-reason"
+              className="block text-xs font-semibold text-slate-200 mb-1"
+            >
+              Mandatory Justification Reason (Rule 7, FR-CONF-003){' '}
+              <span className="text-rose-400">*</span>
             </label>
             <textarea
               id="input-policy-reason"
@@ -426,7 +443,9 @@ export const SecuritySettingsView: React.FC = () => {
               data-testid="btn-save-policies"
             >
               <Save className="w-4 h-4" aria-hidden="true" />
-              <span>{updateMutation.isPending ? 'Saving Policies...' : 'Save Security Policies'}</span>
+              <span>
+                {updateMutation.isPending ? 'Saving Policies...' : 'Save Security Policies'}
+              </span>
             </button>
           </div>
         </div>

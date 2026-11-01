@@ -19,10 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { sessionsApi } from '../../api/sessions';
-import {
-  LockdownEventType,
-  IntegritySeverity,
-} from '../../types/api';
+import { LockdownEventType, IntegritySeverity } from '../../types/api';
 
 interface IntegrityEventsPanelProps {
   sessionId?: string;
@@ -127,10 +124,10 @@ export const IntegrityEventsPanel: React.FC<IntegrityEventsPanelProps> = ({
           </h4>
           <p className="text-amber-800 leading-relaxed font-medium">
             <strong>A single integrity event is not conclusive proof of cheating.</strong> External
-            system notifications, OS accessibility prompts, background driver dialogs, or inadvertent
-            keystrokes can trigger security events. Proctors must evaluate cumulative timeline patterns,
-            verify with physical room supervisors, and document mandatory reasons before taking disciplinary
-            action.
+            system notifications, OS accessibility prompts, background driver dialogs, or
+            inadvertent keystrokes can trigger security events. Proctors must evaluate cumulative
+            timeline patterns, verify with physical room supervisors, and document mandatory reasons
+            before taking disciplinary action.
           </p>
         </div>
       </div>

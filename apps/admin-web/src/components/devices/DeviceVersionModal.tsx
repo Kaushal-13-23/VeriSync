@@ -98,7 +98,10 @@ export const DeviceVersionModal: React.FC<DeviceVersionModalProps> = ({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           <div>
-            <label htmlFor="input-approved-version" className="block font-semibold text-slate-700 mb-1">
+            <label
+              htmlFor="input-approved-version"
+              className="block font-semibold text-slate-700 mb-1"
+            >
               Approved Client Version <span className="text-rose-500">*</span>
             </label>
             <div className="flex gap-2">
@@ -128,7 +131,10 @@ export const DeviceVersionModal: React.FC<DeviceVersionModalProps> = ({
 
           {/* Mandatory Reason */}
           <div>
-            <label htmlFor="input-version-reason" className="block font-semibold text-slate-700 mb-1">
+            <label
+              htmlFor="input-version-reason"
+              className="block font-semibold text-slate-700 mb-1"
+            >
               Mandatory Justification Reason (Rule 7) <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -157,8 +163,8 @@ export const DeviceVersionModal: React.FC<DeviceVersionModalProps> = ({
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900 flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              Per <strong>FR-LAB-003</strong> and <strong>FR-CONF-001</strong>, candidate clients with an
-              unapproved version are rejected with HTTP 426 (Upgrade Required).
+              Per <strong>FR-LAB-003</strong> and <strong>FR-CONF-001</strong>, candidate clients
+              with an unapproved version are rejected with HTTP 426 (Upgrade Required).
             </p>
           </div>
 

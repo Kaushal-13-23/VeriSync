@@ -118,7 +118,10 @@ export const DeviceStatusModal: React.FC<DeviceStatusModalProps> = ({
 
           {/* Current Status vs Target Status */}
           <div>
-            <label htmlFor="select-device-status" className="block font-semibold text-slate-700 mb-1">
+            <label
+              htmlFor="select-device-status"
+              className="block font-semibold text-slate-700 mb-1"
+            >
               Device Operating Status <span className="text-rose-500">*</span>
             </label>
             <select
@@ -137,8 +140,12 @@ export const DeviceStatusModal: React.FC<DeviceStatusModalProps> = ({
 
           {/* Mandatory Reason */}
           <div>
-            <label htmlFor="input-status-reason" className="block font-semibold text-slate-700 mb-1">
-              Mandatory Justification Reason (Rule 7, BR-012) <span className="text-rose-500">*</span>
+            <label
+              htmlFor="input-status-reason"
+              className="block font-semibold text-slate-700 mb-1"
+            >
+              Mandatory Justification Reason (Rule 7, BR-012){' '}
+              <span className="text-rose-500">*</span>
             </label>
             <textarea
               id="input-status-reason"
@@ -165,10 +172,12 @@ export const DeviceStatusModal: React.FC<DeviceStatusModalProps> = ({
 
           {/* Rule Notice */}
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 space-y-1">
-            <span className="font-semibold text-slate-800 block">Non-Negotiable Rule 7 Compliance</span>
+            <span className="font-semibold text-slate-800 block">
+              Non-Negotiable Rule 7 Compliance
+            </span>
             <p>
-              Status adjustments are permanently recorded into immutable audit logs with timestamp (UTC),
-              actor identity, previous status, and the mandatory justification above.
+              Status adjustments are permanently recorded into immutable audit logs with timestamp
+              (UTC), actor identity, previous status, and the mandatory justification above.
             </p>
           </div>
 

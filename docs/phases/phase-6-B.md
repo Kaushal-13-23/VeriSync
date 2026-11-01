@@ -24,7 +24,7 @@ In Phase 6, Developer B executed complete lockdown management and security harde
    - Ingests lockdown violation events: `BLUR` (focus loss), `SHORTCUT_ATTEMPT` (WinKey, Alt+Tab, Ctrl+Alt+Del), `PROHIBITED_PROCESS` (Discord, Slack, IDEs), and `EXIT_ATTEMPT`.
    - Captures detailed telemetry: process executable name, active window title, pressed shortcut combinations, blur duration in milliseconds, and unique correlation ID (`Rule 9`).
    - **Non-Negotiable Evidentiary Notice (`SRS 10.3 / Line 762`, `BR-015`)**: Embedded prominent advisory banner:
-     > *"A single integrity event is not conclusive proof of cheating. External system notifications, OS accessibility prompts, background driver dialogs, or inadvertent keystrokes can trigger security events. Proctors must evaluate cumulative timeline patterns, verify with physical room supervisors, and document mandatory reasons before taking disciplinary action."*
+     > _"A single integrity event is not conclusive proof of cheating. External system notifications, OS accessibility prompts, background driver dialogs, or inadvertent keystrokes can trigger security events. Proctors must evaluate cumulative timeline patterns, verify with physical room supervisors, and document mandatory reasons before taking disciplinary action."_
 
 3. **MFA Enforcement & Security Settings (`FR-AUTH-007`, `FR-AUTH-008`, `NFR-SEC-004`)**:
    - **3-Step MFA Setup Wizard (`MfaSetupModal.tsx`)**: Step 1 displays TOTP QR code and manual base32 secret; Step 2 displays 8 emergency recovery backup codes with one-click copy, download file option, and required acknowledgment checkbox; Step 3 requires verification with a valid 6-digit TOTP code before activating MFA on the account.
@@ -46,51 +46,52 @@ In Phase 6, Developer B executed complete lockdown management and security harde
 
 ## 2. Endpoints, Screens, and Modules Added
 
-| Layer | Subsystem / File | Description | Traceability |
-| :--- | :--- | :--- | :--- |
-| **Admin UI** | `src/components/devices/LabDevicesView.tsx` | Lab workstations overview page with KPI metrics, filters, and device roster | `UC-17`, `FR-LAB-001..004` |
-| **Admin UI** | `src/components/devices/LabDevicesTable.tsx` | Data table of registered lab devices with status badges, version chips, and actions | `FR-LAB-001`, `FR-LAB-003` |
-| **Admin UI** | `src/components/devices/RegisterDeviceModal.tsx` | Modal form to register new lab workstation with MAC, IP, room, and ID validation | `UC-17`, `FR-LAB-001` |
-| **Admin UI** | `src/components/devices/DeviceStatusModal.tsx` | Modal to change device operational status with mandatory justification reason | `FR-LAB-002`, `BR-012`, `Rule 7` |
-| **Admin UI** | `src/components/devices/DeviceVersionModal.tsx` | Modal to update approved client version on device with audited reason | `FR-CONF-001`, `FR-LAB-003` |
-| **Admin UI** | `src/components/sessions/IntegrityEventsPanel.tsx` | Real-time lockdown telemetry stream with mandatory proctoring advisory notice | `SRS 10.3 / Line 762`, `FR-LAB-006` |
-| **Admin UI** | `src/components/auth/MfaSetupModal.tsx` | 3-step MFA setup wizard (QR code, 8 emergency backup codes, 6-digit TOTP validation) | `FR-AUTH-008` |
-| **Admin UI** | `src/components/settings/SecuritySettingsView.tsx` | Security policy configuration & cryptographic audit hash-chain verification tool | `NFR-SEC-004`, `FR-AUTH-007` |
-| **Admin UI** | `src/components/common/SessionTimeoutModal.tsx` | 60-second inactivity warning countdown modal with extend / logout actions | `FR-AUTH-007`, `NFR-SEC-004` |
-| **Admin UI** | `src/hooks/useSessionTimeout.ts` | Inactivity timer hook tracking user DOM events with configurable timeout | `FR-AUTH-007` |
-| **API Client**| `src/api/devices.ts` | Typed API client for lab device CRUD, status overrides, and version management | `FR-LAB-001..004` |
-| **API Client**| `src/api/security.ts` | Typed API client for security policies, MFA init/confirm, and audit chain verification | `FR-AUTH-008`, `NFR-SEC-004` |
-| **MSW Mocks** | `src/mocks/handlers.ts` | Mock endpoints for `/admin/devices`, `/admin/security/*`, `/sessions/integrity-events` | `SRS 10.5` |
-| **Doc** | `docs/security/pentest-checklist.md` | Formal security penetration test checklist and results covering SRS 10.5 | `SRS 10.5` |
-| **E2E Tests** | `e2e/devices-and-mfa.spec.ts` | Playwright E2E suite covering device management, MFA setup, audit chain, and telemetry | `UC-17`, `FR-AUTH-008`, `SRS 10.3` |
+| Layer          | Subsystem / File                                   | Description                                                                            | Traceability                        |
+| :------------- | :------------------------------------------------- | :------------------------------------------------------------------------------------- | :---------------------------------- |
+| **Admin UI**   | `src/components/devices/LabDevicesView.tsx`        | Lab workstations overview page with KPI metrics, filters, and device roster            | `UC-17`, `FR-LAB-001..004`          |
+| **Admin UI**   | `src/components/devices/LabDevicesTable.tsx`       | Data table of registered lab devices with status badges, version chips, and actions    | `FR-LAB-001`, `FR-LAB-003`          |
+| **Admin UI**   | `src/components/devices/RegisterDeviceModal.tsx`   | Modal form to register new lab workstation with MAC, IP, room, and ID validation       | `UC-17`, `FR-LAB-001`               |
+| **Admin UI**   | `src/components/devices/DeviceStatusModal.tsx`     | Modal to change device operational status with mandatory justification reason          | `FR-LAB-002`, `BR-012`, `Rule 7`    |
+| **Admin UI**   | `src/components/devices/DeviceVersionModal.tsx`    | Modal to update approved client version on device with audited reason                  | `FR-CONF-001`, `FR-LAB-003`         |
+| **Admin UI**   | `src/components/sessions/IntegrityEventsPanel.tsx` | Real-time lockdown telemetry stream with mandatory proctoring advisory notice          | `SRS 10.3 / Line 762`, `FR-LAB-006` |
+| **Admin UI**   | `src/components/auth/MfaSetupModal.tsx`            | 3-step MFA setup wizard (QR code, 8 emergency backup codes, 6-digit TOTP validation)   | `FR-AUTH-008`                       |
+| **Admin UI**   | `src/components/settings/SecuritySettingsView.tsx` | Security policy configuration & cryptographic audit hash-chain verification tool       | `NFR-SEC-004`, `FR-AUTH-007`        |
+| **Admin UI**   | `src/components/common/SessionTimeoutModal.tsx`    | 60-second inactivity warning countdown modal with extend / logout actions              | `FR-AUTH-007`, `NFR-SEC-004`        |
+| **Admin UI**   | `src/hooks/useSessionTimeout.ts`                   | Inactivity timer hook tracking user DOM events with configurable timeout               | `FR-AUTH-007`                       |
+| **API Client** | `src/api/devices.ts`                               | Typed API client for lab device CRUD, status overrides, and version management         | `FR-LAB-001..004`                   |
+| **API Client** | `src/api/security.ts`                              | Typed API client for security policies, MFA init/confirm, and audit chain verification | `FR-AUTH-008`, `NFR-SEC-004`        |
+| **MSW Mocks**  | `src/mocks/handlers.ts`                            | Mock endpoints for `/admin/devices`, `/admin/security/*`, `/sessions/integrity-events` | `SRS 10.5`                          |
+| **Doc**        | `docs/security/pentest-checklist.md`               | Formal security penetration test checklist and results covering SRS 10.5               | `SRS 10.5`                          |
+| **E2E Tests**  | `e2e/devices-and-mfa.spec.ts`                      | Playwright E2E suite covering device management, MFA setup, audit chain, and telemetry | `UC-17`, `FR-AUTH-008`, `SRS 10.3`  |
 
 ---
 
 ## 3. Traceability Matrix
 
-| Requirement ID | Module / File | Verification Method | Status |
-| :--- | :--- | :--- | :--- |
-| **`FR-LAB-001`** | `LabDevicesView.tsx`, `RegisterDeviceModal.tsx` | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`FR-LAB-002`** | `DeviceStatusModal.tsx`, `devicesApi.updateDeviceStatus` | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`FR-LAB-003`** | `LabDevicesTable.tsx`, `DeviceVersionModal.tsx` | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`FR-LAB-004`** | `LabDevicesTable.tsx`, `LabDevicesView.tsx` | `LabDevices.test.tsx` | **PASS** |
-| **`FR-LAB-005`** | `LabDevicesView.tsx`, `DeviceStatusModal.tsx` | `LabDevices.test.tsx` | **PASS** |
-| **`FR-LAB-006`** | `IntegrityEventsPanel.tsx`, `sessionsApi.getIntegrityEvents` | `IntegrityEvents.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`SRS 10.3`** | `IntegrityEventsPanel.tsx` (Advisory Notice) | `IntegrityEvents.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`FR-AUTH-007`** | `useSessionTimeout.ts`, `SessionTimeoutModal.tsx` | `SecuritySettings.test.tsx` | **PASS** |
-| **`FR-AUTH-008`** | `MfaSetupModal.tsx`, `securityApi.confirmMfaSetup` | `SecuritySettings.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`NFR-SEC-004`** | `SecuritySettingsView.tsx`, `securityApi.verifyAuditChain` | `SecuritySettings.test.tsx`, `devices-and-mfa.spec.ts` | **PASS** |
-| **`NFR-USE-005`** | `AppLayout.tsx`, Focus Visible CSS, Contrast Ratios | Manual accessibility probe & automated component checks | **PASS** |
-| **`SRS 10.5`** | `docs/security/pentest-checklist.md` | Full penetration checklist audit against code-runner & admin-web | **PASS** |
-| **`BR-012` / `Rule 7`** | `DeviceStatusModal.tsx`, `DeviceVersionModal.tsx` | Mandatory reason validation test | **PASS** |
-| **`Rule 8`** | `services/code-runner/` | `runner.test.ts` (16 passing container tests) | **PASS** |
-| **`Rule 9`** | `LabDevicesTable.tsx`, `IntegrityEventsPanel.tsx` | ISO-8601 UTC timestamp format verification | **PASS** |
+| Requirement ID          | Module / File                                                | Verification Method                                              | Status   |
+| :---------------------- | :----------------------------------------------------------- | :--------------------------------------------------------------- | :------- |
+| **`FR-LAB-001`**        | `LabDevicesView.tsx`, `RegisterDeviceModal.tsx`              | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts`                 | **PASS** |
+| **`FR-LAB-002`**        | `DeviceStatusModal.tsx`, `devicesApi.updateDeviceStatus`     | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts`                 | **PASS** |
+| **`FR-LAB-003`**        | `LabDevicesTable.tsx`, `DeviceVersionModal.tsx`              | `LabDevices.test.tsx`, `devices-and-mfa.spec.ts`                 | **PASS** |
+| **`FR-LAB-004`**        | `LabDevicesTable.tsx`, `LabDevicesView.tsx`                  | `LabDevices.test.tsx`                                            | **PASS** |
+| **`FR-LAB-005`**        | `LabDevicesView.tsx`, `DeviceStatusModal.tsx`                | `LabDevices.test.tsx`                                            | **PASS** |
+| **`FR-LAB-006`**        | `IntegrityEventsPanel.tsx`, `sessionsApi.getIntegrityEvents` | `IntegrityEvents.test.tsx`, `devices-and-mfa.spec.ts`            | **PASS** |
+| **`SRS 10.3`**          | `IntegrityEventsPanel.tsx` (Advisory Notice)                 | `IntegrityEvents.test.tsx`, `devices-and-mfa.spec.ts`            | **PASS** |
+| **`FR-AUTH-007`**       | `useSessionTimeout.ts`, `SessionTimeoutModal.tsx`            | `SecuritySettings.test.tsx`                                      | **PASS** |
+| **`FR-AUTH-008`**       | `MfaSetupModal.tsx`, `securityApi.confirmMfaSetup`           | `SecuritySettings.test.tsx`, `devices-and-mfa.spec.ts`           | **PASS** |
+| **`NFR-SEC-004`**       | `SecuritySettingsView.tsx`, `securityApi.verifyAuditChain`   | `SecuritySettings.test.tsx`, `devices-and-mfa.spec.ts`           | **PASS** |
+| **`NFR-USE-005`**       | `AppLayout.tsx`, Focus Visible CSS, Contrast Ratios          | Manual accessibility probe & automated component checks          | **PASS** |
+| **`SRS 10.5`**          | `docs/security/pentest-checklist.md`                         | Full penetration checklist audit against code-runner & admin-web | **PASS** |
+| **`BR-012` / `Rule 7`** | `DeviceStatusModal.tsx`, `DeviceVersionModal.tsx`            | Mandatory reason validation test                                 | **PASS** |
+| **`Rule 8`**            | `services/code-runner/`                                      | `runner.test.ts` (16 passing container tests)                    | **PASS** |
+| **`Rule 9`**            | `LabDevicesTable.tsx`, `IntegrityEventsPanel.tsx`            | ISO-8601 UTC timestamp format verification                       | **PASS** |
 
 ---
 
 ## 4. Test Evidence & Quality Gates
 
 ### 4.1 Unit & Integration Tests (Vitest)
+
 - **`apps/admin-web`**:
   - `src/tests/LabDevices.test.tsx`: 6/6 passed (device rendering, registration, status change with mandatory reason, version check).
   - `src/tests/SecuritySettings.test.tsx`: 4/4 passed (security policies, MFA setup modal flow, session timeout modal, audit chain check).
@@ -100,6 +101,7 @@ In Phase 6, Developer B executed complete lockdown management and security harde
   - `src/__tests__/runner.test.ts`: **16/16 passed** (Docker sandbox flags, process runner, security probes, resource bounds, SQL runner).
 
 ### 4.2 End-to-End Tests (Playwright)
+
 - Total E2E tests: **4/4 passed** in `apps/admin-web`:
   1. `[UC-17, FR-LAB-001..004] manages lab workstations registry, registration, and status overrides` (4.6s) - **PASS**
   2. `[FR-AUTH-008, NFR-SEC-004] explores security settings, MFA setup flow, and cryptographic audit hash chain` (4.1s) - **PASS**
@@ -107,6 +109,7 @@ In Phase 6, Developer B executed complete lockdown management and security harde
   4. `[FR-AUTH-001, FR-AUTH-008, FR-ADMIN-001] complete login with TOTP MFA and explore dashboard overview` (5.5s) - **PASS**
 
 ### 4.3 Static Code Analysis
+
 - `tsc --noEmit` (`apps/admin-web`): **0 errors**.
 - `eslint` (`apps/admin-web`): **0 errors, 0 warnings**.
 
@@ -128,9 +131,9 @@ In accordance with VeriSync Working Rules, ambiguous or cross-boundary items are
 1. **Open Question (Dev A - API Team)**:
    - Does `/api/v1/admin/devices` require automatic WebSocket push notifications for device heartbeats in addition to HTTP polling, or is the current 30-second interval polling sufficient for lab management?
 2. **External Issue Filed (Dev C - Desktop Team)**:
-   - *Issue #SEC-02*: While `IntegrityEventsPanel` ingests and surfaces `BLUR` and `SHORTCUT_ATTEMPT` events, application-level Electron event listeners cannot intercept `Ctrl+Alt+Del` or `Win+L` in Windows without OS-level Assigned Access Kiosk configuration. Dev C must document lab machine group policy setup in `deploy/kiosk-setup.md`.
+   - _Issue #SEC-02_: While `IntegrityEventsPanel` ingests and surfaces `BLUR` and `SHORTCUT_ATTEMPT` events, application-level Electron event listeners cannot intercept `Ctrl+Alt+Del` or `Win+L` in Windows without OS-level Assigned Access Kiosk configuration. Dev C must document lab machine group policy setup in `deploy/kiosk-setup.md`.
 3. **External Issue Filed (Dev A - API Team)**:
-   - *Issue #SEC-03*: Server-side database tables for audit records must include `previous_hash` and `record_hash` columns with a PostgreSQL constraint or trigger to preserve SHA-256 Merkle chain immutability durably before acknowledgement (`Rule 4`, `NFR-SEC-004`).
+   - _Issue #SEC-03_: Server-side database tables for audit records must include `previous_hash` and `record_hash` columns with a PostgreSQL constraint or trigger to preserve SHA-256 Merkle chain immutability durably before acknowledgement (`Rule 4`, `NFR-SEC-004`).
 
 ---
 
@@ -159,5 +162,5 @@ pnpm.cmd --filter @verisync/admin-web test:e2e
 # Start Admin Web UI dev server (port 5173)
 pnpm.cmd --filter @verisync/admin-web dev
 ```
-Navigate to `http://localhost:5173` in a browser. Select the **Lab Devices** navigation tab to test workstation registration and status overrides, or navigate to **Live Sessions -> Integrity Events Stream** to review lockdown event telemetry.
 
+Navigate to `http://localhost:5173` in a browser. Select the **Lab Devices** navigation tab to test workstation registration and status overrides, or navigate to **Live Sessions -> Integrity Events Stream** to review lockdown event telemetry.

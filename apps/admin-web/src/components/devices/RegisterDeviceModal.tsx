@@ -56,9 +56,7 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
     }
     if (!formData.macAddress.trim()) {
       errs.macAddress = 'Hardware MAC Address is required.';
-    } else if (
-      !/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(formData.macAddress.trim())
-    ) {
+    } else if (!/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(formData.macAddress.trim())) {
       errs.macAddress = 'Format must be XX:XX:XX:XX:XX:XX (e.g. 00:1B:44:11:3A:B7).';
     }
     if (!formData.location.trim()) {
@@ -176,7 +174,10 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
 
             {/* Hostname */}
             <div>
-              <label htmlFor="input-device-hostname" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="input-device-hostname"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Terminal Hostname <span className="text-rose-500">*</span>
               </label>
               <input
@@ -247,7 +248,10 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
 
             {/* Physical Location */}
             <div>
-              <label htmlFor="input-device-location" className="block font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="input-device-location"
+                className="block font-semibold text-slate-700 mb-1"
+              >
                 Physical Location <span className="text-rose-500">*</span>
               </label>
               <input
@@ -289,8 +293,9 @@ export const RegisterDeviceModal: React.FC<RegisterDeviceModalProps> = ({
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2.5 text-blue-900">
             <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed text-blue-800">
-              Per <strong>FR-LAB-002</strong>, device authentication binds the unique managed identifier
-              and approved client version. Only registered workstations can initialize candidate assessment sessions.
+              Per <strong>FR-LAB-002</strong>, device authentication binds the unique managed
+              identifier and approved client version. Only registered workstations can initialize
+              candidate assessment sessions.
             </p>
           </div>
 

@@ -56,7 +56,9 @@ describe('Security Settings & Hardening Suite (FR-AUTH-007, FR-AUTH-008, NFR-SEC
     const warningSelect = screen.getByTestId('select-warning-countdown') as HTMLSelectElement;
     expect(warningSelect.value).toBe('60');
 
-    const approvedVerInput = screen.getByTestId('input-approved-version-policy') as HTMLInputElement;
+    const approvedVerInput = screen.getByTestId(
+      'input-approved-version-policy',
+    ) as HTMLInputElement;
     expect(approvedVerInput.value).toBe('1.1.0');
   });
 
@@ -77,7 +79,9 @@ describe('Security Settings & Hardening Suite (FR-AUTH-007, FR-AUTH-008, NFR-SEC
 
     // Reason validation prompt appears
     expect(
-      await screen.findByText(/Mandatory justification reason \(minimum 5 characters\) is required/i),
+      await screen.findByText(
+        /Mandatory justification reason \(minimum 5 characters\) is required/i,
+      ),
     ).toBeInTheDocument();
 
     // Provide reason

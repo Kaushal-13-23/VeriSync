@@ -61,15 +61,15 @@ export const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({
               {remainingSeconds}s
             </span>
             <p id="session-timeout-desc" className="text-xs text-slate-600 mt-2 leading-relaxed">
-              Your session has been idle. To protect candidate examination integrity, your administrator
-              session will automatically terminate when the countdown reaches zero.
+              Your session has been idle. To protect candidate examination integrity, your
+              administrator session will automatically terminate when the countdown reaches zero.
             </p>
           </div>
 
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500 text-left">
             <span>
-              Per <strong>NFR-SEC-004</strong>, ephemeral administrator credentials require active engagement.
-              Click below to maintain your authenticated access.
+              Per <strong>NFR-SEC-004</strong>, ephemeral administrator credentials require active
+              engagement. Click below to maintain your authenticated access.
             </span>
           </div>
 

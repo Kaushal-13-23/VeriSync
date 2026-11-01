@@ -71,9 +71,7 @@ test.describe('Admin Lab Devices & Security Policies Suite (Phase 6)', () => {
     ).toBeVisible();
 
     // Provide mandatory reason and confirm
-    await page
-      .getByTestId('input-status-reason')
-      .fill('Routine power unit diagnostic inspection.');
+    await page.getByTestId('input-status-reason').fill('Routine power unit diagnostic inspection.');
     await page.getByTestId('submit-status-btn').click();
 
     // Status badge updates

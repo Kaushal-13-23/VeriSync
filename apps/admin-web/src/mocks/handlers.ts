@@ -1988,16 +1988,12 @@ export const handlers = [
       ...(body.warningCountdownSeconds
         ? { warningCountdownSeconds: body.warningCountdownSeconds }
         : {}),
-      ...(body.approvedClientVersion
-        ? { approvedClientVersion: body.approvedClientVersion }
-        : {}),
+      ...(body.approvedClientVersion ? { approvedClientVersion: body.approvedClientVersion } : {}),
       ...(body.strictVersionEnforcement !== undefined
         ? { strictVersionEnforcement: body.strictVersionEnforcement }
         : {}),
       ...(body.kioskEnforcementMode ? { kioskEnforcementMode: body.kioskEnforcementMode } : {}),
-      ...(body.auditLogRetentionDays
-        ? { auditLogRetentionDays: body.auditLogRetentionDays }
-        : {}),
+      ...(body.auditLogRetentionDays ? { auditLogRetentionDays: body.auditLogRetentionDays } : {}),
     };
 
     mockAuditLogs.unshift({
@@ -3464,4 +3460,3 @@ let mockSecurityPolicies: SecuritySettingsPolicies = {
   kioskEnforcementMode: 'STRICT',
   auditLogRetentionDays: 365,
 };
-

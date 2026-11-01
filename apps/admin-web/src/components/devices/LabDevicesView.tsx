@@ -193,7 +193,10 @@ export const LabDevicesView: React.FC = () => {
             <span>Total Registered</span>
             <Laptop className="w-4 h-4 text-blue-600" aria-hidden="true" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 mt-2 font-mono" data-testid="stat-total-devices">
+          <p
+            className="text-2xl font-bold text-slate-900 mt-2 font-mono"
+            data-testid="stat-total-devices"
+          >
             {stats.total}
           </p>
           <span className="text-[11px] text-slate-400 mt-0.5 block">Managed Lab Workstations</span>
@@ -211,7 +214,9 @@ export const LabDevicesView: React.FC = () => {
           >
             {stats.activeCount}
           </p>
-          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Ready for Examination</span>
+          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">
+            Ready for Examination
+          </span>
         </div>
 
         {/* Suspended (Maintenance) */}

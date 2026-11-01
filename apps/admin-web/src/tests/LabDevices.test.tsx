@@ -165,7 +165,9 @@ describe('Lab Devices Management View (UC-17, FR-LAB-001..004)', () => {
 
     // Input justification reason
     const reasonInput = screen.getByTestId('input-version-reason');
-    fireEvent.change(reasonInput, { target: { value: 'Upgraded client binary via Ansible automation.' } });
+    fireEvent.change(reasonInput, {
+      target: { value: 'Upgraded client binary via Ansible automation.' },
+    });
 
     // Confirm version update
     const confirmBtn = screen.getByTestId('submit-version-btn');

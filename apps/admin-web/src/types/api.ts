@@ -798,4 +798,3 @@ export interface UpdateSecurityPoliciesPayload {
   auditLogRetentionDays?: number;
   reason: string; // Mandatory per Rule 7
 }
-

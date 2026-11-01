@@ -104,8 +104,8 @@ export const LabDevicesTable: React.FC<LabDevicesTableProps> = ({
         <Laptop className="w-10 h-10 text-slate-400 mx-auto" aria-hidden="true" />
         <h4 className="text-base font-semibold text-slate-800">No Lab Devices Found</h4>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          No registered workstations match your active search filters. Adjust filters or register a new
-          lab computer.
+          No registered workstations match your active search filters. Adjust filters or register a
+          new lab computer.
         </p>
       </div>
     );
@@ -214,7 +214,10 @@ export const LabDevicesTable: React.FC<LabDevicesTableProps> = ({
                           title={`Outdated client version (System current: v${latestSystemVersion})`}
                           data-testid={`outdated-warning-${device.id}`}
                         >
-                          <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" aria-hidden="true" />
+                          <AlertCircle
+                            className="w-3 h-3 text-amber-600 shrink-0"
+                            aria-hidden="true"
+                          />
                           <span>Outdated</span>
                         </span>
                       )}
@@ -240,7 +243,10 @@ export const LabDevicesTable: React.FC<LabDevicesTableProps> = ({
                   <td className="px-4 py-3.5 font-mono text-[11px] text-slate-600">
                     <div className="flex items-center gap-1 text-slate-700">
                       <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true" />
-                      <span>{new Date(device.lastSeenAt).toLocaleString('en-US', { timeZone: 'UTC' })} UTC</span>
+                      <span>
+                        {new Date(device.lastSeenAt).toLocaleString('en-US', { timeZone: 'UTC' })}{' '}
+                        UTC
+                      </span>
                     </div>
                   </td>
 

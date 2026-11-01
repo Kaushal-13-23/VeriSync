@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header } from '@nestjs/common';
 import { AppService } from './app.service';
 import { HealthStatusResponse } from '@verisync/shared';
 import { Public } from './auth/decorators/public.decorator';
@@ -15,7 +15,26 @@ export class AppController {
 
   @Public()
   @Get('health')
-  getHealth(): HealthStatusResponse {
+  async getHealth(): Promise<HealthStatusResponse> {
     return this.appService.getHealth();
+  }
+
+  @Public()
+  @Get('health/ready')
+  async getReadiness(): Promise<HealthStatusResponse> {
+    return this.appService.getReadiness();
+  }
+
+  @Public()
+  @Get('health/live')
+  getLiveness(): HealthStatusResponse {
+    return this.appService.getLiveness();
+  }
+
+  @Public()
+  @Get('metrics')
+  @Header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
+  async getMetrics(): Promise<string> {
+    return this.appService.getPrometheusMetrics();
   }
 }

@@ -941,40 +941,67 @@ The backend calls the coding service over a secured internal interface that carr
 
 16. Requirements Traceability Matrix
     16.1 By Requirement Area
-    Requirement Area Requirement IDs Verification Method
-    Authentication FR-AUTH-001 to FR-AUTH-010 Functional and security tests
-    Candidate management FR-CAN-001 to FR-CAN-007 Functional tests
-    Assessment management FR-ASMT-001 to FR-ASMT-008 Functional and integration tests
-    Question bank FR-QB-001 to FR-QB-010 Functional tests
-    Candidate interface FR-UI-001 to FR-UI-009 UI and workflow tests
-    Timing FR-TIME-001 to FR-TIME-011 Timer and boundary tests
-    Answer submission FR-ANS-001 to FR-ANS-009 Integration and recovery tests
-    Coding assessment FR-CODE-001 to FR-CODE-014 Functional and sandbox security tests
-    SQL assessment FR-SQL-001 to FR-SQL-005 Functional and isolation tests
-    Evaluation FR-SCORE-001 to FR-SCORE-010 Scoring and regression tests
-    Administration and reports FR-ADMIN-001 to FR-ADMIN-009 Functional and permission tests
-    Lab client FR-LAB-001 to FR-LAB-008 Device and kiosk testing
-    Audit logging FR-AUD-001 to FR-AUD-007 Audit and security tests
-    Configuration FR-CONF-001 to FR-CONF-004 Functional and review
-    Performance NFR-PERF-001 to NFR-PERF-005 Load testing
-    Security NFR-SEC-001 to NFR-SEC-012 Security testing
-    Reliability NFR-REL-001 to NFR-REL-006 Recovery and availability testing
-    Usability NFR-USE-001 to NFR-USE-005 User acceptance testing
-    Maintainability NFR-MNT-001 to NFR-MNT-005 Code and documentation review
-    Scalability NFR-SCALE-001 to NFR-SCALE-003 Architecture review and load testing
-    Privacy NFR-PRIV-001 to NFR-PRIV-004 Policy and access-control review
-    Compatibility NFR-COMP-001 to NFR-COMP-003 Environment compatibility testing
-    16.2 Use Cases to Requirements (new in v1.1)
-    Use Case Main Requirements Test Cases
-    UC-02 Provision candidate FR-AUTH-009, FR-CAN-001, FR-CAN-007 Functional
-    UC-05 Publish assessment FR-ASMT-001 to FR-ASMT-008 Functional
-    UC-08 Start assessment FR-UI-001, FR-UI-002, FR-ASMT-006, BR-007 TC-15, TC-16
-    UC-09 Submit answer FR-ANS-001 to FR-ANS-009, FR-UI-004 TC-02, TC-04, TC-05
-    UC-10 Timeout FR-TIME-004 to FR-TIME-007 TC-03, TC-06
-    UC-11 Coding submission FR-CODE-001 to FR-CODE-014 TC-10, TC-11, TC-12
-    UC-12 Recovery FR-TIME-010, BR-010, NFR-REL-004 TC-07, TC-19
-    UC-14 Finalize results FR-SCORE-001 to FR-SCORE-009 TC-13
-    UC-15 Score correction FR-SCORE-010, BR-012 TC-14
+
+    | Requirement Area          | Requirement IDs                | Verification Method & Automated Test Suite                                                                                          |
+    | ------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+    | Authentication            | FR-AUTH-001 to FR-AUTH-010     | `apps/api/src/auth/auth.service.spec.ts`, `apps/api/src/auth/security-hardening.spec.ts`, `apps/api/src/auth/guards/guards.spec.ts` |
+    | Candidate management      | FR-CAN-001 to FR-CAN-007       | `apps/api/src/candidates/candidates.service.spec.ts`, `apps/api/src/candidates/candidate-portal.service.spec.ts`                    |
+    | Assessment management     | FR-ASMT-001 to FR-ASMT-008     | `apps/api/src/assessments/assessments.service.spec.ts`                                                                              |
+    | Question bank             | FR-QB-001 to FR-QB-010         | `apps/api/src/questions/questions.service.spec.ts`                                                                                  |
+    | Candidate interface       | FR-UI-001 to FR-UI-009         | `apps/api/src/candidates/candidate-portal.service.spec.ts`, `apps/api/src/sessions/sessions.service.spec.ts`                        |
+    | Timing                    | FR-TIME-001 to FR-TIME-011     | `apps/api/src/sessions/sessions.service.spec.ts`, `infra/k6/mass-timer-expiry.js`                                                   |
+    | Answer submission         | FR-ANS-001 to FR-ANS-009       | `apps/api/src/sessions/sessions.service.spec.ts`, `infra/k6/load-test.js`                                                           |
+    | Coding assessment         | FR-CODE-001 to FR-CODE-014     | `apps/api/src/coding/coding.service.spec.ts`                                                                                        |
+    | SQL assessment            | FR-SQL-001 to FR-SQL-005       | `apps/api/src/sql/sql-sandbox.service.spec.ts`                                                                                      |
+    | Evaluation & Scoring      | FR-SCORE-001 to FR-SCORE-010   | `apps/api/src/evaluation/evaluation.service.spec.ts`, `apps/api/src/results/results.service.spec.ts`                                |
+    | Administration & Reports  | FR-ADMIN-001 to FR-ADMIN-009   | `apps/api/src/results/results.service.spec.ts`, `apps/api/src/retention/retention.service.spec.ts`                                  |
+    | Lab client & Kiosk        | FR-LAB-001 to FR-LAB-008       | `apps/api/src/devices/devices.service.spec.ts`, `apps/api/src/auth/security-hardening.spec.ts`                                      |
+    | Audit logging             | FR-AUD-001 to FR-AUD-007       | `apps/api/src/audit/audit-chain.spec.ts`                                                                                            |
+    | Configuration & Retention | FR-CONF-001 to FR-CONF-004     | `apps/api/src/retention/retention.service.spec.ts`                                                                                  |
+    | Performance               | NFR-PERF-001 to NFR-PERF-005   | `infra/k6/load-test.js`, `infra/k6/mass-timer-expiry.js`                                                                            |
+    | Security & RBAC           | NFR-SEC-001 to NFR-SEC-012     | `apps/api/src/auth/authorization-matrix.spec.ts`, `apps/api/src/auth/security-hardening.spec.ts`                                    |
+    | Reliability & DR          | NFR-REL-001 to NFR-REL-006     | `apps/api/src/common/backup-restore.spec.ts`, `apps/api/src/sessions/sessions.service.spec.ts`                                      |
+    | Scalability & Tuning      | NFR-SCALE-001 to NFR-SCALE-003 | `infra/k6/load-test.js`, `infra/monitoring/alert-rules.yml`                                                                         |
+    | Release & CI/CD           | SRS 12.3, 12.4                 | `.github/workflows/ci.yml`, `infra/scripts/validate-migrations.ts`                                                                  |
+
+    16.2 Use Cases to Requirements
+
+    | Use Case                  | Main Requirements                         | Test Cases & Automated Test Files                                                                               |
+    | ------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+    | UC-02 Provision candidate | FR-AUTH-009, FR-CAN-001, FR-CAN-007       | `apps/api/src/candidates/candidates.service.spec.ts`                                                            |
+    | UC-05 Publish assessment  | FR-ASMT-001 to FR-ASMT-008                | `apps/api/src/assessments/assessments.service.spec.ts`                                                          |
+    | UC-08 Start assessment    | FR-UI-001, FR-UI-002, FR-ASMT-006, BR-007 | TC-15, TC-16 (`apps/api/src/sessions/sessions.service.spec.ts`, `apps/api/src/devices/devices.service.spec.ts`) |
+    | UC-09 Submit answer       | FR-ANS-001 to FR-ANS-009, FR-UI-004       | TC-02, TC-04, TC-05 (`apps/api/src/sessions/sessions.service.spec.ts`, `infra/k6/load-test.js`)                 |
+    | UC-10 Timeout             | FR-TIME-004 to FR-TIME-007                | TC-03, TC-06, TC-20 (`apps/api/src/sessions/sessions.service.spec.ts`, `infra/k6/mass-timer-expiry.js`)         |
+    | UC-11 Coding submission   | FR-CODE-001 to FR-CODE-014                | TC-10, TC-11, TC-12 (`apps/api/src/coding/coding.service.spec.ts`)                                              |
+    | UC-12 Recovery            | FR-TIME-010, BR-010, NFR-REL-004          | TC-07, TC-19 (`apps/api/src/sessions/sessions.service.spec.ts`, `apps/api/src/common/backup-restore.spec.ts`)   |
+    | UC-14 Finalize results    | FR-SCORE-001 to FR-SCORE-009              | TC-13 (`apps/api/src/evaluation/evaluation.service.spec.ts`, `apps/api/src/results/results.service.spec.ts`)    |
+    | UC-15 Score correction    | FR-SCORE-010, BR-012                      | TC-14 (`apps/api/src/results/results.service.spec.ts`)                                                          |
+
+    16.3 System Test Cases Traceability (TC-01 through TC-20)
+
+    | Test Case ID | Scenario                   | Verification Suite / Automated File                                                            | Requirement                                     |
+    | ------------ | -------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+    | TC-01        | Clock manipulation         | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-TIME-008 (Rule 1: Server authoritative time) |
+    | TC-02        | Skip question by API       | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-ANS-001, BR-003                              |
+    | TC-03        | Late submission            | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-TIME-004 (Rejected with 409 Conflict)        |
+    | TC-04        | Duplicate submit           | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-ANS-009, FR-TIME-009 (Rule 3: Idempotency)   |
+    | TC-05        | Lost acknowledgement       | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-ANS-007, Rule 4 (Durable commit before ACK)  |
+    | TC-06        | Simultaneous deadlines     | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-TIME-007 (Overall deadline precedence)       |
+    | TC-07        | Disconnect during question | `apps/api/src/sessions/sessions.service.spec.ts`                                               | FR-TIME-010, BR-010                             |
+    | TC-08        | Cross-candidate access     | `apps/api/src/auth/authorization-matrix.spec.ts`                                               | FR-UI-008, NFR-SEC-004                          |
+    | TC-09        | Answer-key exposure        | `apps/api/src/questions/questions.service.spec.ts`                                             | BR-009, FR-QB-004 (Rule 2: Protected answers)   |
+    | TC-10        | Hidden test leak           | `apps/api/src/coding/coding.service.spec.ts`                                                   | FR-CODE-009 (Hidden tests concealed)            |
+    | TC-11        | Sandbox escape             | `apps/api/src/coding/coding.service.spec.ts`, `apps/api/src/sql/sql-sandbox.service.spec.ts`   | FR-CODE-007, NFR-SEC-008                        |
+    | TC-12        | Infrastructure failure     | `apps/api/src/coding/coding.service.spec.ts`                                                   | FR-CODE-012                                     |
+    | TC-13        | Negative marking           | `apps/api/src/evaluation/evaluation.service.spec.ts`                                           | FR-SCORE-002                                    |
+    | TC-14        | Score correction           | `apps/api/src/results/results.service.spec.ts`                                                 | FR-SCORE-010, BR-012 (Rule 7: Audited)          |
+    | TC-15        | Second session             | `apps/api/src/auth/security-hardening.spec.ts`, `apps/api/src/devices/devices.service.spec.ts` | BR-007, FR-AUTH-010                             |
+    | TC-16        | Unsupported client         | `apps/api/src/devices/devices.service.spec.ts`, `apps/api/src/auth/security-hardening.spec.ts` | FR-LAB-004 (Rejected with 426)                  |
+    | TC-17        | Brute-force login          | `apps/api/src/auth/security-hardening.spec.ts`                                                 | FR-AUTH-004 (Lockout and audit log)             |
+    | TC-18        | Kiosk escape               | `apps/api/src/devices/devices.service.spec.ts`                                                 | FR-LAB-005 to FR-LAB-008 (Lockdown telemetry)   |
+    | TC-19        | Backup restore             | `apps/api/src/common/backup-restore.spec.ts`, `infra/backup/restore.sh`                        | NFR-REL-006 (RPO 15m, RTO 4h staging restore)   |
+    | TC-20        | Mass timer expiry          | `infra/k6/mass-timer-expiry.js`, `apps/api/src/sessions/sessions.service.spec.ts`              | NFR-PERF-004 (500 questions processed < 5s)     |
 
 ---
 

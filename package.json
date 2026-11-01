@@ -12,6 +12,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml,yml}\"",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "validate:migrations": "pnpm --filter @verisync/api exec ts-node ../../infra/scripts/validate-migrations.ts",
     "dev:api": "pnpm --filter @verisync/api dev",
     "dev:admin": "pnpm --filter @verisync/admin-web dev",
     "dev:candidate": "pnpm --filter @verisync/candidate-desktop dev"

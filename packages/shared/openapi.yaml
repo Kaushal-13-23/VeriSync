@@ -24,6 +24,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthStatusResponse'
 
+  /health/ready:
+    get:
+      summary: Readiness Probe
+      description: Returns 200 when database and core services are ready to accept traffic (SRS 12.4).
+      operationId: getReadinessStatus
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+        '503':
+          description: Service is not ready.
+
+  /health/live:
+    get:
+      summary: Liveness Probe
+      description: Returns 200 if the Node.js process is responsive (SRS 12.4).
+      operationId: getLivenessStatus
+      responses:
+        '200':
+          description: Process is running.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+
+  /metrics:
+    get:
+      summary: Prometheus Platform Metrics
+      description: Exposes Prometheus-compatible plaintext metrics (SRS 12.4).
+      operationId: getPrometheusMetrics
+      responses:
+        '200':
+          description: Plaintext Prometheus metrics.
+          content:
+            text/plain:
+              schema:
+                type: string
+
   /auth/login:
     post:
       summary: Candidate & Administrator Authentication
@@ -1333,7 +1374,7 @@ components:
       properties:
         status:
           type: string
-          enum: [ok, degraded]
+          enum: [ok, degraded, down]
         serverTime:
           type: string
           format: date-time
@@ -1341,6 +1382,25 @@ components:
         version:
           type: string
           example: '1.1.0'
+        uptimeSeconds:
+          type: number
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [connected, disconnected]
+            latencyMs:
+              type: number
+        memory:
+          type: object
+          properties:
+            heapUsedMb:
+              type: number
+            heapTotalMb:
+              type: number
+            rssMb:
+              type: number
 
     LoginRequest:
       type: object

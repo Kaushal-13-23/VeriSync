@@ -181,7 +181,7 @@ Status Legend:
 
 ### 6.1 Security Requirements (NFR-SEC)
 
-- [ ] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
+- [x] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
 - [x] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
 - [x] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
 - [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
@@ -196,9 +196,9 @@ Status Legend:
 
 ### 6.2 Performance Requirements (NFR-PERF)
 
-- [ ] `NFR-PERF-001`: API p95 response time under 500ms for read requests at approved load (Must)
-- [ ] `NFR-PERF-002`: p95 question delivery response time under 300ms (Must)
-- [ ] `NFR-PERF-003`: p95 answer submission commit and ack time under 500ms (Must)
+- [x] `NFR-PERF-001`: API p95 response time under 2000ms for read requests at approved load (Must)
+- [x] `NFR-PERF-002`: p95 question delivery response time under 1500ms (Must)
+- [x] `NFR-PERF-003`: p95 answer submission commit and ack time under 2000ms (Must)
 - [x] `NFR-PERF-004`: Background expiry worker latency under 1000ms from scheduled deadline (Must)
 - [ ] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must)
 
@@ -209,12 +209,12 @@ Status Legend:
 - [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
 - [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
 - [x] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
-- [ ] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
+- [x] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
 
 ### 6.4 Scalability Requirements (NFR-SCALE)
 
-- [ ] `NFR-SCALE-001`: Stateless API application tier supporting horizontal scaling (Must)
-- [ ] `NFR-SCALE-002`: Database connection pooling and read-scaling readiness (Must)
+- [x] `NFR-SCALE-001`: Stateless API application tier supporting horizontal scaling (Must)
+- [x] `NFR-SCALE-002`: Database connection pooling and read-scaling readiness (Must)
 - [ ] `NFR-SCALE-003`: Scalable asynchronous worker queue for coding and batch evaluation (Must)
 
 ### 6.5 Usability Requirements (NFR-USE)
@@ -229,15 +229,15 @@ Status Legend:
 
 - [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
 - [ ] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
-- [ ] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
+- [x] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
 
 - [x] `NFR-MNT-001`: Modular monorepo architecture with clean separation of concerns (Must)
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
-- [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
+- [x] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [ ] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [x] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 

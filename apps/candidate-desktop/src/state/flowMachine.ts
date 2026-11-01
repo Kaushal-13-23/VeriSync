@@ -11,6 +11,7 @@
 
 import { MockAssessmentSession, MockUser } from '../services/mockApi';
 import { CandidateAssignedAssessment } from '../types/assessment';
+import { FinalSubmitResponseDto } from '@verisync/shared';
 
 export type ScreenState =
   'LOGIN' | 'SYSTEM_CHECK' | 'ASSIGNED_ASSESSMENTS' | 'INSTRUCTIONS' | 'EXAM' | 'SUBMITTED';
@@ -22,6 +23,7 @@ export interface FlowState {
   selectedAssessment: CandidateAssignedAssessment | null;
   instructionsAcknowledged: boolean;
   session: MockAssessmentSession | null;
+  finalResult: FinalSubmitResponseDto | null;
   currentQuestionIndex: number;
   markedForReview: Record<string, boolean>; // Local visual aid (Decision 4)
   savedAnswers: Record<string, unknown>;
@@ -41,7 +43,7 @@ export type FlowAction =
   | { type: 'RECORD_ANSWER'; payload: { questionAttemptId: string; response: unknown } }
   | { type: 'TOGGLE_MARK_REVIEW'; payload: { questionAttemptId: string } }
   | { type: 'SET_SUBMITTING'; payload: { isSubmitting: boolean } }
-  | { type: 'EXAM_SUBMITTED' }
+  | { type: 'EXAM_SUBMITTED'; payload?: { finalResult?: FinalSubmitResponseDto } }
   | { type: 'RESET_TO_LOGIN' }
   | { type: 'SET_ERROR'; payload: { error: string | null } };
 
@@ -52,6 +54,7 @@ export const initialFlowState: FlowState = {
   selectedAssessment: null,
   instructionsAcknowledged: false,
   session: null,
+  finalResult: null,
   currentQuestionIndex: 0,
   markedForReview: {},
   savedAnswers: {},
@@ -174,6 +177,7 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return {
         ...state,
         currentScreen: 'SUBMITTED',
+        finalResult: action.payload?.finalResult || null,
         isSubmitting: false,
         error: null,
       };

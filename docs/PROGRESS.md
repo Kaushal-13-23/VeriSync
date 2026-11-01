@@ -188,7 +188,7 @@ Status Legend:
 - [x] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
 - [x] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [x] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
-- [ ] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
+- [x] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
 - [x] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Must)
 - [x] `NFR-SEC-010`: Tamper-evident audit storage with append-only access controls (Must)
 - [x] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
@@ -252,7 +252,7 @@ Status Legend:
 ### Developer B: Ashlin Siddharth (Frontend & Execution Lead)
 
 - **Ownership**: `apps/admin-web` (and `services/code-runner` in Phase 3/5).
-- **Branch**: `phase-4/B-scoring-results-reports`
+- **Branch**: `phase-5/B-coding-sql-assessment`
 - **Phase 1 Completion Status**:
 
 - **Phase 2 Completion Status**:
@@ -326,3 +326,35 @@ Status Legend:
   - [x] `FR-SCORE-009`: Result ranking calculation with deterministic tie-break criteria (Score ↓, Time ↑, ID ↑) (Done)
   - [x] `FR-SCORE-010`: Audited score correction workflow requiring original value, new value, reason, actor (`UC-15`) (Done)
   - [x] `FR-ADMIN-006`: Export of results in CSV format with ISO-8601 UTC timestamps (Done)
+
+- **Phase 5 Completion Status**:
+  - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination index, option distribution) (Done)
+  - [x] `FR-ADMIN-009`: Role-based permissions enforcement (`SUPER_ADMIN` score correction vs. `TECHNICAL_EVALUATOR` queue) (Done)
+  - [x] `BR-012`: Mandatory justification reason required for every administrative override and score adjustment (Done)
+  - [x] `Rule 7`: All score adjustments, overrides, and status transitions audited with reason and actor (Done)
+  - [x] `Rule 9`: UTC ISO-8601 timestamps and correlation ID traceability across all responses and logs (Done)
+  - [x] `FR-CODE-001`: Multi-language execution support (C, C++, Java, Python, JavaScript) with pinned Docker images (Done)
+  - [x] `FR-CODE-003`: Visible sample test case execution testing and candidate output review (Done)
+  - [x] `FR-CODE-004`: Hidden test case configuration; hidden inputs and expected outputs strictly concealed (Done)
+  - [x] `FR-CODE-005`: Isolated coding execution microservice (`services/code-runner`) separate from API process (Done)
+  - [x] `FR-CODE-006`: Configurable execution time limit and memory limit enforcement per language (Done)
+  - [x] `FR-CODE-007`: Hardened sandbox (unprivileged user 10001:10001, read-only root, small tmpfs, no network) (Done)
+  - [x] `FR-CODE-008`: Standardized execution status classification (`ACCEPTED`, `WA`, `CE`, `RE`, `TLE`, `MLE`, `INTERNAL_ERROR`) (Done)
+  - [x] `FR-CODE-009`: Response sanitization; internal paths, environment variables, and hidden test data scrubbed (Done)
+  - [x] `FR-CODE-010`: Configurable maximum code submission count per coding question in authoring modal (Done)
+  - [x] `FR-CODE-011`: Weighted test-case scoring calculation per passed test case marks (Done)
+  - [x] `FR-CODE-012`: Distinction between internal runner infrastructure errors and candidate code errors (Done)
+  - [x] `FR-CODE-013`: Coding execution service denied DB/secret access; protected by internal token auth (Done)
+  - [x] `FR-CODE-014`: Source code and structured evaluation result persistence schema (Done)
+  - [x] `FR-SQL-001`: SQL question authoring with schema DDL, seed data, reference query, and expected output (Done)
+  - [x] `FR-SQL-002`: Ephemeral in-memory SQLite sandbox initialized per execution with read-only sandbox (Done)
+  - [x] `FR-SQL-003`: Destructive SQL command blocking (`DROP`, `ALTER`, `CREATE`, `TRUNCATE`, `ATTACH`, `PRAGMA`) (Done)
+  - [x] `FR-SQL-004`: SQL execution limits: statement timeout, maximum returned rows, memory bounds (Done)
+  - [x] `FR-SQL-005`: SQL result set comparison against expected output (`EXACT_MATCH` vs `UNORDERED_MATCH`) (Done)
+  - [x] `NFR-SEC-008`: Sandboxing, memory bounds, CPU bounds, output truncation, cloud metadata blocking (Done)
+  - [x] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Done)
+  - [x] `TC-10`: Hidden test case confidentiality verification (Done)
+  - [x] `TC-11`: Sandbox escape suite (sockets, env vars, fork bomb, huge output, infinite loop, file writes) (Done)
+  - [x] `TC-12`: Resource limit enforcement (Done)
+  - [x] `Rule 8`: Candidate code never runs in API process (Done)
+  - [x] `Rule 2`: Candidate-facing APIs never return answer keys or hidden test cases (Done)

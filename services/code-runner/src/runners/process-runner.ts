@@ -253,11 +253,19 @@ export class ProcessSandboxRunner {
         }
       }
 
+      let isStdoutTruncated = false;
+      let isStderrTruncated = false;
+
       if (child.stdout) {
         child.stdout.on('data', (chunk: Buffer) => {
           // Output truncation cap per SRS 10.4
           if (Buffer.byteLength(stdoutBuffer, 'utf8') < config.maxOutputSizeBytes) {
             stdoutBuffer += chunk.toString('utf8');
+            if (Buffer.byteLength(stdoutBuffer, 'utf8') >= config.maxOutputSizeBytes) {
+              isStdoutTruncated = true;
+            }
+          } else {
+            isStdoutTruncated = true;
           }
         });
       }
@@ -266,6 +274,11 @@ export class ProcessSandboxRunner {
         child.stderr.on('data', (chunk: Buffer) => {
           if (Buffer.byteLength(stderrBuffer, 'utf8') < config.maxOutputSizeBytes) {
             stderrBuffer += chunk.toString('utf8');
+            if (Buffer.byteLength(stderrBuffer, 'utf8') >= config.maxOutputSizeBytes) {
+              isStderrTruncated = true;
+            }
+          } else {
+            isStderrTruncated = true;
           }
         });
       }
@@ -283,10 +296,21 @@ export class ProcessSandboxRunner {
 
       child.on('close', (code) => {
         clearTimeout(timer);
+        const formattedStdout = isStdoutTruncated
+          ? Buffer.from(stdoutBuffer, 'utf8')
+              .subarray(0, config.maxOutputSizeBytes)
+              .toString('utf8') + '\n[Output truncated at maximum size cap]'
+          : InputSanitizer.truncateOutput(stdoutBuffer);
+        const formattedStderr = isStderrTruncated
+          ? Buffer.from(stderrBuffer, 'utf8')
+              .subarray(0, config.maxOutputSizeBytes)
+              .toString('utf8') + '\n[Output truncated at maximum size cap]'
+          : InputSanitizer.truncateOutput(stderrBuffer);
+
         if (isTimedOut) {
           resolve({
             exitCode: null,
-            stdout: InputSanitizer.truncateOutput(stdoutBuffer),
+            stdout: formattedStdout,
             stderr: 'Execution timed out. Time Limit Exceeded.',
             status: 'TIME_LIMIT_EXCEEDED',
             memoryKb: 0,
@@ -294,8 +318,8 @@ export class ProcessSandboxRunner {
         } else {
           resolve({
             exitCode: code,
-            stdout: InputSanitizer.truncateOutput(stdoutBuffer),
-            stderr: InputSanitizer.truncateOutput(stderrBuffer),
+            stdout: formattedStdout,
+            stderr: formattedStderr,
             status: code === 0 ? 'ACCEPTED' : 'RUNTIME_ERROR',
             memoryKb: 2048, // Baseline execution memory
           });

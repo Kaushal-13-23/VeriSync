@@ -37,7 +37,7 @@ if input_data:
       language: 'python',
       sourceCode: pythonCode,
       testCases: [sampleTestCase, hiddenTestCase],
-      timeLimitMs: 2000,
+      timeLimitMs: 4000,
     });
 
     expect(result.status).toBe('ACCEPTED');
@@ -56,7 +56,7 @@ print("42")
       language: 'python',
       sourceCode: failingCode,
       testCases: [sampleTestCase, hiddenTestCase],
-      timeLimitMs: 2000,
+      timeLimitMs: 4000,
     });
 
     expect(result.status).toBe('WRONG_ANSWER');

@@ -59,7 +59,18 @@ Per **SRS FR-LAB-008**, the VeriSync platform **never relies solely on full-scre
 
 Run all commands from an **elevated Administrator PowerShell session**.
 
-### Step 1: Provision the Restricted Candidate Account
+### Fast Path: One-Command Automated Silent Imaging Pipeline
+
+To deploy the full lockdown suite in a single command during lab imaging (MDT, SCCM, Fog, or manual provisioning):
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+.\deploy\kiosk\Install-CandidateClient.ps1 -InstallerPath "C:\DeploymentShare\VeriSync-Setup.exe" -InstallDir "C:\Program Files\VeriSync"
+```
+
+### Granular Step-by-Step Pipeline
+
+#### Step 1: Provision the Restricted Candidate Account
 
 Creates a restricted local user (`VeriSyncCandidate`), generates a secure non-expiring password, and strips administrative privileges:
 
@@ -140,6 +151,14 @@ Before opening the lab to candidates, run through the verification checklist:
 
 Per **SRS FR-LAB-003** and **NFR-MNT-002**, client updates must be deployed without exposing write access to candidate accounts:
 
+### Automated Scripted Update:
+
+```powershell
+.\deploy\kiosk\Update-CandidateClient.ps1 -UpdatePackagePath "C:\DeploymentShare\v1.2.0" -TargetVersion "1.2.0"
+```
+
+### Manual Staging Procedure:
+
 1. **Staging**: An elevated SCCM/Intune job or lab administrator copies new package files to `C:\Program Files\VeriSync\Updates`.
 2. **Integrity Validation**: Administrator verifies package hash and signature.
 3. **Atomic Replacement**:
@@ -155,6 +174,14 @@ Per **SRS FR-LAB-003** and **NFR-MNT-002**, client updates must be deployed with
 ## 6. Workstation Rollback & Lab Repurposing
 
 To restore a lab workstation to a general-purpose academic desktop environment:
+
+### Automated Cleanup Script:
+
+```powershell
+.\deploy\kiosk\Uninstall-CandidateClient.ps1 -Username "VeriSyncCandidate" -RemoveUser
+```
+
+### Manual Repurposing Steps:
 
 1. Log in as local Administrator.
 2. Restore standard `explorer.exe` shell for the candidate account:

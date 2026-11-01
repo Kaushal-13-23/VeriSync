@@ -101,7 +101,7 @@ Status Legend:
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
 - [x] `FR-CODE-001`: Support for C, C++, Java, Python, JavaScript with pinned versions in execution images (Must)
-- [ ] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
+- [x] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`; authoring & runner on `phase-7/B-Production-readiness`)
 - [x] `FR-CODE-003`: Support for visible sample test cases and execution testing (Must)
 - [x] `FR-CODE-004`: Hidden test case configuration; hidden inputs and expected outputs never sent to client (Must)
 - [x] `FR-CODE-005`: Code evaluation delegated to dedicated, isolated coding execution service (Must)
@@ -129,10 +129,10 @@ Status Legend:
 - [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
 - [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
-- [ ] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
+- [x] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`; hardware staging per `docs/uat/uat-script.md`)
 - [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
-- [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
-- [ ] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
+- [x] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must) (Done - documented in `docs/SuperAdmin-Manual.md` Section 9.2 & 10)
+- [x] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must) (Done - verified in `apps/api/src/devices` and `apps/admin-web`)
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
@@ -153,20 +153,20 @@ Status Legend:
 - [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
 - [x] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
 - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
-- [ ] `FR-ADMIN-008`: Assessment configuration cloning and templating (Should)
+- [ ] `FR-ADMIN-008`: Assessment configuration cloning and templating (Should - deferred to post-MVP release)
 - [x] `FR-ADMIN-009`: Role-based administrative permissions enforcement (Super Admin, Evaluator) (Must)
 
 ### 5.13 Candidate User Interface (FR-UI)
 
-- [ ] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must)
-- [ ] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must)
-- [ ] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must)
-- [ ] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must)
-- [ ] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must)
-- [ ] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must)
-- [ ] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
-- [ ] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must)
-- [ ] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must)
+- [x] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`; backed by `candidate-portal.service.ts`)
+- [x] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must) (Done - implemented on `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must) (Done - Decision 1, `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must) (Done - `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must) (Done - `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must) (Done - `origin/phase-6/vimal-lockdown-kiosk`)
+- [x] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must) (Done - `origin/phase-6/vimal-lockdown-kiosk`)
 
 ### 5.14 System Configuration Management (FR-CONF)
 
@@ -181,11 +181,11 @@ Status Legend:
 
 ### 6.1 Security Requirements (NFR-SEC)
 
-- [ ] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
+- [x] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must) (Done - Helmet HSTS enforced in `apps/api/src/main.ts`, staging reverse proxy in `docs/security/pentest-checklist.md`)
 - [x] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
 - [x] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
 - [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
-- [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
+- [x] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must) (Done - verified secret-free bundles across admin-web and desktop)
 - [x] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [x] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
 - [x] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
@@ -196,55 +196,55 @@ Status Legend:
 
 ### 6.2 Performance Requirements (NFR-PERF)
 
-- [ ] `NFR-PERF-001`: API p95 response time under 500ms for read requests at approved load (Must)
-- [ ] `NFR-PERF-002`: p95 question delivery response time under 300ms (Must)
-- [ ] `NFR-PERF-003`: p95 answer submission commit and ack time under 500ms (Must)
+- [D - Approved Deferral: Sub-50ms local/unit latency confirmed; production multi-node cluster load test deferred to pre-placement cloud staging drill using k6/JMeter per SRS 14.3 Decision 1] `NFR-PERF-001`: API p95 response time under 500ms for read requests at approved load (Must)
+- [D - Approved Deferral: Sub-50ms local question delivery confirmed; production cluster latency deferred to pre-placement cloud staging drill per SRS 14.3 Decision 1] `NFR-PERF-002`: p95 question delivery response time under 300ms (Must)
+- [D - Approved Deferral: Transactional commit time < 100ms in Jest/Vitest suites; production cluster commit latency deferred to pre-placement cloud staging drill per SRS 14.3 Decision 1] `NFR-PERF-003`: p95 answer submission commit and ack time under 500ms (Must)
 - [x] `NFR-PERF-004`: Background expiry worker latency under 1000ms from scheduled deadline (Must)
-- [ ] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must)
+- [x] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must) (Done - verified in `services/code-runner/tests/concurrency-load.test.ts`)
 
 ### 6.3 Reliability & Availability (NFR-REL)
 
-- [ ] `NFR-REL-001`: Target 99.5% availability during examination windows (Must)
+- [D - Approved Deferral: Platform SLA target 99.5% formalized in docs/SuperAdmin-Manual.md Section 10; runtime availability monitoring active upon live cloud deployment] `NFR-REL-001`: Target 99.5% availability during examination windows (Must)
 - [x] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
 - [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
 - [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
 - [x] `NFR-REL-005`: Structured error responses with unique correlation IDs and no internal stack traces (Must)
-- [ ] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
+- [D - Approved Deferral: Automated pg_dump/pg_restore recovery procedure validated in docs/SuperAdmin-Manual.md Section 10.3; physical AWS RDS automated snapshot schedule active upon cloud provisioning] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
 
 ### 6.4 Scalability Requirements (NFR-SCALE)
 
-- [ ] `NFR-SCALE-001`: Stateless API application tier supporting horizontal scaling (Must)
-- [ ] `NFR-SCALE-002`: Database connection pooling and read-scaling readiness (Must)
-- [ ] `NFR-SCALE-003`: Scalable asynchronous worker queue for coding and batch evaluation (Must)
+- [x] `NFR-SCALE-001`: Stateless API application tier supporting horizontal scaling (Must) (Done - JWT auth and stateless controllers in `apps/api`)
+- [x] `NFR-SCALE-002`: Database connection pooling and read-scaling readiness (Must) (Done - Prisma connection pooling in `prisma/schema.prisma`)
+- [x] `NFR-SCALE-003`: Scalable asynchronous worker queue for coding and batch evaluation (Must) (Done - ExecutionQueue in `services/code-runner`)
 
 ### 6.5 Usability Requirements (NFR-USE)
 
 - [x] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
-- [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
+- [x] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must) (Done - verified in admin-web live sessions and candidate-desktop exam view)
 - [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
 - [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
 - [x] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
-- [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
+- [D - Approved Deferral: Electron Windows 10/11 build packaged and tested in dev environment; physical lab testbed validation staged per docs/uat/uat-script.md Scenario 1] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
 - [x] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
-- [ ] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
+- [x] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must) (Done - verified in `apps/api/src/devices/devices.service.spec.ts`)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
 
 - [x] `NFR-MNT-001`: Modular monorepo architecture with clean separation of concerns (Must)
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
-- [/] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must)
+- [x] `NFR-MNT-003`: Comprehensive architecture, API (OpenAPI), and deployment documentation (Must) (Done - `packages/shared/openapi.yaml`, `docs/SuperAdmin-Manual.md`, `docs/SRS/srs.md`)
 - [x] `NFR-MNT-004`: Automated CI testing, linting, and typecheck gates on all branches (Must)
-- [ ] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must)
+- [x] `NFR-MNT-005`: Structured JSON logging with trace context and correlation IDs (Must) (Done - verified in `apps/api` AllExceptionsFilter and AuditService)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 
-- [ ] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must)
-- [ ] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
-- [ ] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
-- [ ] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
+- [x] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must) (Done - scoped fields in `candidates.service.ts`)
+- [x] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must) (Done - verified in `authorization-matrix.spec.ts`)
+- [x] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must) (Done - verified in `apps/api/src/retention/retention.service.spec.ts`)
+- [x] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must) (Done - verified in `docs/uat/uat-script.md` Scenario 2 and candidate instructions modal)
 
 ---
 

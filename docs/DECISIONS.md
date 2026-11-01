@@ -58,3 +58,15 @@ This document records architectural, functional, and design decisions, specifica
   - Step 3 (**Settings**) is expanded to rigorously capture per-question time limits, negative marking configuration, question/option randomization flags, passing criteria, and navigation mode (`sequential` vs `free`) per `FR-ASMT-002`.
   - Client-side validation prevents creating any question limit that exceeds the overall assessment duration.
 - **Traceability**: `FR-ASMT-001`, `FR-ASMT-002`, `FR-ASMT-004`, `FR-ASMT-008`.
+
+---
+
+### Decision 6: Single Integrity Event Non-Conclusiveness and Proctoring Advisory
+
+- **Context & Conflict**: UI dashboards and automated proctoring mocks often present security infractions (e.g. window blur, keystroke shortcuts, prohibited background process) with immediate red-flag punitive indicators. Conversely, SRS Section 10.3 (Line 762), Section 11.4, and `BR-015` strictly mandate: *"Record detected incidents without treating every focus change as conclusive proof of cheating."* and *"no automatic penalty from a single focus-change event."*
+- **Decision (SRS Wins)**:
+  - The live session monitoring interface and telemetry stream must feature a persistent, prominent Proctoring Advisory notice.
+  - The platform forbids automatic disqualification or penalty application based solely on a single focus or process event.
+  - Telemetry is presented with chronological context, duration, window titles, and severity ratings so proctors and administrators can correlate events with physical lab invigilation reports.
+- **Traceability**: SRS Section 10.3 (Line 762), Section 11.4, `BR-015`, `FR-LAB-006`.
+

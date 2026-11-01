@@ -24,6 +24,15 @@ import {
   QuestionPerformanceStats,
   CodingQuestionConfig,
   SqlQuestionConfig,
+  LabDeviceRecord,
+  RegisterLabDevicePayload,
+  UpdateDeviceStatusPayload,
+  UpdateDeviceVersionPayload,
+  DeviceStatus,
+  IntegrityEventRecord,
+  SecuritySettingsPolicies,
+  UpdateSecurityPoliciesPayload,
+  MfaSetupConfirmPayload,
 } from '../types/api';
 
 export const handlers = [
@@ -1015,6 +1024,53 @@ export const handlers = [
     });
   }),
 
+  // ==========================================
+  // Integrity & Lockdown Telemetry (FR-LAB-006, SRS 10.3)
+  // ==========================================
+
+  // GET /api/v1/admin/sessions/integrity-events
+  http.get(/\/api\/v1\/admin\/sessions\/integrity-events(\?.*)?$/, ({ request }) => {
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get('sessionId');
+
+    let events = [...mockIntegrityEvents];
+    if (sessionId) {
+      events = events.filter((e) => e.sessionId === sessionId);
+    }
+
+    return HttpResponse.json(events);
+  }),
+
+  // POST /api/v1/candidate/lockdown-events
+  http.post(/\/api\/v1\/candidate\/lockdown-events$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<IntegrityEventRecord>;
+
+    const eventId = `integ-${Date.now()}`;
+    const newEvent: IntegrityEventRecord = {
+      id: eventId,
+      sessionId: body.sessionId || 'sess-1',
+      candidateId: body.candidateId || 'can-1',
+      candidateIdentifier: body.candidateIdentifier || 'CAN-2026-001',
+      candidateName: body.candidateName || 'Candidate',
+      assessmentId: body.assessmentId || 'asmt-01',
+      assessmentTitle: body.assessmentTitle || 'Assessment',
+      eventType: body.eventType || 'FOCUS_LOST',
+      severity: body.severity || 'MEDIUM',
+      timestamp: new Date().toISOString(),
+      details: body.details || { description: 'Client window blurred.' },
+      supervisorReviewed: false,
+      correlationId: `cid-${Date.now().toString(36)}`,
+    };
+
+    mockIntegrityEvents.unshift(newEvent);
+
+    return HttpResponse.json({
+      recorded: true,
+      eventId,
+      serverTime: new Date().toISOString(),
+    });
+  }),
+
   // GET /api/v1/admin/sessions/:id
   http.get(/\/api\/v1\/admin\/sessions\/([^/]+)$/, ({ params }) => {
     const sessionId = params[0] as string;
@@ -1615,6 +1671,444 @@ export const handlers = [
     ];
 
     return HttpResponse.json(stats);
+  }),
+
+  // ==========================================
+  // Lab Devices Handlers (FR-LAB-001..004, UC-17)
+  // ==========================================
+
+  // GET /api/v1/admin/devices
+  http.get(/\/api\/v1\/admin\/devices(\?.*)?$/, ({ request }) => {
+    const url = new URL(request.url);
+    const statusParam = url.searchParams.get('status');
+    const searchParam = url.searchParams.get('search')?.toLowerCase();
+    const locationParam = url.searchParams.get('location');
+
+    let filtered = [...mockLabDevices];
+
+    if (statusParam && statusParam !== 'ALL') {
+      filtered = filtered.filter((d) => d.deviceStatus === statusParam);
+    }
+
+    if (locationParam && locationParam !== 'ALL') {
+      filtered = filtered.filter((d) =>
+        d.location.toLowerCase().includes(locationParam.toLowerCase()),
+      );
+    }
+
+    if (searchParam) {
+      filtered = filtered.filter(
+        (d) =>
+          d.deviceReference.toLowerCase().includes(searchParam) ||
+          d.hostname.toLowerCase().includes(searchParam) ||
+          d.ipAddress.includes(searchParam) ||
+          d.location.toLowerCase().includes(searchParam) ||
+          (d.activeCandidateName && d.activeCandidateName.toLowerCase().includes(searchParam)),
+      );
+    }
+
+    const stats = {
+      total: mockLabDevices.length,
+      activeCount: mockLabDevices.filter((d) => d.deviceStatus === 'ACTIVE').length,
+      suspendedCount: mockLabDevices.filter((d) => d.deviceStatus === 'SUSPENDED').length,
+      blockedCount: mockLabDevices.filter((d) => d.deviceStatus === 'BLOCKED').length,
+      outdatedVersionCount: mockLabDevices.filter(
+        (d) => d.approvedClientVersion !== mockSecurityPolicies.approvedClientVersion,
+      ).length,
+    };
+
+    return HttpResponse.json({
+      devices: filtered,
+      stats,
+      total: filtered.length,
+    });
+  }),
+
+  // GET /api/v1/admin/devices/:id
+  http.get(/\/api\/v1\/admin\/devices\/([^/]+)$/, ({ params }) => {
+    const deviceId = params[0] as string;
+    const device = mockLabDevices.find((d) => d.id === deviceId);
+    if (!device) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Lab device '${deviceId}' was not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json(device);
+  }),
+
+  // POST /api/v1/admin/devices (FR-LAB-001, FR-LAB-002, UC-17, Rule 7)
+  http.post(/\/api\/v1\/admin\/devices$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<RegisterLabDevicePayload>;
+
+    if (
+      !body.deviceReference ||
+      !body.hostname ||
+      !body.ipAddress ||
+      !body.macAddress ||
+      !body.location ||
+      !body.approvedClientVersion
+    ) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'All device fields (Reference, Hostname, IP, MAC, Location, Client Version) are required.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const duplicate = mockLabDevices.some(
+      (d) => d.deviceReference.toLowerCase() === body.deviceReference!.trim().toLowerCase(),
+    );
+    if (duplicate) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.INVALID_STATE,
+          message: `A lab device with reference '${body.deviceReference}' already exists.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 409 },
+      );
+    }
+
+    const newDevice: LabDeviceRecord = {
+      id: `dev-${Date.now()}`,
+      deviceReference: body.deviceReference.trim(),
+      hostname: body.hostname.trim(),
+      ipAddress: body.ipAddress.trim(),
+      macAddress: body.macAddress.trim(),
+      location: body.location.trim(),
+      approvedClientVersion: body.approvedClientVersion.trim(),
+      deviceStatus: 'ACTIVE',
+      lastSeenAt: new Date().toISOString(),
+      registeredAt: new Date().toISOString(),
+      notes: body.notes?.trim() || undefined,
+    };
+
+    mockLabDevices.unshift(newDevice);
+
+    mockAuditLogs.unshift({
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'DEVICE_REGISTERED',
+      actorId: 'usr-admin-01',
+      actorName: 'Super Admin (Ashlin Siddharth)',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'DEVICE',
+      entityId: newDevice.id,
+      outcome: 'SUCCESS',
+      correlationId: `cid-${Date.now().toString(36)}`,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        deviceReference: newDevice.deviceReference,
+        location: newDevice.location,
+        version: newDevice.approvedClientVersion,
+      },
+    });
+
+    return HttpResponse.json(newDevice, { status: 201 });
+  }),
+
+  // PATCH /api/v1/admin/devices/:id/status (FR-LAB-004, Rule 7, BR-012)
+  http.patch(/\/api\/v1\/admin\/devices\/([^/]+)\/status$/, async ({ params, request }) => {
+    const deviceId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as Partial<UpdateDeviceStatusPayload>;
+
+    const device = mockLabDevices.find((d) => d.id === deviceId);
+    if (!device) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Lab device '${deviceId}' was not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!body.status) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message: 'Target device status is required.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    if (!body.reason || body.reason.trim().length < 5) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'Mandatory justification reason (min 5 characters) is required for device status modification (BR-012, Rule 7).',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const previousStatus = device.deviceStatus;
+    device.deviceStatus = body.status as DeviceStatus;
+    device.statusReason = body.reason.trim();
+
+    mockAuditLogs.unshift({
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'DEVICE_STATUS_CHANGED',
+      actorId: 'usr-admin-01',
+      actorName: 'Super Admin (Ashlin Siddharth)',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'DEVICE',
+      entityId: device.id,
+      outcome: 'SUCCESS',
+      reason: body.reason.trim(),
+      correlationId: `cid-${Date.now().toString(36)}`,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        fromStatus: previousStatus,
+        toStatus: body.status,
+      },
+    });
+
+    return HttpResponse.json(device);
+  }),
+
+  // PATCH /api/v1/admin/devices/:id/version (FR-LAB-003, FR-CONF-001, Rule 7)
+  http.patch(/\/api\/v1\/admin\/devices\/([^/]+)\/version$/, async ({ params, request }) => {
+    const deviceId = params[0] as string;
+    const body = (await request.json().catch(() => ({}))) as Partial<UpdateDeviceVersionPayload>;
+
+    const device = mockLabDevices.find((d) => d.id === deviceId);
+    if (!device) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.NOT_ELIGIBLE,
+          message: `Lab device '${deviceId}' was not found.`,
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!body.approvedClientVersion) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message: 'Approved client version string is required.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    if (!body.reason || body.reason.trim().length < 5) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'Mandatory justification reason is required for updating approved client version (Rule 7).',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    const previousVersion = device.approvedClientVersion;
+    device.approvedClientVersion = body.approvedClientVersion.trim();
+
+    mockAuditLogs.unshift({
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'DEVICE_VERSION_UPDATED',
+      actorId: 'usr-admin-01',
+      actorName: 'Super Admin (Ashlin Siddharth)',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'DEVICE',
+      entityId: device.id,
+      outcome: 'SUCCESS',
+      reason: body.reason.trim(),
+      correlationId: `cid-${Date.now().toString(36)}`,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        fromVersion: previousVersion,
+        toVersion: body.approvedClientVersion,
+      },
+    });
+
+    return HttpResponse.json(device);
+  }),
+
+  // ==========================================
+  // Security Policies & MFA Setup (FR-AUTH-007, FR-AUTH-008, NFR-SEC-004)
+  // ==========================================
+
+  // GET /api/v1/admin/security/policies
+  http.get(/\/api\/v1\/admin\/security\/policies(\?.*)?$/, () => {
+    return HttpResponse.json(mockSecurityPolicies);
+  }),
+
+  // PATCH /api/v1/admin/security/policies
+  http.patch(/\/api\/v1\/admin\/security\/policies$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<UpdateSecurityPoliciesPayload>;
+
+    if (!body.reason || body.reason.trim().length < 5) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message:
+            'Mandatory justification reason is required for changing system security policies (Rule 7, FR-CONF-003).',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    mockSecurityPolicies = {
+      ...mockSecurityPolicies,
+      ...(body.sessionTimeoutMinutes ? { sessionTimeoutMinutes: body.sessionTimeoutMinutes } : {}),
+      ...(body.warningCountdownSeconds
+        ? { warningCountdownSeconds: body.warningCountdownSeconds }
+        : {}),
+      ...(body.approvedClientVersion
+        ? { approvedClientVersion: body.approvedClientVersion }
+        : {}),
+      ...(body.strictVersionEnforcement !== undefined
+        ? { strictVersionEnforcement: body.strictVersionEnforcement }
+        : {}),
+      ...(body.kioskEnforcementMode ? { kioskEnforcementMode: body.kioskEnforcementMode } : {}),
+      ...(body.auditLogRetentionDays
+        ? { auditLogRetentionDays: body.auditLogRetentionDays }
+        : {}),
+    };
+
+    mockAuditLogs.unshift({
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'CONFIGURATION_UPDATED',
+      actorId: 'usr-admin-01',
+      actorName: 'Super Admin (Ashlin Siddharth)',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'SECURITY_POLICIES',
+      entityId: 'global',
+      outcome: 'SUCCESS',
+      reason: body.reason.trim(),
+      correlationId: `cid-${Date.now().toString(36)}`,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        policies: mockSecurityPolicies,
+      },
+    });
+
+    return HttpResponse.json(mockSecurityPolicies);
+  }),
+
+  // POST /api/v1/admin/auth/mfa/setup-init
+  http.post(/\/api\/v1\/admin\/auth\/mfa\/setup-init$/, () => {
+    return HttpResponse.json({
+      secretKey: 'JBSWY3DPEHPK3PXP',
+      qrCodeUrl:
+        'otpauth://totp/VeriSync:admin@verisync.internal?secret=JBSWY3DPEHPK3PXP&issuer=VeriSync',
+      backupCodes: [
+        'A8F4-9C12',
+        'B3E7-5D90',
+        'C1D8-4E23',
+        'D7A2-8B65',
+        'E4C9-1F38',
+        'F2B6-7A41',
+        '9E5D-3C82',
+        '7F1A-6E94',
+      ],
+    });
+  }),
+
+  // POST /api/v1/admin/auth/mfa/setup-confirm
+  http.post(/\/api\/v1\/admin\/auth\/mfa\/setup-confirm$/, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<MfaSetupConfirmPayload>;
+
+    if (!body.code || body.code.length !== 6) {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.VALIDATION_FAILED,
+          message: 'A valid 6-digit TOTP verification code is required.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 422 },
+      );
+    }
+
+    if (body.code === '000000') {
+      return HttpResponse.json(
+        {
+          status: 'rejected',
+          code: ApiErrorCode.UNAUTHENTICATED,
+          message: 'Invalid TOTP security code. Please check your authenticator app clock.',
+          correlationId: `cid-${Date.now().toString(36)}`,
+        },
+        { status: 401 },
+      );
+    }
+
+    mockAuditLogs.unshift({
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      eventType: 'AUTH_MFA_ENABLED',
+      actorId: 'usr-admin-01',
+      actorName: 'Super Admin (Ashlin Siddharth)',
+      actorRole: 'SUPER_ADMIN',
+      entityType: 'USER',
+      entityId: 'usr-admin-01',
+      outcome: 'SUCCESS',
+      reason: 'Administrator TOTP authenticator enrolled',
+      correlationId: `cid-${Date.now().toString(36)}`,
+      ipAddress: '127.0.0.1',
+      metadata: {
+        method: 'TOTP_AUTHENTICATOR',
+        backupCodesIssued: 8,
+      },
+    });
+
+    return HttpResponse.json({
+      success: true,
+      message: 'MFA TOTP protection enabled successfully for your administrator account.',
+      user: {
+        id: 'usr_admin_01',
+        username: 'admin',
+        fullName: 'Super Admin',
+        email: 'admin@verisync.internal',
+        role: 'SUPER_ADMIN',
+        mfaEnrolled: true,
+      },
+    });
+  }),
+
+  // GET /api/v1/admin/security/verify-audit-chain
+  http.get(/\/api\/v1\/admin\/security\/verify-audit-chain$/, () => {
+    return HttpResponse.json({
+      valid: true,
+      totalEntries: mockAuditLogs.length,
+      verifiedAt: new Date().toISOString(),
+      hashAlgorithm: 'SHA-256',
+    });
   }),
 ];
 
@@ -2775,3 +3269,199 @@ const mockResults: AssessmentResultRecord[] = [
     corrections: [],
   },
 ];
+
+// ==========================================
+// Mock Lab Devices (FR-LAB-001..004, UC-17)
+// ==========================================
+
+const mockLabDevices: LabDeviceRecord[] = [
+  {
+    id: 'dev-1',
+    deviceReference: 'LAB-PC-101',
+    hostname: 'lab3-ws-01.internal',
+    ipAddress: '192.168.10.101',
+    macAddress: '00:1B:44:11:3A:B7',
+    location: 'Lab 3 - Block B',
+    approvedClientVersion: '1.1.0',
+    deviceStatus: 'ACTIVE',
+    lastSeenAt: '2026-11-01T10:15:00Z',
+    registeredAt: '2026-10-15T08:00:00Z',
+    activeSessionId: 'sess-1',
+    activeCandidateName: 'Rohan Mehta',
+    notes: 'Primary workstation, Dell OptiPlex 7090, secure kiosk enabled.',
+  },
+  {
+    id: 'dev-2',
+    deviceReference: 'LAB-PC-102',
+    hostname: 'lab3-ws-02.internal',
+    ipAddress: '192.168.10.102',
+    macAddress: '00:1B:44:11:3A:B8',
+    location: 'Lab 3 - Block B',
+    approvedClientVersion: '1.1.0',
+    deviceStatus: 'ACTIVE',
+    lastSeenAt: '2026-11-01T10:14:30Z',
+    registeredAt: '2026-10-15T08:05:00Z',
+    activeSessionId: 'sess-2',
+    activeCandidateName: 'Aisha Khan',
+    notes: 'Secondary workstation, Dell OptiPlex 7090.',
+  },
+  {
+    id: 'dev-3',
+    deviceReference: 'LAB-PC-103',
+    hostname: 'lab3-ws-03.internal',
+    ipAddress: '192.168.10.103',
+    macAddress: '00:1B:44:11:3A:B9',
+    location: 'Lab 3 - Block B',
+    approvedClientVersion: '1.0.9', // Outdated version trigger
+    deviceStatus: 'ACTIVE',
+    lastSeenAt: '2026-11-01T09:45:00Z',
+    registeredAt: '2026-10-15T08:10:00Z',
+    activeSessionId: null,
+    activeCandidateName: null,
+    notes: 'Standby terminal; requires update to client v1.1.0 before exam.',
+  },
+  {
+    id: 'dev-4',
+    deviceReference: 'LAB-PC-104',
+    hostname: 'lab2-ws-14.internal',
+    ipAddress: '192.168.10.104',
+    macAddress: '00:1B:44:11:3A:C1',
+    location: 'Lab 2 - Block A',
+    approvedClientVersion: '1.1.0',
+    deviceStatus: 'SUSPENDED',
+    lastSeenAt: '2026-10-31T16:20:00Z',
+    registeredAt: '2026-10-16T09:00:00Z',
+    activeSessionId: null,
+    activeCandidateName: null,
+    notes: 'Keyboard mechanical switch failure reported during practice test.',
+    statusReason: 'Hardware repair scheduled with campus IT support.',
+  },
+  {
+    id: 'dev-5',
+    deviceReference: 'LAB-PC-105',
+    hostname: 'lab1-ws-09.internal',
+    ipAddress: '192.168.10.105',
+    macAddress: '00:1B:44:11:3A:D4',
+    location: 'Lab 1 - Block A',
+    approvedClientVersion: '1.0.8',
+    deviceStatus: 'BLOCKED',
+    lastSeenAt: '2026-10-30T11:00:00Z',
+    registeredAt: '2026-10-14T10:00:00Z',
+    activeSessionId: null,
+    activeCandidateName: null,
+    notes: 'Security violation: external unauthorized USB Wi-Fi adapter detected.',
+    statusReason: 'Blocked by proctor per SRS 10.3 security protocol.',
+  },
+];
+
+// ==========================================
+// Mock Integrity Events (FR-LAB-006, SRS 10.3)
+// ==========================================
+
+const mockIntegrityEvents: IntegrityEventRecord[] = [
+  {
+    id: 'integ-1',
+    sessionId: 'sess-1',
+    candidateId: 'can-1',
+    candidateIdentifier: 'CAN-2026-001',
+    candidateName: 'Rohan Mehta',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    eventType: 'FOCUS_LOST',
+    severity: 'MEDIUM',
+    timestamp: '2026-11-01T10:02:14Z',
+    details: {
+      windowTitle: 'Windows Security Prompt',
+      blurDurationMs: 1200,
+      description: 'Client window blurred for 1.2s during OS credential dialog.',
+    },
+    supervisorReviewed: true,
+    correlationId: 'cid-integ-001',
+  },
+  {
+    id: 'integ-2',
+    sessionId: 'sess-2',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    eventType: 'SHORTCUT_TRIPPED',
+    severity: 'LOW',
+    timestamp: '2026-11-01T09:58:30Z',
+    details: {
+      shortcutKey: 'Alt+Tab',
+      description: 'Alt+Tab keyboard combination trapped and blocked by kiosk guard.',
+    },
+    supervisorReviewed: false,
+    correlationId: 'cid-integ-002',
+  },
+  {
+    id: 'integ-3',
+    sessionId: 'sess-1',
+    candidateId: 'can-1',
+    candidateIdentifier: 'CAN-2026-001',
+    candidateName: 'Rohan Mehta',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    eventType: 'PROHIBITED_PROCESS_DETECTED',
+    severity: 'HIGH',
+    timestamp: '2026-11-01T10:10:05Z',
+    details: {
+      processName: 'notepad.exe',
+      description: 'Background text editor process detected in system process table.',
+    },
+    supervisorReviewed: false,
+    correlationId: 'cid-integ-003',
+  },
+  {
+    id: 'integ-4',
+    sessionId: 'sess-6',
+    candidateId: 'can-6',
+    candidateIdentifier: 'CAN-2026-006',
+    candidateName: 'Suresh Nair',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    eventType: 'EXIT_ATTEMPT',
+    severity: 'CRITICAL',
+    timestamp: '2026-11-01T09:30:12Z',
+    details: {
+      description: 'Application close event intercepted; candidate confirmed exit dialog attempt.',
+    },
+    supervisorReviewed: true,
+    correlationId: 'cid-integ-004',
+  },
+  {
+    id: 'integ-5',
+    sessionId: 'sess-2',
+    candidateId: 'can-2',
+    candidateIdentifier: 'CAN-2026-002',
+    candidateName: 'Aisha Khan',
+    assessmentId: 'asmt-01',
+    assessmentTitle: 'Frontend Developer Test',
+    eventType: 'CLIPBOARD_ACCESSED',
+    severity: 'LOW',
+    timestamp: '2026-11-01T10:05:44Z',
+    details: {
+      description: 'External clipboard read attempt intercepted and sanitized.',
+    },
+    supervisorReviewed: false,
+    correlationId: 'cid-integ-005',
+  },
+];
+
+// ==========================================
+// Mock Security Policies (FR-AUTH-007, FR-CONF-001)
+// ==========================================
+
+let mockSecurityPolicies: SecuritySettingsPolicies = {
+  sessionTimeoutMinutes: 15,
+  warningCountdownSeconds: 60,
+  mfaEnforcedForAdmins: true,
+  approvedClientVersion: '1.1.0',
+  minimumClientVersion: '1.0.0',
+  strictVersionEnforcement: true,
+  kioskEnforcementMode: 'STRICT',
+  auditLogRetentionDays: 365,
+};
+

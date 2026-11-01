@@ -10,6 +10,7 @@ import {
   SessionOverrideResult,
   AssessmentStatus,
   AssessmentRecord,
+  IntegrityEventRecord,
 } from '../types/api';
 
 export interface GetLiveSessionsResponse {
@@ -60,5 +61,10 @@ export const sessionsApi = {
         body: JSON.stringify({ status, reason }),
       },
     );
+  },
+
+  async getIntegrityEvents(sessionId?: string): Promise<IntegrityEventRecord[]> {
+    const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
+    return apiFetch<IntegrityEventRecord[]>(`/admin/sessions/integrity-events${qs}`);
   },
 };

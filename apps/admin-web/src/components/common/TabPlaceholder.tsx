@@ -70,6 +70,12 @@ const TAB_DETAILS: Record<
     description:
       'Cryptographically ordered audit event search and inspection without secret disclosure.',
   },
+  'lab-devices': {
+    title: 'Lab Devices Registry',
+    phase: 'Phase 6 (Hardening & Lockdown)',
+    srsIds: 'FR-LAB-001, FR-LAB-002, FR-LAB-003, FR-LAB-004, UC-17',
+    description: 'Workstation registration, status management, and client version tracking.',
+  },
   settings: {
     title: 'Platform Security Settings',
     phase: 'Phase 6 (Hardening & Lockdown)',

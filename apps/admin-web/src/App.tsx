@@ -18,8 +18,12 @@ import { LiveSessionsView } from './components/sessions/LiveSessionsView';
 import { ResultsView } from './components/results/ResultsView';
 import { ReportsView } from './components/reports/ReportsView';
 import { AuditLogsView } from './components/audit/AuditLogsView';
+import { LabDevicesView } from './components/devices/LabDevicesView';
+import { SecuritySettingsView } from './components/settings/SecuritySettingsView';
 import { TabPlaceholder } from './components/common/TabPlaceholder';
 import { ToastContainer } from './components/ui/ToastContainer';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
+import { SessionTimeoutModal } from './components/common/SessionTimeoutModal';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +36,9 @@ const queryClient = new QueryClient({
 
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+
+  const { isWarningModalOpen, remainingSeconds, extendSession, terminateSession } =
+    useSessionTimeout();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -51,6 +58,10 @@ export const AppContent: React.FC = () => {
         return <ReportsView />;
       case 'audit-logs':
         return <AuditLogsView />;
+      case 'lab-devices':
+        return <LabDevicesView />;
+      case 'settings':
+        return <SecuritySettingsView />;
       default:
         return (
           <TabPlaceholder tab={activeTab} onReturnToDashboard={() => setActiveTab('dashboard')} />
@@ -63,6 +74,14 @@ export const AppContent: React.FC = () => {
       <AppLayout activeTab={activeTab} onSelectTab={setActiveTab}>
         {renderContent()}
       </AppLayout>
+
+      {/* Session Inactivity Timeout Modal (FR-AUTH-007, NFR-SEC-004) */}
+      <SessionTimeoutModal
+        isOpen={isWarningModalOpen}
+        remainingSeconds={remainingSeconds}
+        onContinue={extendSession}
+        onLogout={terminateSession}
+      />
     </ProtectedRoute>
   );
 };

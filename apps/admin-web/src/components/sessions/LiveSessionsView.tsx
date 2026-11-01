@@ -12,12 +12,14 @@ import { LiveSessionFilters, AutoRefreshInterval } from './LiveSessionFilters';
 import { LiveSessionsTable } from './LiveSessionsTable';
 import { SessionOverrideModal } from './SessionOverrideModal';
 import { SessionDetailModal } from './SessionDetailModal';
+import { IntegrityEventsPanel } from './IntegrityEventsPanel';
 import { toastManager } from '../../lib/toast';
-import { Radio, AlertCircle } from 'lucide-react';
+import { Radio, AlertCircle, Users, ShieldAlert } from 'lucide-react';
 
 export const LiveSessionsView: React.FC = () => {
   const queryClient = useQueryClient();
 
+  const [activeViewTab, setActiveViewTab] = useState<'sessions' | 'integrity'>('sessions');
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<AutoRefreshInterval>(10000); // 10s default
@@ -93,6 +95,35 @@ export const LiveSessionsView: React.FC = () => {
             Real-time candidate telemetry, exam timing countdowns, and authoritative admin
             overrides.
           </p>
+          <div className="flex items-center gap-2 mt-2 sm:mt-0">
+            <button
+              type="button"
+              onClick={() => setActiveViewTab('sessions')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
+                activeViewTab === 'sessions'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+              }`}
+              data-testid="tab-candidate-sessions"
+            >
+              <Users className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Candidate Sessions ({counts.total})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveViewTab('integrity')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
+                activeViewTab === 'integrity'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+              }`}
+              data-testid="tab-integrity-events"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Integrity Events Stream</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -107,26 +138,33 @@ export const LiveSessionsView: React.FC = () => {
         </div>
       )}
 
-      {/* Filters and telemetry counters */}
-      <LiveSessionFilters
-        search={search}
-        onSearchChange={setSearch}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        autoRefreshInterval={autoRefreshInterval}
-        onAutoRefreshChange={setAutoRefreshInterval}
-        onManualRefresh={() => refetch()}
-        isFetching={isFetching}
-        counts={counts}
-      />
+      {/* Conditional Content: Candidate Sessions vs. Integrity Events */}
+      {activeViewTab === 'sessions' ? (
+        <>
+          {/* Filters and telemetry counters */}
+          <LiveSessionFilters
+            search={search}
+            onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            autoRefreshInterval={autoRefreshInterval}
+            onAutoRefreshChange={setAutoRefreshInterval}
+            onManualRefresh={() => refetch()}
+            isFetching={isFetching}
+            counts={counts}
+          />
 
-      {/* Live Sessions Table */}
-      <LiveSessionsTable
-        sessions={sessions}
-        isLoading={isLoading}
-        onOpenOverride={(sess) => setSelectedOverrideSession(sess)}
-        onOpenDetails={(sess) => setSelectedDetailSession(sess)}
-      />
+          {/* Live Sessions Table */}
+          <LiveSessionsTable
+            sessions={sessions}
+            isLoading={isLoading}
+            onOpenOverride={(sess) => setSelectedOverrideSession(sess)}
+            onOpenDetails={(sess) => setSelectedDetailSession(sess)}
+          />
+        </>
+      ) : (
+        <IntegrityEventsPanel />
+      )}
 
       {/* Admin Override Modal */}
       <SessionOverrideModal

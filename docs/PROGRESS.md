@@ -20,8 +20,8 @@ Status Legend:
 - [/] `FR-AUTH-004`: Rate-limiting on login endpoints with temporary lockout on repeated failures (Must)
 - [x] `FR-AUTH-005`: Super Admin initiated candidate password reset workflow without exposing old password (Must)
 - [x] `FR-AUTH-006`: Account deactivation preventing new sessions and enforcing session revocation (Must)
-- [/] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
-- [/] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
+- [x] `FR-AUTH-007`: Backend session state management enforcing expiry, revocation, and RBAC authorization (Must)
+- [x] `FR-AUTH-008`: Multi-factor authentication (TOTP) support for privileged administrator accounts (Must)
 - [x] `FR-AUTH-009`: Secure temporary credential provisioning; credentials excluded from exports and logs (Must)
 - [ ] `FR-AUTH-010`: Candidate session token bound to registered lab device and approved client version (Should)
 
@@ -125,12 +125,12 @@ Status Legend:
 
 ### 5.10 Lab Device Registry and Lockdown (FR-LAB)
 
-- [ ] `FR-LAB-001`: Registry of authorized lab devices (device ID, hostname, IP, MAC, location, status) (Should)
-- [ ] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
-- [ ] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
-- [ ] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
+- [x] `FR-LAB-001`: Registry of authorized lab devices (device ID, hostname, IP, MAC, location, status) (Should)
+- [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
+- [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
+- [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
 - [ ] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
-- [ ] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
+- [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
 - [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
 - [ ] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
 
@@ -170,9 +170,9 @@ Status Legend:
 
 ### 5.14 System Configuration Management (FR-CONF)
 
-- [ ] `FR-CONF-001`: Administrative management of approved client versions and compatibility thresholds (Must)
+- [x] `FR-CONF-001`: Administrative management of approved client versions and compatibility thresholds (Must)
 - [ ] `FR-CONF-002`: Server-side validation of runtime configuration parameters (Must)
-- [ ] `FR-CONF-003`: Audit logging of configuration changes with reason and actor (Must)
+- [x] `FR-CONF-003`: Audit logging of configuration changes with reason and actor (Must)
 - [ ] `FR-CONF-004`: Dynamic retrieval of system operational policies by clients (Must)
 
 ---
@@ -184,7 +184,7 @@ Status Legend:
 - [ ] `NFR-SEC-001`: Mandatory TLS 1.3/HTTPS across all external and internal API communication (Must)
 - [ ] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
 - [ ] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
-- [ ] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
+- [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
 - [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
 - [ ] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [ ] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
@@ -223,7 +223,7 @@ Status Legend:
 - [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
 - [x] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
 - [x] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
-- [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
+- [x] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
@@ -364,3 +364,19 @@ Status Legend:
   - [x] `TC-12`: Resource limit enforcement (Done)
   - [x] `Rule 8`: Candidate code never runs in API process (Done)
   - [x] `Rule 2`: Candidate-facing APIs never return answer keys or hidden test cases (Done)
+
+- **Phase 6 Completion Status**:
+  - [x] `FR-LAB-001`: Lab device registration by MAC address, IP range, room number, and machine identifier (`UC-17`) (Done)
+  - [x] `FR-LAB-002`: Workstation status management (`ACTIVE`, `MAINTENANCE`, `DEACTIVATED`, `BLOCKED`) with mandatory audit reason (`BR-012`, Rule 7) (Done)
+  - [x] `FR-LAB-003`: Approved candidate client version enforcement and outdated client version flagging (`v1.4.0`) (Done)
+  - [x] `FR-LAB-004`: Workstation heartbeat telemetry tracking with last-seen ISO-8601 UTC timestamp and active session binding (Done)
+  - [x] `FR-LAB-005`: Bulk device deactivation and status overrides for compromised physical lab sectors (Done)
+  - [x] `FR-LAB-006`: Lockdown integrity telemetry ingestion (`BLUR`, `SHORTCUT_ATTEMPT`, `PROHIBITED_PROCESS`, `EXIT_ATTEMPT`) (Done)
+  - [x] `SRS 10.3 / BR-015`: Mandatory proctoring advisory banner: *"A single integrity event is not conclusive proof of cheating"* (Done)
+  - [x] `FR-AUTH-007`: Automatic inactivity session timeout (15 mins) with 60-second warning countdown and secure logout (Done)
+  - [x] `FR-AUTH-008`: Enforced MFA setup flow for administrators (QR code, 8 emergency backup codes, 6-digit TOTP verification) (Done)
+  - [x] `NFR-SEC-004`: Cryptographic SHA-256 audit log hash-chain verification tool with tamper-detection visualization (Done)
+  - [x] `NFR-USE-005`: Accessibility pass across admin-web (skip to main content, keyboard navigation, focus rings, high contrast, aria labels) (Done)
+  - [x] `SRS 10.5`: Pre-release security penetration testing checklist (`docs/security/pentest-checklist.md`) covering all 11 security domains (Done)
+  - [x] `Playwright E2E`: Automated end-to-end suites for Lab Device management, Security Settings, MFA setup flow, and Integrity telemetry stream (Done)
+

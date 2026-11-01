@@ -16,6 +16,7 @@ import {
   History,
   Settings,
   Radio,
+  Laptop,
 } from 'lucide-react';
 import { useAuth } from '../../store/authContext';
 import { UserRole } from '../../types/api';
@@ -29,6 +30,7 @@ export type NavigationTab =
   | 'results'
   | 'reports'
   | 'audit-logs'
+  | 'lab-devices'
   | 'settings';
 
 interface SidebarProps {
@@ -91,6 +93,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Audit Logs',
     icon: History,
     allowedRoles: ['SUPER_ADMIN', 'TECHNICAL_EVALUATOR'],
+  },
+  {
+    id: 'lab-devices',
+    label: 'Lab Devices',
+    icon: Laptop,
+    allowedRoles: ['SUPER_ADMIN'],
   },
   {
     id: 'settings',

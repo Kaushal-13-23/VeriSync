@@ -1,0 +1,86 @@
+<AppLockerPolicy Version="1">
+  <!--
+    VeriSync Lab Workstation AppLocker Execution Policy
+    Non-Negotiable Rules & SRS Requirements:
+    - FR-LAB-005: Integrate candidate application with selected OS kiosk/lockdown configuration
+    - FR-LAB-008: Multi-layer controls beyond full-screen display alone
+    - TC18: AppLocker prevents execution of CLI, browsers, unauthorized scripts, and Task Manager
+  -->
+  <RuleCollection Type="Exe" EnforcementMode="Enabled">
+    <!-- Rule 1: Allow Windows System directory executables -->
+    <FilePathRule Id="92149746-e70f-4ae5-9fc0-01a07bc833ec" Name="All files located in Windows folder" Description="Allows members of the Everyone group to run applications in the Windows folder." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\*" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 2: Allow VeriSync Candidate Desktop application -->
+    <FilePathRule Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" Name="Allow VeriSync Candidate Desktop" Description="Allows candidate application execution from protected directory." UserOrGroupSid="S-1-1-0" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="%PROGRAMFILES%\VeriSync\*" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 3: Allow Administrators to run everything -->
+    <FilePathRule Id="a61c8b27-2479-4a0b-8d07-2a6285a21074" Name="All files for Local Administrators" Description="Allows local administrators full execution access." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="*" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 4: Explicit Deny for Command Prompt (cmd.exe) -->
+    <FilePathRule Id="b2c3d4e5-f6a7-8901-bcde-f12345678901" Name="Deny Command Prompt" Description="Blocks cmd.exe execution for standard users." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%SYSTEM32%\cmd.exe" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 5: Explicit Deny for PowerShell (powershell.exe / pwsh.exe) -->
+    <FilePathRule Id="c3d4e5f6-a7b8-9012-cdef-123456789012" Name="Deny Windows PowerShell" Description="Blocks powershell.exe for standard users." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\System32\WindowsPowerShell\v1.0\powershell.exe" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 6: Explicit Deny for Task Manager (taskmgr.exe) -->
+    <FilePathRule Id="d4e5f6a7-b8c9-0123-def0-123456789013" Name="Deny Task Manager" Description="Blocks Task Manager execution for standard users (TC18)." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%SYSTEM32%\taskmgr.exe" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 7: Explicit Deny for Registry Editor (regedit.exe) -->
+    <FilePathRule Id="e5f6a7b8-c9d0-1234-ef01-123456789014" Name="Deny Registry Editor" Description="Blocks regedit.exe for standard users." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%WINDIR%\regedit.exe" />
+      </Conditions>
+    </FilePathRule>
+
+    <!-- Rule 8: Explicit Deny for External Browsers -->
+    <FilePathRule Id="f6a7b8c9-d0e1-2345-f012-123456789015" Name="Deny Chrome Browser" Description="Blocks external Google Chrome browser execution." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%PROGRAMFILES%\Google\Chrome\Application\chrome.exe" />
+      </Conditions>
+    </FilePathRule>
+    <FilePathRule Id="07b8c9d0-e1f2-3456-0123-123456789016" Name="Deny Edge Browser" Description="Blocks external Microsoft Edge browser execution." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%PROGRAMFILES(X86)%\Microsoft\Edge\Application\msedge.exe" />
+      </Conditions>
+    </FilePathRule>
+  </RuleCollection>
+
+  <RuleCollection Type="Script" EnforcementMode="Enabled">
+    <!-- Allow administrative scripts only -->
+    <FilePathRule Id="18c9d0e1-f2a3-4567-1234-123456789017" Name="Allow Administrative Scripts" Description="Allows administrators to run PowerShell/batch scripts." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+      <Conditions>
+        <FilePathCondition Path="*" />
+      </Conditions>
+    </FilePathRule>
+    <!-- Deny user script execution from temporary / download locations -->
+    <FilePathRule Id="29d0e1f2-a3b4-5678-2345-123456789018" Name="Block User Script Execution" Description="Blocks scripts in user profiles." UserOrGroupSid="S-1-5-32-545" Action="Deny">
+      <Conditions>
+        <FilePathCondition Path="%USERPROFILE%\*" />
+      </Conditions>
+    </FilePathRule>
+  </RuleCollection>
+</AppLockerPolicy>

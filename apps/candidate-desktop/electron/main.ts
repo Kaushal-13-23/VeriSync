@@ -7,17 +7,20 @@ import { exec } from 'node:child_process';
 /**
  * Secure Electron Main Process for VeriSync Candidate Desktop
  * Non-Negotiable Rules & SRS Requirements:
- * - Single window instance lock (FR-LAB-005, SRS 10.3)
+ * - Single window instance lock (FR-LAB-005, SRS 10.3, TC18)
  * - contextIsolation: true, nodeIntegration: false, sandbox: true (NFR-SEC-001, NFR-SEC-005)
  * - Strict navigation boundaries (prevent remote content navigation & window popups)
  * - Persisted app-managed device ID (FR-LAB-002)
  * - Client version handshake (FR-LAB-003)
  * - Electron safeStorage encrypted token management (NFR-SEC-004)
- * - Prohibited application detection (FR-LAB-006)
+ * - Prohibited application detection from dynamic API policy (FR-LAB-006)
+ * - Multi-layer lockdown: kiosk, fullscreen, always-on-top, shortcut blocking (FR-LAB-005, FR-LAB-008)
+ * - Focus-loss (blur), minimize, and exit attempt security telemetry (FR-LAB-006, TC18)
  */
 
 let mainWindow: BrowserWindow | null = null;
 let inMemoryToken: string | null = null;
+let isExamActive = false;
 
 // SRS FR-LAB-002: Generate and persist unique application-managed device identifier
 function getOrCreateDeviceId(): string {
@@ -96,18 +99,66 @@ function removeEncryptedToken(): boolean {
   }
 }
 
-// SRS FR-LAB-006: Prohibited background applications detection
-async function detectProhibitedApps(): Promise<{ hasProhibitedApps: boolean; apps: string[] }> {
-  const blacklist = [
-    'teamviewer.exe',
-    'teamviewer',
-    'anydesk.exe',
-    'anydesk',
-    'vncviewer.exe',
-    'vncserver.exe',
-    'obs64.exe',
-    'obs32.exe',
-  ];
+// SRS FR-LAB-006: Comprehensive default denylist of prohibited applications
+export const DEFAULT_PROHIBITED_PROCESSES = [
+  // Remote Desktop / Screen Sharing
+  'teamviewer.exe',
+  'teamviewer',
+  'anydesk.exe',
+  'anydesk',
+  'vncviewer.exe',
+  'vncserver.exe',
+  'mstsc.exe',
+  'rustdesk.exe',
+  'rustdesk',
+  'parsec.exe',
+  'logmein.exe',
+  'ammyy.exe',
+  'ultraviewer.exe',
+  'chrome-remote-desktop',
+  // Screen Recording / Streaming / Meeting
+  'obs64.exe',
+  'obs32.exe',
+  'obs',
+  'camtasia.exe',
+  'bandicam.exe',
+  'fraps.exe',
+  'discord.exe',
+  'discord',
+  'zoom.exe',
+  'teams.exe',
+  'webex.exe',
+  'slack.exe',
+  // Cheating / Debugging / Process Inspection
+  'wireshark.exe',
+  'wireshark',
+  'fiddler.exe',
+  'fiddler',
+  'charles.exe',
+  'cheatengine-x86_64.exe',
+  'cheatengine.exe',
+  'cheatengine',
+  'x64dbg.exe',
+  'x32dbg.exe',
+  'processhacker.exe',
+  'procmon.exe',
+  'procmon64.exe',
+  'procexp.exe',
+  'procexp64.exe',
+];
+
+// SRS FR-LAB-006: Dynamic allowlist/denylist process detection
+export async function detectProhibitedApps(
+  customDenylist?: string[],
+): Promise<{ hasProhibitedApps: boolean; apps: string[] }> {
+  const combinedList = Array.from(
+    new Set([
+      ...DEFAULT_PROHIBITED_PROCESSES,
+      ...(customDenylist && Array.isArray(customDenylist)
+        ? customDenylist.map((s) => s.toLowerCase().trim()).filter(Boolean)
+        : []),
+    ]),
+  );
 
   return new Promise((resolve) => {
     const cmd = process.platform === 'win32' ? 'tasklist /FO CSV /NH' : 'ps -e -o comm=';
@@ -117,7 +168,7 @@ async function detectProhibitedApps(): Promise<{ hasProhibitedApps: boolean; app
         return;
       }
       const runningLower = stdout.toLowerCase();
-      const detected = blacklist.filter((proc) => runningLower.includes(proc));
+      const detected = combinedList.filter((proc) => runningLower.includes(proc.toLowerCase()));
       resolve({ hasProhibitedApps: detected.length > 0, apps: detected });
     });
   });
@@ -137,7 +188,7 @@ function scrubSensitiveData(text: string): string {
     .replace(/[A-Za-z0-9]{32,}/g, (match) => match.slice(0, 4) + '...[REDACTED]');
 }
 
-function appendLocalLog(
+export function appendLocalLog(
   level: string,
   message: string,
   correlationId?: string,
@@ -250,15 +301,53 @@ export function verifyBundleIntegrity(baseDir?: string): TamperCheckResult {
   };
 }
 
+// SRS FR-LAB-005 & FR-LAB-008: Dynamic lockdown toggling tied to Active Assessment state
+export function setExamActive(isActive: boolean): boolean {
+  isExamActive = Boolean(isActive);
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (isExamActive) {
+      // Fullscreen, kiosk, and screen-saver level always-on-top to prevent taskbar/window bleeding
+      mainWindow.setKiosk(true);
+      mainWindow.setFullScreen(true);
+      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+      mainWindow.focus();
+      appendLocalLog(
+        'info',
+        'Assessment lockdown engaged: Kiosk mode, fullscreen, and screen-saver always-on-top active (FR-LAB-005, FR-LAB-008)',
+        undefined,
+        { isExamActive: true, timestamp: new Date().toISOString() },
+      );
+    } else {
+      mainWindow.setAlwaysOnTop(false);
+      if (process.env.NODE_ENV !== 'production') {
+        mainWindow.setKiosk(false);
+        mainWindow.setFullScreen(false);
+      }
+      appendLocalLog('info', 'Assessment lockdown disengaged', undefined, {
+        isExamActive: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+  return true;
+}
+
+export function getExamActive(): boolean {
+  return isExamActive;
+}
+
 // Register IPC handlers before window creation
 function setupIpcHandlers() {
   ipcMain.handle('verisync:getAppVersion', () => '1.1.0');
   ipcMain.handle('verisync:getDeviceId', () => getOrCreateDeviceId());
-  ipcMain.handle('verisync:isKiosk', () => process.env.NODE_ENV === 'production');
+  ipcMain.handle('verisync:isKiosk', () => process.env.NODE_ENV === 'production' || isExamActive);
   ipcMain.handle('verisync:storeToken', (_event, token: string) => saveEncryptedToken(token));
   ipcMain.handle('verisync:getToken', () => loadEncryptedToken());
   ipcMain.handle('verisync:clearToken', () => removeEncryptedToken());
-  ipcMain.handle('verisync:checkProhibitedApps', () => detectProhibitedApps());
+  ipcMain.handle('verisync:checkProhibitedApps', (_event, customDenylist?: string[]) =>
+    detectProhibitedApps(customDenylist),
+  );
   ipcMain.handle('verisync:getSystemInfo', () => ({
     platform: process.platform,
     arch: process.arch,
@@ -278,8 +367,15 @@ function setupIpcHandlers() {
   );
   ipcMain.handle('verisync:verifyIntegrity', () => verifyBundleIntegrity());
   ipcMain.handle('verisync:closeApp', () => {
-    app.quit();
+    if (!isExamActive) {
+      app.quit();
+    } else {
+      appendLocalLog('warn', 'Application close request ignored while exam is active');
+    }
   });
+  // Phase 6 Lockdown Handlers
+  ipcMain.handle('verisync:setExamActive', (_event, isActive: boolean) => setExamActive(isActive));
+  ipcMain.handle('verisync:isExamActive', () => isExamActive);
 }
 
 function createWindow() {
@@ -303,6 +399,52 @@ function createWindow() {
   // Strict CSP and navigation enforcement: block popups & foreign navigation
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
+  // Prevent webview embedding (NFR-SEC-005)
+  mainWindow.webContents.on('will-attach-webview', (e) => {
+    e.preventDefault();
+  });
+
+  // Context menu suppression in production or while exam is active (FR-LAB-005, FR-LAB-008)
+  mainWindow.webContents.on('context-menu', (e) => {
+    if (process.env.NODE_ENV === 'production' || isExamActive) {
+      e.preventDefault();
+    }
+  });
+
+  // DevTools blocking in production or while exam is active
+  mainWindow.webContents.on('devtools-opened', () => {
+    if (process.env.NODE_ENV === 'production' || isExamActive) {
+      mainWindow?.webContents.closeDevTools();
+    }
+  });
+
+  // Keyboard shortcut filtering (F12, DevTools, Reload, Alt+F4) (FR-LAB-008, TC18)
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    const isDevToolsKey =
+      input.key === 'F12' ||
+      ((input.control || input.meta) &&
+        input.shift &&
+        ['I', 'i', 'J', 'j', 'C', 'c'].includes(input.key));
+    const isReloadKey =
+      input.key === 'F5' || ((input.control || input.meta) && ['r', 'R'].includes(input.key));
+    const isCloseKey = input.alt && input.key === 'F4';
+
+    if (
+      (isDevToolsKey || isReloadKey || isCloseKey) &&
+      (process.env.NODE_ENV === 'production' || isExamActive)
+    ) {
+      event.preventDefault();
+      if (isExamActive) {
+        appendLocalLog(
+          'warn',
+          `Restricted keyboard shortcut '${input.key}' blocked during active exam (FR-LAB-006, TC18)`,
+          undefined,
+          { key: input.key, timestamp: new Date().toISOString() },
+        );
+      }
+    }
+  });
+
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
     try {
       const parsedUrl = new URL(navigationUrl);
@@ -316,6 +458,57 @@ function createWindow() {
       }
     } catch {
       event.preventDefault();
+    }
+  });
+
+  // Window Focus-Loss (blur) Detection (FR-LAB-006, FR-LAB-008)
+  mainWindow.on('blur', () => {
+    if (isExamActive) {
+      appendLocalLog(
+        'warn',
+        'Security Event: Application window lost focus (blur) during active assessment (FR-LAB-006, FR-LAB-008)',
+        undefined,
+        { eventType: 'FOCUS_LOST', timestamp: new Date().toISOString() },
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('verisync:onWindowBlur');
+      }
+    }
+  });
+
+  // Window Minimization Detection & Immediate Restoration (FR-LAB-006, TC18)
+  mainWindow.on('minimize', () => {
+    if (isExamActive) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.restore();
+        mainWindow.focus();
+        mainWindow.setAlwaysOnTop(true, 'screen-saver');
+      }
+      appendLocalLog(
+        'warn',
+        'Security Event: Window minimize attempted during active assessment; immediately restored (FR-LAB-006, TC18)',
+        undefined,
+        { eventType: 'WINDOW_MINIMIZE', timestamp: new Date().toISOString() },
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('verisync:onWindowMinimize');
+      }
+    }
+  });
+
+  // Window Close Attempt Handled by Policy (FR-LAB-006, FR-LAB-008)
+  mainWindow.on('close', (e) => {
+    if (isExamActive) {
+      e.preventDefault();
+      appendLocalLog(
+        'warn',
+        'Security Event: Window close prevented by exam lockdown policy (FR-LAB-006, FR-LAB-008)',
+        undefined,
+        { eventType: 'CLOSE_ATTEMPT_BLOCKED', timestamp: new Date().toISOString() },
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('verisync:onExitAttempted');
+      }
     }
   });
 
@@ -334,7 +527,7 @@ function createWindow() {
   });
 }
 
-// Single-instance lock enforcement (FR-LAB-005)
+// Single-instance lock enforcement (FR-LAB-005, TC18)
 if (app && typeof app.requestSingleInstanceLock === 'function') {
   const gotTheLock = app.requestSingleInstanceLock();
 
@@ -345,6 +538,18 @@ if (app && typeof app.requestSingleInstanceLock === 'function') {
       if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
+        if (isExamActive) {
+          mainWindow.setAlwaysOnTop(true, 'screen-saver');
+          appendLocalLog(
+            'warn',
+            'Security Alert: Second instance launch attempt detected and blocked (FR-LAB-005, TC18)',
+            undefined,
+            { eventType: 'SECOND_INSTANCE_ATTEMPT', timestamp: new Date().toISOString() },
+          );
+          mainWindow.webContents.send('verisync:onSecurityAlert', {
+            eventType: 'SECOND_INSTANCE_ATTEMPT',
+          });
+        }
       }
     });
 

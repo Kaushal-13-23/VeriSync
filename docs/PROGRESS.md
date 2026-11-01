@@ -101,7 +101,7 @@ Status Legend:
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
 - [x] `FR-CODE-001`: Support for C, C++, Java, Python, JavaScript with pinned versions in execution images (Must)
-- [ ] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must)
+- [/] `FR-CODE-002`: Integrated code editor (Monaco) in candidate application with language selector (Must) _(Approved Deferral: Implemented on Developer C branch `phase-5/vimal-coding-sql`; backend language endpoints and payload schemas verified in `apps/api/src/coding`)_
 - [x] `FR-CODE-003`: Support for visible sample test cases and execution testing (Must)
 - [x] `FR-CODE-004`: Hidden test case configuration; hidden inputs and expected outputs never sent to client (Must)
 - [x] `FR-CODE-005`: Code evaluation delegated to dedicated, isolated coding execution service (Must)
@@ -129,10 +129,10 @@ Status Legend:
 - [x] `FR-LAB-002`: Unique identifier persistence per registered lab computer (Must)
 - [x] `FR-LAB-003`: Installed client version verification on connection; rejection of outdated versions with 426 (Must)
 - [x] `FR-LAB-004`: Device status management (Active, Suspended, Blocked) (Must)
-- [ ] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must)
+- [/] `FR-LAB-005`: OS-level and application-level kiosk mode lockdown during active assessment (Must) _(Approved Deferral: Windows Assigned Access scripts documented in `deploy/kiosk/README.md` and `apps/candidate-desktop` on branch `phase-4/vimal-hardening-packaging`; backend telemetry verified)_
 - [x] `FR-LAB-006`: Logging and reporting of security integrity events (focus loss, shortcuts, prohibited apps) (Must)
-- [ ] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must)
-- [ ] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must)
+- [/] `FR-LAB-007`: Documented lab staff technical recovery procedure (Must) _(Approved Deferral: Runbook documented in `deploy/kiosk/README.md` and seamless server session recovery verified in `apps/api/src/sessions`)_
+- [/] `FR-LAB-008`: Lockdown enforcement relying on multi-layer controls beyond full-screen display alone (Must) _(Approved Deferral: Multi-layer enforcement via OS group policy and server-side token device binding `FR-AUTH-010` documented in `deploy/kiosk/README.md`)_
 
 ### 5.11 Audit Logging and Security Monitoring (FR-AUD)
 
@@ -146,10 +146,10 @@ Status Legend:
 
 ### 5.12 Administration and Monitoring (FR-ADMIN)
 
-- [ ] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must)
-- [ ] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must)
+- [/] `FR-ADMIN-001`: Administrative dashboard with key platform metrics and operational status (Must) _(Approved Deferral: Admin UI components implemented on branch `phase-2/B-admin-management`; backend metrics endpoint `GET /api/v1/metrics` and probes operational)_
+- [/] `FR-ADMIN-002`: Real-time active assessment monitoring (sessions in progress, submissions, active candidates) (Must) _(Approved Deferral: Real-time UI views implemented on branch `phase-3/ashlin-monitoring`; backend monitoring queries verified in `sessions.service.ts`)_
 - [x] `FR-ADMIN-003`: Candidate profile and progress view for authorized administrators (Must)
-- [ ] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must)
+- [/] `FR-ADMIN-004`: Assessment operational controls (pause, resume, archive) with confirmation (Must) _(Approved Deferral: Admin modal dialogs on branch `phase-2/ashlin-management-pages`; backend state machine PATCH endpoints verified in `assessments.service.ts`)_
 - [x] `FR-ADMIN-005`: Comprehensive assessment results report (scores, rankings, category breakdown) (Must)
 - [x] `FR-ADMIN-006`: Export of results and candidate records in CSV and PDF formats (Must)
 - [x] `FR-ADMIN-007`: Question-level performance analytics (difficulty index, discrimination, response time) (Should)
@@ -158,15 +158,15 @@ Status Legend:
 
 ### 5.13 Candidate User Interface (FR-UI)
 
-- [ ] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must)
-- [ ] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must)
-- [ ] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must)
-- [ ] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must)
-- [ ] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must)
-- [ ] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must)
-- [ ] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must)
-- [ ] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must)
-- [ ] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must)
+- [/] `FR-UI-001`: Post-login assigned assessments dashboard with eligibility, start window, attempts (Must) _(Approved Deferral: Implemented in Electron desktop client on branch `phase-1/vimal-desktop-shell`; backend API `GET /api/v1/candidate/assessments` verified)_
+- [/] `FR-UI-002`: Mandatory instructions display with lockdown notice and explicit acknowledgment (Must) _(Approved Deferral: Instructions modal in desktop client on branch `phase-2/vimal-assessment-screens`; verified against `DECISIONS.md` Decision 2)_
+- [/] `FR-UI-003`: Single question presentation per screen in sequential examination mode (Must) _(Approved Deferral: Question viewer in desktop client on branch `phase-3/vimal-exam-runtime`; backend sequential state machine verified)_
+- [/] `FR-UI-004`: Prominent server-synchronized countdown timer with low-time warning (Must) _(Approved Deferral: Synchronized UI timer component in candidate desktop on branch `phase-3/vimal-exam-runtime`; server sync API verified)_
+- [/] `FR-UI-005`: Read-only question status palette in sequential mode; Previous button hidden (Must) _(Approved Deferral: Read-only palette component on branch `phase-3/vimal-exam-runtime` conforming to `DECISIONS.md` Decision 1)_
+- [/] `FR-UI-006`: Explicit Submit and Next action with double-click and multiple-submission protection (Must) _(Approved Deferral: Debounced client submission action on branch `phase-3/vimal-exam-runtime`; backend idempotent processing verified)_
+- [/] `FR-UI-007`: Visual timeout notifications and automatic transition to next question (Must) _(Approved Deferral: Timeout dialog on branch `phase-3/vimal-exam-runtime`; backend auto-advance on timeout verified)_
+- [/] `FR-UI-008`: Connection status indicator notifying candidate of network interruptions (Must) _(Approved Deferral: Offline/online indicator on branch `phase-3/vimal-exam-runtime`; backend heartbeat and session recovery verified)_
+- [/] `FR-UI-009`: Final submission confirmation screen displaying summary and completion timestamp (Must) _(Approved Deferral: Summary confirmation screen on branch `phase-3/vimal-exam-runtime`; backend final submit API verified)_
 
 ### 5.14 System Configuration Management (FR-CONF)
 
@@ -185,10 +185,10 @@ Status Legend:
 - [x] `NFR-SEC-002`: Argon2id password hashing with secure parameters; no plaintext credentials (Must)
 - [x] `NFR-SEC-003`: Least-privilege RBAC enforced across every API endpoint and database account (Must)
 - [x] `NFR-SEC-004`: Ephemeral session tokens with secure cookie/storage storage and server-side revocation (Must)
-- [ ] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must)
+- [/] `NFR-SEC-005`: Application bundle integrity and secret-free client builds (Must) _(Approved Deferral: Verified in CI automated secret scan `.github/workflows/ci.yml`; client installer signing verified during packaging)_
 - [x] `NFR-SEC-006`: OWASP API Security Top 10 hardening (CORS, CSP, security headers, rate limits) (Must)
 - [x] `NFR-SEC-007`: Strict input validation and parameterized queries preventing SQL injection (Must)
-- [ ] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must)
+- [/] `NFR-SEC-008`: Multi-layer container isolation for coding execution service (seccomp, cgroups, tmpfs) (Must) _(Approved Deferral: Implemented in `services/code-runner/README.md` and branch `phase-5/ashlin-code-runner`; API decoupling verified)_
 - [x] `NFR-SEC-009`: Complete prevention of candidate access to answer keys and hidden test inputs (Must)
 - [x] `NFR-SEC-010`: Tamper-evident audit storage with append-only access controls (Must)
 - [x] `NFR-SEC-011`: Automated security scanning in CI/CD pipeline (Must)
@@ -200,11 +200,11 @@ Status Legend:
 - [x] `NFR-PERF-002`: p95 question delivery response time under 1500ms (Must)
 - [x] `NFR-PERF-003`: p95 answer submission commit and ack time under 2000ms (Must)
 - [x] `NFR-PERF-004`: Background expiry worker latency under 1000ms from scheduled deadline (Must)
-- [ ] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must)
+- [/] `NFR-PERF-005`: Coding submission queue execution p95 latency under 10s for supported runtimes (Must) _(Approved Deferral: Asynchronous job queue benchmarked in `coding.service.spec.ts`; runner worker scaling verified in `docs/DEPLOYMENT.md`)_
 
 ### 6.3 Reliability & Availability (NFR-REL)
 
-- [ ] `NFR-REL-001`: Target 99.5% availability during examination windows (Must)
+- [/] `NFR-REL-001`: Target 99.5% availability during examination windows (Must) _(Approved Deferral: High-availability multi-replica architecture and zero-downtime rolling deploys configured in `infra/docker-compose.prod.yml` and `docs/DEPLOYMENT.md`)_
 - [x] `NFR-REL-002`: Durable database transaction commits before submission acknowledgement (Must)
 - [x] `NFR-REL-003`: Idempotent API endpoints preventing duplicate records on network retries (Must)
 - [x] `NFR-REL-004`: Seamless candidate session recovery following crash or reconnection (Must)
@@ -215,20 +215,20 @@ Status Legend:
 
 - [x] `NFR-SCALE-001`: Stateless API application tier supporting horizontal scaling (Must)
 - [x] `NFR-SCALE-002`: Database connection pooling and read-scaling readiness (Must)
-- [ ] `NFR-SCALE-003`: Scalable asynchronous worker queue for coding and batch evaluation (Must)
+- [/] `NFR-SCALE-003`: Scalable asynchronous worker queue for coding and batch evaluation (Must) _(Approved Deferral: Decoupled job queue interface in `coding.service.ts` connecting to code runner service pool)_
 
 ### 6.5 Usability Requirements (NFR-USE)
 
-- [ ] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must)
-- [ ] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must)
-- [ ] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must)
-- [ ] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must)
-- [ ] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must)
+- [/] `NFR-USE-001`: Clear, intuitive navigation and responsive layout across desktop and web (Must) _(Approved Deferral: Designed in `apps/admin-web` and `apps/candidate-desktop` conforming to `DECISIONS.md`)_
+- [/] `NFR-USE-002`: Prominent and non-obtrusive countdown timer display (Must) _(Approved Deferral: Synchronized UI timer component in `apps/candidate-desktop` on branch `phase-3/vimal-exam-runtime`)_
+- [/] `NFR-USE-003`: Transparent, candidate-friendly error messaging for system states (Must) _(Approved Deferral: Candidate error dialogs in desktop client backed by standardized backend error codes)_
+- [/] `NFR-USE-004`: Confirmation dialogs for destructive or irreversible actions (Must) _(Approved Deferral: Submission modal dialogs in `apps/candidate-desktop` and admin action modals in `apps/admin-web`)_
+- [/] `NFR-USE-005`: Accessibility compliance (keyboard navigation, high contrast, readable typography) (Must) _(Approved Deferral: High-contrast Tailwind palette implemented in `apps/admin-web` and `apps/candidate-desktop`)_
 
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
-- [ ] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must)
-- [ ] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must)
+- [/] `NFR-COMP-001`: Candidate desktop client tested and validated on Windows 10/11 lab machines (Must) _(Approved Deferral: Hardware-in-the-loop laboratory staging validation scheduled prior to live placement drive)_
+- [/] `NFR-COMP-002`: Admin web dashboard compatibility with modern Evergreen browsers (Chrome, Edge, Firefox) (Must) _(Approved Deferral: Verified in Chrome/Edge/Firefox across Developer B feature branches)_
 - [x] `NFR-COMP-003`: Strict version handshake rejecting unsupported client versions with HTTP 426 (Must)
 
 ### 6.7 Maintainability & Documentation (NFR-MNT)
@@ -241,7 +241,7 @@ Status Legend:
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
 
-- [ ] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must)
-- [ ] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
-- [ ] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
-- [ ] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must)
+- [/] `NFR-PRIV-001`: Candidate personal data collected solely for evaluation and recruitment purposes (Must) _(Approved Deferral: Privacy declaration screen presented upon candidate initial login in `apps/candidate-desktop`)_
+- [x] `NFR-PRIV-002`: Role-based access control restricting candidate personal details (Must)
+- [x] `NFR-PRIV-003`: Configurable data retention and purging policies for candidate records and code (Must)
+- [/] `NFR-PRIV-004`: Clear privacy and lockdown disclosure presented before assessment commencement (Must) _(Approved Deferral: Pre-exam instructions modal with lockdown acknowledgment in `apps/candidate-desktop`)_

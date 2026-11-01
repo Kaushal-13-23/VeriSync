@@ -100,7 +100,6 @@ Status Legend:
 
 ### 5.8 Technical Assessment and Coding Engine (FR-CODE)
 
-
 ### 5.9 SQL Assessment (FR-SQL)
 
 - [x] FR-CODE-001: Support for C, C++, Java, Python, JavaScript with pinned versions in execution images (Must)
@@ -214,7 +213,6 @@ Status Legend:
 
 ### 6.2 Performance Requirements (NFR-PERF)
 
-
 ### 6.3 Reliability & Availability (NFR-REL)
 
 - [D - Approved Deferral: Sub-50ms local/unit latency confirmed; production multi-node cluster load test deferred to pre-placement cloud staging drill using k6/JMeter per SRS 14.3 Decision 1] `NFR-PERF-001`: API p95 response time under 500ms for read requests at approved load (Must)
@@ -241,7 +239,6 @@ Status Legend:
 
 ### 6.5 Usability Requirements (NFR-USE)
 
-
 ### 6.6 Compatibility Requirements (NFR-COMP)
 
 - [D - Approved Deferral: Automated pg_dump/pg_restore recovery procedure validated in docs/SuperAdmin-Manual.md Section 10.3; physical AWS RDS automated snapshot schedule active upon cloud provisioning] `NFR-REL-006`: Automated backup procedures supporting RPO <= 15 min and RTO <= 4 hours (Must)
@@ -265,7 +262,6 @@ Status Legend:
 - [x] `NFR-MNT-002`: Consistent coding standards, linting, formatting, and strict TypeScript types (Must)
 
 ### 6.8 Privacy & Data Protection (NFR-PRIV)
-
 
 ---
 

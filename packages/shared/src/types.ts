@@ -111,9 +111,19 @@ export enum ExecutionStatus {
  * Health check response
  */
 export interface HealthStatusResponse {
-  status: 'ok' | 'degraded';
+  status: 'ok' | 'degraded' | 'down';
   serverTime: string; // UTC ISO-8601 (Rule 9)
   version: string;
+  uptimeSeconds?: number;
+  database?: {
+    status: 'connected' | 'disconnected';
+    latencyMs?: number;
+  };
+  memory?: {
+    heapUsedMb: number;
+    heapTotalMb: number;
+    rssMb: number;
+  };
 }
 
 /**

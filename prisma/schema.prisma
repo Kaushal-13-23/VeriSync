@@ -323,6 +323,8 @@ model AssessmentSession {
 
   @@unique([assignmentId, attemptNumber])
   @@index([sessionStatus])
+  @@index([sessionStatus, overallDeadline])
+  @@index([deviceId])
   @@map("assessment_sessions")
 }
 
@@ -352,6 +354,7 @@ model QuestionAttempt {
 
   @@unique([sessionId, assessmentQuestionId])
   @@index([sessionId, attemptStatus])
+  @@index([attemptStatus, deadlineAt])
   @@map("question_attempts")
 }
 
@@ -473,6 +476,7 @@ model AuditLog {
   @@index([eventType])
   @@index([correlationId])
   @@index([eventTimestamp])
+  @@index([currentHash])
   @@map("audit_logs")
 }
 
@@ -495,6 +499,7 @@ model LabDevice {
 
   sessions              AssessmentSession[]
 
+  @@index([deviceStatus])
   @@map("lab_devices")
 }
 

@@ -1,0 +1,99 @@
+# VeriSync Production Alerting Rules (SRS Section 12.4, NFR-PERF-001..005, NFR-REL-001)
+# Compatible with Prometheus Alertmanager / Grafana Mimir
+
+groups:
+  - name: verisync_api_alerts
+    rules:
+      - alert: VeriSyncApiDown
+        expr: up{job="verisync-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          tier: backend
+        annotations:
+          summary: 'VeriSync API instance is unreachable'
+          description: 'Instance {{ $labels.instance }} has been down for over 1 minute.'
+
+      - alert: HighHttp5xxErrorRate
+        expr: sum(rate(verisync_http_requests_total{status=~"5.."}[5m])) / sum(rate(verisync_http_requests_total[5m])) * 100 > 1
+        for: 3m
+        labels:
+          severity: critical
+          tier: backend
+        annotations:
+          summary: 'High HTTP 5xx error rate detected (>1%)'
+          description: '5xx error rate is {{ $value }}% over the last 5 minutes (NFR-REL-001).'
+
+      - alert: ElevatedLoginLatency
+        expr: histogram_quantile(0.95, sum(rate(verisync_http_request_duration_seconds_bucket{path="/auth/login"}[5m])) by (le)) > 2.0
+        for: 3m
+        labels:
+          severity: warning
+          tier: performance
+        annotations:
+          summary: 'Login endpoint p95 latency exceeded 2.0 seconds (NFR-PERF-001)'
+          description: 'Candidate/Admin login p95 latency is {{ $value }}s.'
+
+      - alert: ElevatedQuestionDeliveryLatency
+        expr: histogram_quantile(0.95, sum(rate(verisync_http_request_duration_seconds_bucket{path=~".*/current-question"}[5m])) by (le)) > 1.5
+        for: 3m
+        labels:
+          severity: warning
+          tier: performance
+        annotations:
+          summary: 'Question delivery p95 latency exceeded 1.5 seconds (NFR-PERF-002)'
+          description: 'Question delivery p95 latency is {{ $value }}s.'
+
+      - alert: ElevatedAnswerSubmissionLatency
+        expr: histogram_quantile(0.95, sum(rate(verisync_http_request_duration_seconds_bucket{path=~".*/submit-answer"}[5m])) by (le)) > 2.0
+        for: 3m
+        labels:
+          severity: warning
+          tier: performance
+        annotations:
+          summary: 'Answer submission p95 commit latency exceeded 2.0 seconds (NFR-PERF-003)'
+          description: 'Answer submission ack latency is {{ $value }}s.'
+
+  - name: verisync_database_alerts
+    rules:
+      - alert: PostgresConnectionExhaustion
+        expr: pg_stat_activity_count / pg_settings_max_connections * 100 > 85
+        for: 2m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: 'PostgreSQL connection pool near exhaustion (>85%)'
+          description: 'Connection utilization is {{ $value }}%.'
+
+      - alert: DatabaseReadinessFailed
+        expr: probe_success{instance="http://verisync-api:3000/health/ready"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          tier: backend
+        annotations:
+          summary: 'VeriSync readiness probe failing'
+          description: 'API reports database connectivity is disconnected or timed out.'
+
+  - name: verisync_security_alerts
+    rules:
+      - alert: BruteForceLoginSpike
+        expr: sum(rate(verisync_http_requests_total{path="/auth/login", status="429"}[2m])) > 10
+        for: 1m
+        labels:
+          severity: warning
+          tier: security
+        annotations:
+          summary: 'Spike in rate-limited login attempts (FR-AUTH-004, TC-17)'
+          description: 'More than 10 lockout responses/sec observed across candidates.'
+
+      - alert: KioskLockdownBreachSurge
+        expr: sum(rate(verisync_lockdown_events_total{type="FOCUS_LOST"}[2m])) > 50
+        for: 1m
+        labels:
+          severity: warning
+          tier: security
+        annotations:
+          summary: 'Surge in candidate kiosk focus loss events (FR-LAB-006, BR-015)'
+          description: 'Unusually high focus loss rate ({{ $value }} events/sec). Possible hall disruption or OS policy issue.'
